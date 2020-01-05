@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RestoreSources>../refrences;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+
+</Project>
