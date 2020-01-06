@@ -1,0 +1,147 @@
+﻿
+@{
+    ViewData["Title"] = "Coching";
+}
+
+<style>
+    .tree {
+        /*position: fixed !important;
+        top: 57px;
+        left: 0;
+        bottom: 61px;
+        right: 0;*/
+        width: 100%;
+        height: calc(100vh - 57px - 61px - 35px);
+    }
+
+    .tree-container {
+        border: 1px solid grey;
+        position: relative;
+    }
+
+    .left-hover-menu {
+        position: absolute;
+        border: 1px solid grey;
+        left: -99999px;
+        top: -999999px;
+    }
+
+    .right-click-menu {
+        position: absolute;
+        border: 1px solid blue;
+        left: -99999px;
+        top: -999999px;
+    }
+
+    .tooltip-title {
+        color: red;
+    }
+</style>
+
+<script src="~/lib/echarts/echarts.min.js"></script>
+
+<div class="tree-container">
+    <div class="tree"></div>
+</div>
+
+<div class="left-hover-menu">
+    <div>中文名: 报表</div>
+    <div>英文名:data charts</div>
+    <div>产品域定义:用于记录各种数据.</div>
+</div>
+
+<div class="right-click-menu">
+    <div>新增业务对象</div>
+    <div>编辑</div>
+    <div>删除</div>
+</div>
+
+<script>
+    $(function () {
+        var tree = echarts.init($('.tree')[0]);
+        $('.tree-container').bind("contextmenu", function () { return false; });
+        tree.on('contextmenu', function (params) {
+            $('.right-click-menu').css({
+                'display': 'block',
+                'left': params.event.offsetX + 15,
+                'top': params.event.offsetY + 15
+            });
+        });
+        $('.tree-container').click(function () {
+            $('.right-click-menu').css({
+                'display': 'none',
+                'left': '-9999px',
+                'top': '-9999px'
+            });
+        })
+
+        //tree.showLoading();
+        //tree.hideLoading();
+
+        var data = [
+            {
+                children: [
+                    {
+                        name: '测试1',
+                        description: '这是一个解释'
+                    },
+                    {
+                        name: '测试2',
+                        description: '这是一个解释2'
+                    }
+                ],
+                name: '测试测试测',
+                description: '这是一个解释top'
+            }
+        ]
+
+        tree.setOption(option = {
+            tooltip: {
+                trigger: 'item',
+                triggerOn: 'mousemove'
+            },
+            series: [
+                {
+                    type: 'tree',
+
+                    data: data,
+
+                    left: '2%',
+                    right: '2%',
+                    top: '8%',
+                    bottom: '20%',
+                    roam: true,
+                    symbol: 'square',
+                    symbolSize: [150, 80],
+                    orient: 'vertical',
+
+                    expandAndCollapse: true,
+
+                    label: {
+                        position: 'inside',
+                        rotate: 0,
+                        verticalAlign: 'middle',
+                        align: 'center',
+                        fontSize: 9,
+                        formatter: function (node) {
+                            return ['{name|' + node.data.name + '}', node.data.description].join('\n');
+                        },
+                        rich: {
+                            name: {
+                                color: 'red'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        formatter: function (node) {
+                            return '<div class="tooltip-title">' + node.data.name + '</div>';
+                        }
+                    },
+
+                    animationDurationUpdate: 750
+                }
+            ]
+        });
+
+    })
+</script>

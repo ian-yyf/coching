@@ -2,7 +2,7 @@
 
 namespace Coching.Bll
 {
-    public class Class1
+    public class CochingWork
     {
     }
 }

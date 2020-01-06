@@ -1,8 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <RestoreSources>../refrences;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Public.Bll" Version="1.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="../Coching.Dal/Coching.Dal.csproj" />
+  </ItemGroup>
 
 </Project>
