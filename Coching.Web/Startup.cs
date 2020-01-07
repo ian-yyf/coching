@@ -2,12 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Coching.Dal;
+using Coching.Bll;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Public.Utils;
 
 namespace Coching.Web
 {
@@ -23,12 +27,19 @@ namespace Coching.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.AddControllersWithViews().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = null;
+            });
+            services.AddSession(o => o.IdleTimeout = TimeSpan.FromHours(1));
+            services.AddDbContext<CochingModels>(o => o.UseSqlServer(Configuration.GetConnectionString("conn"), providerOptions => providerOptions.CommandTimeout(60)));
+            services.AddScoped<CochingWork>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseSession();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -52,6 +63,7 @@ namespace Coching.Web
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            LogHelper.nothing();
         }
     }
 }

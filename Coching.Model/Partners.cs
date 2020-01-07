@@ -1,20 +1,22 @@
 ﻿using Coching.Model.Data;
 using Public.Model;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 
 namespace Coching.Model
 {
-    [Table("Nodes")]
-    public class Nodes : NodeData, IKeyDeleted
+    [Table("Partners")]
+    public class Partners : PartnerData, IKeyDeleted
     {
-        public Nodes()
+        public Partners()
         {
 
         }
 
-        public Nodes(NodeData data)
+        public Partners(PartnerData data)
             : base(data)
         {
             KeyGuid = Guid.NewGuid();

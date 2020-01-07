@@ -4,4 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../Coching.Model.Data/Coching.Model.Data.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -42,6 +42,7 @@ namespace Coching.Model.Data
         public Guid RootGuid { get; set; }
         public Guid ParentGuid { get; set; }
         public Guid CreatorGuid { get; set; }
+        [Required]
         [StringLength(16)]
         public string Name { get; set; }
         [Column(TypeName = "text")]
@@ -51,5 +52,10 @@ namespace Coching.Model.Data
         public DateTime? EndTime { get; set; }
         public Guid? WorkerGuid { get; set; }
         public int Status { get; set; }
+
+        public NodeStatus getStatus()
+        {
+            return (NodeStatus)Status;
+        }
     }
 }

@@ -6,14 +6,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Coching.Web.Models;
+using Coching.Bll;
 
 namespace Coching.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : _Controller
     {
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(CochingWork work, ILogger<HomeController> logger)
+            : base(work)
         {
             _logger = logger;
         }
