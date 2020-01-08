@@ -19,83 +19,209 @@
         position: relative;
     }
 
-    .left-hover-menu {
+    .right-click-menu-pos {
         position: absolute;
-        border: 1px solid grey;
         left: -99999px;
         top: -999999px;
-    }
-
-    .right-click-menu {
-        position: absolute;
-        border: 1px solid blue;
-        left: -99999px;
-        top: -999999px;
+        display: block;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
     }
 
     .tooltip-title {
         color: red;
     }
+
+    .right-click-menu .layui-layer-content {
+        background-color: white !important;
+        color: #444 !important;
+    }
+
+    .right-click-menu .layui-layer-TipsG {
+        display: none;
+    }
+
+    .right-click-menu .layui-layer-content {
+        padding: 2px 0px !important;
+    }
+
+    .right-click-menu li {
+        padding: 0 15px;
+        line-height: 26px;
+    }
+
+        .right-click-menu li:hover {
+            cursor: pointer;
+            background-color: #eee;
+        }
+
+        .right-click-menu .line {
+            height: 1px;
+            background-color: lightgray;
+        }
 </style>
 
 <script src="~/lib/echarts/echarts.min.js"></script>
 
 <div class="tree-container">
     <div class="tree"></div>
-</div>
-
-<div class="left-hover-menu">
-    <div>中文名: 报表</div>
-    <div>英文名:data charts</div>
-    <div>产品域定义:用于记录各种数据.</div>
-</div>
-
-<div class="right-click-menu">
-    <div>新增业务对象</div>
-    <div>编辑</div>
-    <div>删除</div>
+    <div class="right-click-menu-pos"></div>
 </div>
 
 <script>
     $(function () {
-        var tree = echarts.init($('.tree')[0]);
-        $('.tree-container').bind("contextmenu", function () { return false; });
-        tree.on('contextmenu', function (params) {
-            $('.right-click-menu').css({
-                'display': 'block',
-                'left': params.event.offsetX + 15,
-                'top': params.event.offsetY + 15
-            });
-        });
-        $('.tree-container').click(function () {
-            $('.right-click-menu').css({
-                'display': 'none',
-                'left': '-9999px',
-                'top': '-9999px'
-            });
-        })
+        layui.define(["layer"],
+            function (i) {
+            }
+        );
 
-        //tree.showLoading();
-        //tree.hideLoading();
+        var tree = echarts.init($('.tree')[0]);
+
+        var tool = {
+            findNode: function (id, array) {
+                for (var i = 0; i < array.length; i++) {
+                    if (array[i].id == id) {
+                        return array[i];
+                    }
+                    if (array[i].children) {
+                        var node = this.findNode(id, array[i].children);
+                        if (node) {
+                            return node;
+                        }
+                    }
+                }
+                return null;
+            },
+            removeNode: function (id, array) {
+                for (var i = 0; i < array.length; i++) {
+                    if (array[i].id == id) {
+                        array.splice(i, 1);
+                        break;
+                    }
+
+                    if (array[i].children) {
+                        array[i].children = this.removeNode(id, array[i].children);
+                    }
+                }
+                return array;
+            }
+        }
+
+        var menu = {
+            commands: function (node) {
+                return [
+                    {
+                        name: '查看详情',
+                        command: 'detail'
+                    },
+                    {
+                        name: '添加子节点',
+                        command: 'addChild'
+                    },
+                    {
+                        line: true
+                    },
+                    {
+                        name: '删除',
+                        command: 'delete'
+                    }
+                ];
+            },
+            execute: function (command, node) {
+                this[command].call(this, node);
+            },
+            detail: function (node) {
+                console.log(node);
+            },
+            addChild: function (node) {
+                this.id = this.id || 11;
+                node.data.children = node.data.children || [];
+                node.data.children.push({
+                    id: this.id++,
+                    name: '这是一个新的',
+                    description: '这是新的解释',
+                });
+                tree.refresh();
+            },
+            delete: function (node) {
+                var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
+                tree.refresh(data);
+            }
+        }
+
+        $('.tree-container').bind("contextmenu", function (x) {
+            return !tree.contextmenu;
+        });
+
+        tree.closeContextmenu = function () {
+            if (tree.contextmenu) {
+                layui.layer.close(tree.contextmenu);
+                tree.contextmenu = null;
+            }
+        }
+
+        tree.on('contextmenu', function (params) {
+            var commands = menu.commands(params.data);
+            var n = YFUtils.select(commands, cmd => {
+                if (cmd.line) {
+                    return '<li class="line"/>';
+                }
+                return '<li cmd-event="' + cmd.command + '">' + cmd.name + '</li>';
+            }).join('');
+
+            var n = '<ul>' + n + '</ul>';
+            $('.right-click-menu-pos').css({
+                'left': params.event.offsetX,
+                'top': params.event.offsetY
+            });
+            tree.contextmenu = layui.layer.tips(n, $('.right-click-menu-pos'), {
+                tips: 3,
+                time: 0,
+                fixed: !0,
+                skin: "layui-box right-click-menu",
+                success: function (i) {
+                    i.find("li").on("mousedown",
+                        function (i) {
+                            layui.stope(i);
+                        }).on("click", function () {
+                            menu.execute($(this).attr('cmd-event'), params);
+                            tree.closeContextmenu();
+                        })
+                }
+            });
+            $(document).off("mousedown", tree.closeContextmenu).on("mousedown", tree.closeContextmenu);
+            $(window).off("resize", tree.closeContextmenu).on("resize", tree.closeContextmenu);
+        });
+
+        $('.tree-container').click(function () {
+            tree.closeContextmenu();
+        })
 
         var data = [
             {
                 children: [
                     {
+                        id: 1,
                         name: '测试1',
                         description: '这是一个解释'
                     },
                     {
+                        id: 2,
                         name: '测试2',
                         description: '这是一个解释2'
                     }
                 ],
+                id: 3,
                 name: '测试测试测',
                 description: '这是一个解释top'
             }
         ]
 
-        tree.setOption(option = {
+        //tree.showLoading();
+        //tree.hideLoading();
+
+        var option = {
             tooltip: {
                 trigger: 'item',
                 triggerOn: 'mousemove'
@@ -111,12 +237,27 @@
                     top: '8%',
                     bottom: '20%',
                     roam: true,
-                    symbol: 'square',
+                    symbol: 'roundRect',
                     symbolSize: [150, 80],
                     orient: 'vertical',
+                    initialTreeDepth: -1,
 
                     expandAndCollapse: true,
-
+                    itemStyle: {
+                        color: {
+                            type: 'radial',
+                            x: 0.5,
+                            y: 0.5,
+                            r: 0.5,
+                            colorStops: [{
+                                offset: 0, color: '#108ee9' // 0% 处的颜色
+                            }, {
+                                offset: 1, color: '#62b7f4' // 100% 处的颜色
+                            }],
+                            globalCoord: false // 缺省为 false
+                        },
+                        borderWidth: 0
+                    },
                     label: {
                         position: 'inside',
                         rotate: 0,
@@ -141,7 +282,13 @@
                     animationDurationUpdate: 750
                 }
             ]
-        });
+        }
 
+        tree.setOption(option);
+
+        tree.refresh = function (data) {
+            option.series[0].data = data || tree.getOption().series[0].data;
+            tree.setOption(option);
+        }
     })
 </script>

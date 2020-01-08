@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <link rel="stylesheet" href="~/lib/toastr.js/toastr.min.css">
+    <script src="~/lib/toastr.js/toastr.min.js"></script>
+
+    <link rel="stylesheet" href="~/css/utils.css">
+    <script src="~/js/utils.js"></script>
+    <link rel="stylesheet" href="~/lib/layui/css/layui.css" media="all">
+    <script src="~/lib/layui/layui.js"></script>
 </head>
 <body>
     <header>
@@ -43,6 +50,18 @@
     </footer>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(function () {
+            @if (!String.IsNullOrEmpty(ViewBag.Error))
+            {
+                <text>
+                setTimeout(function () {
+                    YFUtils.showErrorToastr('@ViewBag.Error')
+                }, 500)
+                </text>
+            }
+        })
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

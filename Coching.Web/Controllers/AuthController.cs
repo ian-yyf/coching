@@ -51,7 +51,7 @@ namespace Coching.Web.Controllers
         {
             get
             {
-                return "~/Views/Shared/_Layout.cshtml";
+                return "~/Views/Shared/_Auth.cshtml";
             }
         }
 
@@ -59,7 +59,7 @@ namespace Coching.Web.Controllers
         {
             get
             {
-                return "~/Views/Shared/_LayoutMobile.cshtml";
+                return "~/Views/Shared/_AuthMobile.cshtml";
             }
         }
 

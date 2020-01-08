@@ -24,4 +24,8 @@
     <ProjectReference Include="../Coching.Bll/Coching.Bll.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\res\" />
+  </ItemGroup>
+
 </Project>

@@ -20,6 +20,16 @@ namespace Coching.Web.Controllers
             _logger = logger;
         }
 
+        protected override bool loginRequired()
+        {
+            return false;
+        }
+
+        protected override List<string> loginRequiredExceptional()
+        {
+            return new List<string>();
+        }
+
         public IActionResult Index()
         {
             return View();
