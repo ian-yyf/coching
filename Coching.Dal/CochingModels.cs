@@ -26,11 +26,87 @@ namespace Coching.Dal
         {
             //options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         }
+        
+        public async Task<bool> checkRoot(Guid nodeGuid, Guid rootGuid)
+        {
+            return await (from n in NodesTable
+                          where n.KeyGuid == nodeGuid
+                          select n.RootGuid).SingleAsync() == rootGuid;
+
+        }
+
+        public async Task<bool> checkNodePartner(Guid nodeGuid, Guid rootGuid, Guid userGuid)
+        {
+            return await (from p in PartnersTable
+                          where (p.NodeGuid == nodeGuid || p.NodeGuid == rootGuid) && p.UserGuid == userGuid && p.Deleted == false
+                          select p.KeyGuid).FirstOrDefaultAsync() != Guid.Empty;
+        }
+
+        public async Task<bool> checkNodeModifyPartner(Guid nodeGuid, Guid rootGuid, Guid userGuid)
+        {
+            var roles = new int[]
+            {
+                (int)PartnerRole.管理员,
+                (int)PartnerRole.执行者,
+            };
+
+            return await (from p in PartnersTable
+                          where (p.NodeGuid == nodeGuid || p.NodeGuid == rootGuid) && p.UserGuid == userGuid && roles.Contains(p.Role) && p.Deleted == false
+                          select p.KeyGuid).FirstOrDefaultAsync() != Guid.Empty;
+        }
+
+        public async Task<bool> checkNodePartner(Guid nodeGuid, Guid userGuid)
+        {
+            var node = await (from n in NodesTable
+                              where n.KeyGuid == nodeGuid
+                              select n).SingleAsync();
+
+            return await checkNodePartner(node.KeyGuid, node.RootGuid, userGuid);
+        }
+
+        public async Task<bool> checkNodeModifyPartner(Guid nodeGuid, Guid userGuid)
+        {
+            var node = await (from n in NodesTable
+                              where n.KeyGuid == nodeGuid
+                              select n).SingleAsync();
+
+            return await checkNodeModifyPartner(node.KeyGuid, node.RootGuid, userGuid);
+        }
+
+        public async Task<bool> checkNotePartner(Guid noteGuid, Guid userGuid)
+        {
+            var node = await (from t in NotesTable
+                              join n in NodesTable on t.NodeGuid equals n.KeyGuid
+                              where t.KeyGuid == noteGuid
+                              select n).SingleAsync();
+
+            return await checkNodePartner(node.KeyGuid, node.RootGuid, userGuid);
+        }
+
+        public async Task<bool> checkNoteModifyPartner(Guid noteGuid, Guid userGuid)
+        {
+            var node = await (from t in NotesTable
+                              join n in NodesTable on t.NodeGuid equals n.KeyGuid
+                              where t.KeyGuid == noteGuid
+                              select n).SingleAsync();
+
+            return await checkNodeModifyPartner(node.KeyGuid, node.RootGuid, userGuid);
+        }
+
+        public async Task<bool> checkPartnerModifyPartner(Guid partnerGuid, Guid userGuid)
+        {
+            var node = await (from p in PartnersTable
+                              join n in NodesTable on p.NodeGuid equals n.KeyGuid
+                              where p.KeyGuid == partnerGuid
+                              select n).SingleAsync();
+
+            return await checkNodeModifyPartner(node.KeyGuid, node.RootGuid, userGuid);
+        }
 
         public async Task<Page<FNode>> getUserRoots(Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
         {
             var tables = (from n in NodesTable
-                          join p in PartnersTable on n.ParentGuid equals p.KeyGuid
+                          join p in PartnersTable on n.KeyGuid equals p.NodeGuid
                           select new { n, p.JoinTime, p.UserGuid });
 
             var sql = tables.build(db => db.n.Deleted == false && db.UserGuid == userGuid && db.n.ParentGuid == Guid.Empty);
@@ -59,6 +135,14 @@ namespace Coching.Dal
             return findNodes(dbs, Guid.Empty).Single();
         }
 
+        public async Task<FNode> getNode(Guid id)
+        {
+            var db = await (from n in NodesTable
+                            where n.KeyGuid == id
+                            select n).SingleAsync();
+            return new FNode(db.KeyGuid, db);
+        }
+
         public async Task<Guid> insertNode(NodeData data)
         {
             return await insert(NodesTable, data);
@@ -72,6 +156,14 @@ namespace Coching.Dal
         public async Task deleteNode(Guid id)
         {
             await delete(NodesTable, id);
+        }
+
+        public async Task<FNote> getNote(Guid id)
+        {
+            var db = await (from n in NotesTable
+                            where n.KeyGuid == id
+                            select n).SingleAsync();
+            return new FNote(db.KeyGuid, db);
         }
 
         public async Task<Guid> insertNote(NoteData data)
@@ -89,14 +181,17 @@ namespace Coching.Dal
             await delete(NotesTable, id);
         }
 
+        public async Task<FPartner> getPartner(Guid id)
+        {
+            var db = await (from n in PartnersTable
+                            where n.KeyGuid == id
+                            select n).SingleAsync();
+            return new FPartner(db.KeyGuid, db);
+        }
+
         public async Task<Guid> insertPartner(PartnerData data)
         {
             return await insert(PartnersTable, data);
-        }
-
-        public async Task modifyPartner(Guid id, PartnerData oldData, PartnerData newData)
-        {
-            await modify(PartnersTable, id, oldData, newData);
         }
 
         public async Task deletePartner(Guid id)

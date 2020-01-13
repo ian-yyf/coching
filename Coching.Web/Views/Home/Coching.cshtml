@@ -1,22 +1,79 @@
-﻿
+﻿@using Coching.Model;
+@model CochingViewModel
+
 @{
-    ViewData["Title"] = "Coching";
+    ViewData["Title"] = "考成树";
+    Layout = "~/Views/Shared/_Tree.cshtml";
 }
 
 <style>
+    .out-container {
+        height: calc(100vh - 50px - 1rem);
+    }
+
     .tree {
-        /*position: fixed !important;
-        top: 57px;
-        left: 0;
-        bottom: 61px;
-        right: 0;*/
         width: 100%;
-        height: calc(100vh - 57px - 61px - 35px);
+        height: 100%;
+    }
+
+    .catalogue {
+        width: 250px;
+        background-color: #F7F7F7;
+        overflow-y: auto;
+        height: 100%;
+        padding: 5px 0;
+    }
+
+        .catalogue::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .catalogue::-webkit-scrollbar-thumb {
+            border-radius: 6px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: #535353;
+        }
+
+        .catalogue::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: #EDEDED;
+        }
+
+    .catalogue-item {
+        background-color: white;
+        border-radius: 5px;
+        -webkit-box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        padding: 10px;
+        line-height: 20px;
+        margin: 0 5px;
+        cursor: pointer;
+    }
+
+        .catalogue-item:hover {
+            opacity: 0.8;
+        }
+
+        .catalogue > .catalogue-item:not(:first-child) {
+            margin-top: 10px;
+        }
+
+    .add-button {
+        position: fixed;
+        bottom: 20px;
+        left: 180px;
+        border-radius: 50%;
+        -webkit-box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        background-color: white;
+        padding: 10px;
+    }
+
+    .add-button:hover {
+        opacity: 0.8;
     }
 
     .tree-container {
-        border: 1px solid grey;
         position: relative;
+        overflow: auto;
     }
 
     .right-click-menu-pos {
@@ -64,10 +121,186 @@
 
 <script src="~/lib/echarts/echarts.min.js"></script>
 
-<div class="tree-container">
-    <div class="tree"></div>
-    <div class="right-click-menu-pos"></div>
+<div class="layout-row out-container">
+    <div class="catalogue">
+        @foreach (var root in Model.Roots)
+        {
+            <div id="@root.ID" class="catalogue-item" onclick="root(this)">
+                <div class="ellipsis-1 text-size-descrip text-color-common">@root.Name</div>
+                <div class="ellipsis-2 text-size-min text-color-descrip">@root.Description</div>
+            </div>
+        }
+        <div class="add-button" onclick="add_root()">
+            <img src="~/res/add.png" />
+        </div>
+    </div>
+    <div class="tree-container flex">
+        <div class="tree"></div>
+        <div class="right-click-menu-pos"></div>
+    </div>
 </div>
+
+<script>
+    var tree = null;
+    var current = null;
+    var tool = {
+        findNode: function (id, array) {
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].id == id) {
+                    return array[i];
+                }
+                if (array[i].children) {
+                    var node = this.findNode(id, array[i].children);
+                    if (node) {
+                        return node;
+                    }
+                }
+            }
+            return null;
+        },
+        removeNode: function (id, array) {
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].id == id) {
+                    array.splice(i, 1);
+                    break;
+                }
+
+                if (array[i].children) {
+                    array[i].children = this.removeNode(id, array[i].children);
+                }
+            }
+            return array;
+        },
+        minSize: function (array) {
+            var x = 1, y = 0;
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].collapsed || !array[i].children || array[i].children.length == 0) {
+                    y += 1;
+                    continue;
+                }
+
+                var childrenSize = this.minSize(array[i].children);
+                x = Math.max(x, 1 + childrenSize.x);
+                y += childrenSize.y;
+            }
+            return {
+                x: x,
+                y: y
+            }
+        }
+    }
+    var menu = {
+        commands: function (node) {
+            var cmds = [
+                {
+                    name: '添加子节点',
+                    command: 'addChild'
+                },
+                {
+                    line: true
+                },
+                {
+                    name: '删除',
+                    command: 'delete'
+                }
+            ];
+            if (node.data.collapsed) {
+                cmds.push({
+                    name: '展开',
+                    command: 'expand'
+                })
+            }
+            else if (node.data.children && node.data.children.length > 0) {
+                cmds.push({
+                    name: '收缩',
+                    command: 'collapse'
+                })
+            }
+            return cmds;
+        },
+        execute: function (command, node) {
+            this[command].call(this, node);
+        },
+        addChild: function (node) {
+            add_child(node.data.id);
+        },
+        delete: function (node) {
+            var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
+            tree.refresh(data);
+        },
+        expand: function (node) {
+            node.data.collapsed = false;
+            tree.refresh();
+        },
+        collapse: function (node) {
+            node.data.collapsed = true;
+            tree.refresh();
+        }
+    }
+</script>
+
+<script>
+    function add_root() {
+        layer.open({
+            type: 2,
+            title: '添加任务',
+            maxmin: true,
+            area: ['80%', '80%'],
+            shadeClose: true,
+            content: '@Url.Action("AddNode", new { rootGuid = Guid.Empty, parentGuid = Guid.Empty, callback = "add_root_success" })',
+        });
+    }
+
+    function add_root_success(result) {
+        var item = '<div id="' + result.ID + '" class="catalogue-item" onclick="root(this)">'
+            + '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.Name + '</div>'
+            + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.Description + '</div>'
+            + '</div>';
+
+        $('.catalogue').prepend(item);
+        top.layer.msg("提交成功!");
+    }
+
+    function add_child(parentId) {
+        layer.open({
+            type: 2,
+            title: '添加节点',
+            maxmin: true,
+            area: ['80%', '80%'],
+            shadeClose: true,
+            content: '@Url.Action("AddNode", new { callback = "add_child_success" })' + '&parentGuid=' + parentId + '&rootGuid=' + current.RootGuid,
+        });
+    }
+
+    function add_child_success(result) {
+        var array = tree.getOption().series[0].data;
+        var node = tool.findNode(result.ParentGuid, array);
+
+        node.children = node.children || [];
+        node.children.push({
+            id: result.ID,
+            name: result.Name,
+        });
+
+        tree.refresh(array);
+    }
+
+    function root(e) {
+        $.post('@Url.Action("Tree")', {
+            id: $(e).attr('id')
+        }, function (result) {
+            if (!result.Success) {
+                top.layer.msg(result.Message);
+            }
+            else {
+                tree.showLoading();
+                tree.refresh(result.Body);
+                current = result.Body;
+                tree.hideLoading();
+            }
+        });
+    }
+</script>
 
 <script>
     $(function () {
@@ -76,79 +309,7 @@
             }
         );
 
-        var tree = echarts.init($('.tree')[0]);
-
-        var tool = {
-            findNode: function (id, array) {
-                for (var i = 0; i < array.length; i++) {
-                    if (array[i].id == id) {
-                        return array[i];
-                    }
-                    if (array[i].children) {
-                        var node = this.findNode(id, array[i].children);
-                        if (node) {
-                            return node;
-                        }
-                    }
-                }
-                return null;
-            },
-            removeNode: function (id, array) {
-                for (var i = 0; i < array.length; i++) {
-                    if (array[i].id == id) {
-                        array.splice(i, 1);
-                        break;
-                    }
-
-                    if (array[i].children) {
-                        array[i].children = this.removeNode(id, array[i].children);
-                    }
-                }
-                return array;
-            }
-        }
-
-        var menu = {
-            commands: function (node) {
-                return [
-                    {
-                        name: '查看详情',
-                        command: 'detail'
-                    },
-                    {
-                        name: '添加子节点',
-                        command: 'addChild'
-                    },
-                    {
-                        line: true
-                    },
-                    {
-                        name: '删除',
-                        command: 'delete'
-                    }
-                ];
-            },
-            execute: function (command, node) {
-                this[command].call(this, node);
-            },
-            detail: function (node) {
-                console.log(node);
-            },
-            addChild: function (node) {
-                this.id = this.id || 11;
-                node.data.children = node.data.children || [];
-                node.data.children.push({
-                    id: this.id++,
-                    name: '这是一个新的',
-                    description: '这是新的解释',
-                });
-                tree.refresh();
-            },
-            delete: function (node) {
-                var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
-                tree.refresh(data);
-            }
-        }
+        tree = echarts.init($('.tree')[0]);
 
         $('.tree-container').bind("contextmenu", function (x) {
             return !tree.contextmenu;
@@ -162,7 +323,7 @@
         }
 
         tree.on('contextmenu', function (params) {
-            var commands = menu.commands(params.data);
+            var commands = menu.commands(params);
             var n = YFUtils.select(commands, cmd => {
                 if (cmd.line) {
                     return '<li class="line"/>';
@@ -194,32 +355,24 @@
             $(window).off("resize", tree.closeContextmenu).on("resize", tree.closeContextmenu);
         });
 
+        tree.on('click', function (params) {
+            console.log(params);
+
+            layer.open({
+                type: 2,
+                title: '设置备注',
+                maxmin: true,
+                area: ['380px', '400px'],
+                shadeClose: true,
+                content: '/IM/SetRemark?id=',
+            });
+        });
+
         $('.tree-container').click(function () {
             tree.closeContextmenu();
         })
 
-        var data = [
-            {
-                children: [
-                    {
-                        id: 1,
-                        name: '测试1',
-                        description: '这是一个解释'
-                    },
-                    {
-                        id: 2,
-                        name: '测试2',
-                        description: '这是一个解释2'
-                    }
-                ],
-                id: 3,
-                name: '测试测试测',
-                description: '这是一个解释top'
-            }
-        ]
-
-        //tree.showLoading();
-        //tree.hideLoading();
+        var data = [];
 
         var option = {
             tooltip: {
@@ -232,17 +385,16 @@
 
                     data: data,
 
-                    left: '2%',
-                    right: '2%',
-                    top: '8%',
+                    left: '20%',
+                    right: '20%',
+                    top: '20%',
                     bottom: '20%',
                     roam: true,
-                    symbol: 'roundRect',
-                    symbolSize: [150, 80],
-                    orient: 'vertical',
+                    symbol: 'rect',
+                    symbolSize: [150, 30],
                     initialTreeDepth: -1,
 
-                    expandAndCollapse: true,
+                    expandAndCollapse: false,
                     itemStyle: {
                         color: {
                             type: 'radial',
@@ -265,11 +417,11 @@
                         align: 'center',
                         fontSize: 9,
                         formatter: function (node) {
-                            return ['{name|' + node.data.name + '}', node.data.description].join('\n');
+                            return ['{name|' + node.data.name + '}'].join('\n');
                         },
                         rich: {
                             name: {
-                                color: 'red'
+                                color: 'white'
                             }
                         }
                     },
@@ -288,6 +440,10 @@
 
         tree.refresh = function (data) {
             option.series[0].data = data || tree.getOption().series[0].data;
+            var size = tool.minSize(option.series[0].data);
+            $('.tree').css('min-width', size.x * 300);
+            $('.tree').css('min-height', size.y * 80);
+            tree.resize();
             tree.setOption(option);
         }
     })

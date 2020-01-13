@@ -11,18 +11,18 @@ namespace Coching.Model.Data
 
         }
 
-        public NodeData(Guid rootGuid, Guid parentGuid, Guid creatorGuid, string name, string description, int totalMinutes, DateTime? startTime, DateTime? endTime, Guid? workerGuid, int status)
+        public NodeData(Guid rootGuid, Guid parentGuid, Guid creatorGuid, string name, string description, NodeStatus status)
         {
             RootGuid = rootGuid;
             ParentGuid = parentGuid;
             CreatorGuid = creatorGuid;
             Name = name;
             Description = description;
-            TotalMinutes = totalMinutes;
-            StartTime = startTime;
-            EndTime = endTime;
-            WorkerGuid = workerGuid;
-            Status = status;
+            TotalMinutes = 0;
+            StartTime = null;
+            EndTime = null;
+            WorkerGuid = null;
+            Status = (int)status;
         }
 
         public NodeData(NodeData rhs)
@@ -37,6 +37,14 @@ namespace Coching.Model.Data
             EndTime = rhs.EndTime;
             WorkerGuid = rhs.WorkerGuid;
             Status = rhs.Status;
+        }
+
+        public NodeData(NodeData rhs, string name, string description, NodeStatus status)
+            : this(rhs)
+        {
+            Name = name;
+            Description = description;
+            Status = (int)status;
         }
 
         public Guid RootGuid { get; set; }
@@ -56,6 +64,21 @@ namespace Coching.Model.Data
         public NodeStatus getStatus()
         {
             return (NodeStatus)Status;
+        }
+
+        public bool isRoot()
+        {
+            return ParentGuid == Guid.Empty;
+        }
+
+        public string getLable()
+        {
+            if (Name.Length <= 10)
+            {
+                return Name;
+            }
+
+            return Name.Substring(0, 8) + "...";
         }
     }
 }

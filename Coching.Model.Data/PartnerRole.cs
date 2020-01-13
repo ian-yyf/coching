@@ -6,9 +6,8 @@ namespace Coching.Model.Data
 {
     public enum PartnerRole
     {
-        创建者,
         管理员,
-        参与者,
+        执行者,
         观察者
     }
 }
