@@ -71,7 +71,7 @@ namespace Coching.Model.Data
             return ParentGuid == Guid.Empty;
         }
 
-        public string getLable()
+        public string getLabel()
         {
             if (Name.Length <= 10)
             {

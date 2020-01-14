@@ -24,14 +24,14 @@ namespace Coching.Web.Models
         public FNode[] Roots { get; set; }
     }
 
-    public class NodeItemModel : PopupItemViewModel<NodeData, FNode>
+    public class NodeItemViewModel : PopupItemViewModel<NodeData, FNode>
     {
-        public NodeItemModel()
+        public NodeItemViewModel()
         {
 
         }
 
-        public NodeItemModel(Guid keyGuid, string actionName, string actionTitle, NodeData oldData, string callback)
+        public NodeItemViewModel(Guid keyGuid, string actionName, string actionTitle, NodeData oldData, string callback)
            : base(keyGuid, actionName, actionTitle, oldData, callback)
         {
             ParentGuid = oldData.ParentGuid;
@@ -41,7 +41,7 @@ namespace Coching.Web.Models
             Status = oldData.getStatus();
         }
 
-        public NodeItemModel(string actionName, string actionTitle, Guid rootGuid, Guid parentGuid, string callback)
+        public NodeItemViewModel(string actionName, string actionTitle, Guid rootGuid, Guid parentGuid, string callback)
             : base(actionName, actionTitle, callback)
         {
             ParentGuid = parentGuid;
@@ -58,5 +58,46 @@ namespace Coching.Web.Models
         [Display(Name = "详情")]
         public string Description { get; set; }
         public NodeStatus Status { get; set; }
+    }
+
+    public class NodeDetailViewModel
+    {
+        public NodeDetailViewModel()
+        {
+
+        }
+
+        public NodeDetailViewModel(FNodeDetail data)
+        {
+            Data = data;
+        }
+
+        public FNodeDetail Data { get; set; }
+    }
+
+    public class NoteItemViewModel : PopupItemViewModel<NoteData, FNote>
+    {
+        public NoteItemViewModel()
+        {
+
+        }
+
+        public NoteItemViewModel(Guid keyGuid, string actionName, string actionTitle, NoteData oldData, string callback)
+           : base(keyGuid, actionName, actionTitle, oldData, callback)
+        {
+            NodeGuid = oldData.NodeGuid;
+            Content = oldData.Content;
+        }
+
+        public NoteItemViewModel(string actionName, string actionTitle, Guid nodeGuid, string callback)
+            : base(actionName, actionTitle, callback)
+        {
+            NodeGuid = nodeGuid;
+        }
+
+        public Guid NodeGuid { get; set; }
+        [Required]
+        [Display(Name = "批注内容")]
+        public String Content { get; set; }
     }
 }

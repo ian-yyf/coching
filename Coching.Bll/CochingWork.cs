@@ -61,6 +61,23 @@ namespace Coching.Bll
             return new Result<FNode>(await _models.getNode(id));
         }
 
+        public async Task<Result<FNodeDetail>> getNodeDetail(FUserToken token, Guid id)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FNodeDetail>(false, null, "请重新登录");
+            }
+
+            if (!await _models.checkNodePartner(id, token.ID))
+            {
+                return new Result<FNodeDetail>(false, null, "没有权限");
+            }
+
+            var node = await _models.getNode(id);
+            var notes = await _models.getNotesOfNode(node.ID);
+            return new Result<FNodeDetail>(new FNodeDetail(node, notes));
+        }
+
         public async Task<Result<FNode>> insertNode(FUserToken token, NodeData data)
         {
             if (!await _models.checkToken(token.ID, token.Token))
@@ -105,7 +122,7 @@ namespace Coching.Bll
             {
                 var tran = _models.Database.BeginTransaction();
                 id = await _models.insertNode(data);
-                await _models.insertPartner(new PartnerData(id, data.CreatorGuid, PartnerRole.管理员, DateTime.Now));
+                await _models.insertPartner(new PartnerData(id, data.CreatorGuid, PartnerRole.管理员));
                 await _models.modifyNode(id, new NodeData() { RootGuid = Guid.Empty }, new NodeData() { RootGuid = id });
                 await tran.CommitAsync();
             }
@@ -190,6 +207,11 @@ namespace Coching.Bll
                 return new Result<FNote>(false, null, "请重新登录");
             }
 
+            if (data.CreatorGuid != token.ID)
+            {
+                return new Result<FNote>(false, null, "没有权限");
+            }
+
             if (!await _models.checkNodeModifyPartner(data.NodeGuid, token.ID))
             {
                 return new Result<FNote>(false, null, "没有权限");
@@ -206,7 +228,7 @@ namespace Coching.Bll
                 return new Result<FNote>(false, null, "请重新登录");
             }
 
-            if (oldData.NodeGuid != newData.NodeGuid)
+            if (oldData.NodeGuid != newData.NodeGuid || oldData.CreatorGuid != newData.CreatorGuid)
             {
                 return new Result<FNote>(false, null, "没有权限");
             }
@@ -241,14 +263,14 @@ namespace Coching.Bll
                 return new Result<FPartner>(false, null, "请重新登录");
             }
 
-            if (!await _models.checkNodeModifyPartner(data.NodeGuid, data.UserGuid))
-            {
-                return new Result<FPartner>(false, null, "不能添加");
-            }
-
             if (!await _models.checkNodeModifyPartner(data.NodeGuid, token.ID))
             {
                 return new Result<FPartner>(false, null, "没有权限");
+            }
+
+            if (await _models.checkNodePartner(data.NodeGuid, data.UserGuid))
+            {
+                return new Result<FPartner>(false, null, "此成员已经存在");
             }
 
             var id = await _models.insertPartner(data);

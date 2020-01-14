@@ -13,24 +13,24 @@ namespace Coching.Model.Data
 
         }
 
-        public NoteData(Guid nodeGuid, Guid partnerGuid, string content, DateTime createdTime)
+        public NoteData(Guid nodeGuid, Guid creatorGuid, string content)
         {
             NodeGuid = nodeGuid;
-            PartnerGuid = partnerGuid;
+            CreatorGuid = creatorGuid;
             Content = content;
-            CreatedTime = createdTime;
+            CreatedTime = DateTime.Now;
         }
 
         public NoteData(NoteData rhs)
         {
             NodeGuid = rhs.NodeGuid;
-            PartnerGuid = rhs.PartnerGuid;
+            CreatorGuid = rhs.CreatorGuid;
             Content = rhs.Content;
             CreatedTime = rhs.CreatedTime;
         }
 
         public Guid NodeGuid { get; set; }
-        public Guid PartnerGuid { get; set; }
+        public Guid CreatorGuid { get; set; }
         [Required]
         [Column(TypeName = "text")]
         public String Content { get; set; }

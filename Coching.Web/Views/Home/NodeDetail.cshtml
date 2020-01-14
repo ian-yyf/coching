@@ -1,0 +1,157 @@
+﻿@using Coching.Model;
+@model NodeDetailViewModel
+
+@{
+    ViewData["Title"] = "节点详情";
+    Layout = "~/Views/Shared/_Popup.cshtml";
+}
+
+@if (Model == null)
+{
+    return;
+}
+
+<style>
+    legend {
+        width: auto;
+    }
+    .pane {
+        padding: 5px;
+        background-color: #F2F2F2;
+    }
+    .layui-collapse {
+        margin: 5px;
+    }
+    .layui-field-title {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    .add-note-btn .layui-icon {
+        line-height: 42px;
+        font-size: 14px;
+        color: #0171c2;
+        padding: 0 14px;
+    }
+    .add-note-btn .layui-icon:hover {
+        color: #0171f2;
+        cursor: pointer;
+    }
+    .layui-colla-title img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    .layui-colla-title .flex {
+        margin-right: 10px;
+    }
+</style>
+
+<fieldset class="layui-elem-field layui-field-title">
+    <legend>基本信息</legend>
+</fieldset>
+
+<div class="pane">
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    @Model.Data.Node.Name
+                </div>
+                <div class="layui-card-body text-color-descrip">
+                    @Model.Data.Node.Description
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<fieldset class="layui-elem-field layui-field-title">
+    <legend>批注</legend>
+</fieldset>
+
+@{ 
+    string header(string src)
+    {
+        if (string.IsNullOrEmpty(src))
+        {
+            return Url.Content("~/res/userHead.png");
+        }
+        return src;
+    }
+}
+
+<div class="layui-collapse" lay-filter="notes">
+    @foreach (var note in Model.Data.Notes)
+    {
+        <div id="@note.ID" class="layui-colla-item">
+            <h2 class="layui-colla-title layout-row layout-center-h">
+                <img src="@header(note.User.Header)" />
+                <span class="ellipsis-1 flex name" style="display: none">@note.User.Name</span>
+                <span class="ellipsis-1 flex content">@note.Content</span>
+                <span>@note.CreatedTime.ToString("yy-MM-dd HH:mm:ss")</span>
+            </h2>
+            <div class="layui-colla-content">
+                <p>@note.Content</p>
+            </div>
+        </div>
+    }
+    <div class="add-note-btn">
+        <i class="layui-icon layui-icon-add-1" onclick="add_note()">    添加批注</i>
+    </div>
+</div>
+
+<script>
+    function header(src) {
+        if (src) {
+            return src;
+        }
+        return '@Url.Content("~/res/userHead.png")';
+    }
+
+    function use_layui() {
+        layui.use(['element', 'layer'], function() {
+            var element = layui.element;
+            element.on('collapse(notes)', function (data) {
+                if (data.show) {
+                    $(data.title).children('.name').show();
+                    $(data.title).children('.content').hide();
+                }
+                else {
+                    $(data.title).children('.name').hide();
+                    $(data.title).children('.content').show();
+                }
+            });
+        });
+    }
+
+    use_layui();
+
+    function add_note() {
+        layer.open({
+            type: 2,
+            title: '添加批注',
+            maxmin: true,
+            area: ['80%', '80%'],
+            shadeClose: true,
+            content: '@Url.Action("AddNote", new { nodeGuid = Model.Data.Node.ID })' + '&callback=add_note_success',
+        });
+    }
+
+    function add_note_success(note) {
+        $('.layui-collapse').prepend('<div id="' + note.ID + '" class="layui-colla-item">'
+            + '<h2 class="layui-colla-title layout-row layout-center-h">'
+            + '<img src="' + header(note.User.Header) + '" />'
+            + '<span class="ellipsis-1 flex name" style="display: none">' + note.User.Name + '</span>'
+            + '<span class="ellipsis-1 flex content">' + note.Content + '</span>'
+            + '<span>' + note.CreatedTime + '</span>'
+            + '<i class="layui-icon layui-colla-icon"></i>'
+            + '</h2>'
+            + '<div class="layui-colla-content layui-show">'
+            + '<p>' + note.Content + '</p>'
+            + '</div>'
+            + '</div>'
+        );
+        use_layui();
+    }
+</script>

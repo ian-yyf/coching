@@ -1,5 +1,5 @@
 ﻿@using Coching.Model;
-@model NodeItemViewModel
+@model NoteItemViewModel
 
 @{
     ViewData["Title"] = Model?.ActionName;
@@ -14,15 +14,7 @@
 @if (Model.Success)
 {
     <script>
-        parent.@(Model.Callback)({
-            id: '@Model.Result.ID',
-            root: '@Model.Result.RootGuid',
-            parent: '@Model.Result.ParentGuid',
-            name: '@Html.Raw(Model.Result.Name)',
-            label: '@Html.Raw(Model.Result.getLabel())',
-            description: '@Html.Raw(Model.Result.Description)',
-            collapsed: false
-        });
+        parent.@(Model.Callback)(eval(@Html.Raw(Model.getResult())));
 
         var open = parent.layer.getFrameIndex(window.name);
         parent.layer.close(open);
@@ -32,7 +24,10 @@
 
 <style>
     .layui-textarea {
-        height: calc(100vh - 160px);
+        height: calc(100vh - 100px);
+    }
+    .layui-input-block {
+        margin-left: 0;
     }
 </style>
 
@@ -45,19 +40,10 @@
                 @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
 
                 <div class="layui-form-item">
-                    @Html.LabelFor(m => m.Name, new { @class = "layui-form-label" })
                     <div class="layui-input-block">
-                        @Html.TextBoxFor(m => m.Name, new { @class = "layui-input", @placeholder = "请输入名称", @autofocus = true, @autocomplete = "off" })
+                        @Html.TextAreaFor(m => m.Content, new { @class = "layui-textarea", @placeholder = "请输入详细批注", @autofocus = true })
                     </div>
-                    @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
-                </div>
-
-                <div class="layui-form-item">
-                    @Html.LabelFor(m => m.Description, new { @class = "layui-form-label" })
-                    <div class="layui-input-block">
-                        @Html.TextAreaFor(m => m.Description, new { @class = "layui-textarea", @placeholder = "请输入详细信息" })
-                    </div>
-                    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                    @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger" })
                 </div>
 
                 <div>
@@ -65,8 +51,7 @@
                     @Html.HiddenFor(m => m.ActionName)
                     @Html.HiddenFor(m => m.ActionTitle)
                     @Html.HiddenFor(m => m.OldJson)
-                    @Html.HiddenFor(m => m.RootGuid)
-                    @Html.HiddenFor(m => m.ParentGuid)
+                    @Html.HiddenFor(m => m.NodeGuid)
                     @Html.HiddenFor(m => m.Callback)
                 </div>
 

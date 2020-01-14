@@ -5,19 +5,20 @@ using System.Text;
 
 namespace Coching.Model.Front
 {
-    public class FNodeDetail : FNode
+    public class FNodeDetail
     {
         public FNodeDetail()
         {
 
         }
 
-        public FNodeDetail(Guid id, NodeData data)
-            : base(id, data)
+        public FNodeDetail(FNode node, FNote[] notes)
         {
-
+            Node = node;
+            Notes = notes;
         }
 
-        public FNote Notes { get; set; }
+        public FNode Node { get; set; }
+        public FNote[] Notes { get; set; }
     }
 }

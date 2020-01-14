@@ -12,6 +12,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Public.Utils;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using Coching.Web.Models;
 
 namespace Coching.Web
 {
@@ -30,6 +33,8 @@ namespace Coching.Web
             services.AddControllersWithViews().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
+                options.JsonSerializerOptions.Converters.Add(new DateTimeNullConverter());
             });
             services.AddSession(o => o.IdleTimeout = TimeSpan.FromHours(1));
             services.AddDbContext<CochingModels>(o => o.UseSqlServer(Configuration.GetConnectionString("conn"), providerOptions => providerOptions.CommandTimeout(60)));

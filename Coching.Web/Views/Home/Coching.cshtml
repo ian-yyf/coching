@@ -10,12 +10,10 @@
     .out-container {
         height: calc(100vh - 50px - 1rem);
     }
-
     .tree {
         width: 100%;
         height: 100%;
     }
-
     .catalogue {
         width: 250px;
         background-color: #F7F7F7;
@@ -23,22 +21,18 @@
         height: 100%;
         padding: 5px 0;
     }
-
         .catalogue::-webkit-scrollbar {
             width: 6px;
         }
-
         .catalogue::-webkit-scrollbar-thumb {
             border-radius: 6px;
             -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
             background: #535353;
         }
-
         .catalogue::-webkit-scrollbar-track {
             -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
             background: #EDEDED;
         }
-
     .catalogue-item {
         background-color: white;
         border-radius: 5px;
@@ -48,15 +42,12 @@
         margin: 0 5px;
         cursor: pointer;
     }
-
         .catalogue-item:hover {
             opacity: 0.8;
         }
-
         .catalogue > .catalogue-item:not(:first-child) {
             margin-top: 10px;
         }
-
     .add-button {
         position: fixed;
         bottom: 20px;
@@ -66,16 +57,14 @@
         background-color: white;
         padding: 10px;
     }
-
     .add-button:hover {
         opacity: 0.8;
+        cursor: pointer;
     }
-
     .tree-container {
         position: relative;
         overflow: auto;
     }
-
     .right-click-menu-pos {
         position: absolute;
         left: -99999px;
@@ -85,34 +74,33 @@
         height: 1px;
         opacity: 0;
     }
-
-    .tooltip-title {
-        color: red;
+    .tooltip {
+        max-width: 300px;
     }
-
+    .tooltip-title {
+        color: white;
+    }
+    .tooltip-content {
+        color: #eee;
+    }
     .right-click-menu .layui-layer-content {
         background-color: white !important;
         color: #444 !important;
     }
-
     .right-click-menu .layui-layer-TipsG {
         display: none;
     }
-
     .right-click-menu .layui-layer-content {
         padding: 2px 0px !important;
     }
-
     .right-click-menu li {
         padding: 0 15px;
         line-height: 26px;
     }
-
         .right-click-menu li:hover {
             cursor: pointer;
             background-color: #eee;
         }
-
         .right-click-menu .line {
             height: 1px;
             background-color: lightgray;
@@ -142,7 +130,6 @@
 
 <script>
     var tree = null;
-    var current = null;
     var tool = {
         findNode: function (id, array) {
             for (var i = 0; i < array.length; i++) {
@@ -222,7 +209,7 @@
             this[command].call(this, node);
         },
         addChild: function (node) {
-            add_child(node.data.id);
+            add_child(node.data.id, node.data.root);
         },
         delete: function (node) {
             var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
@@ -252,35 +239,32 @@
     }
 
     function add_root_success(result) {
-        var item = '<div id="' + result.ID + '" class="catalogue-item" onclick="root(this)">'
-            + '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.Name + '</div>'
-            + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.Description + '</div>'
+        var item = '<div id="' + result.id + '" class="catalogue-item" onclick="root(this)">'
+            + '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.name + '</div>'
+            + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.description + '</div>'
             + '</div>';
 
         $('.catalogue').prepend(item);
         top.layer.msg("提交成功!");
     }
 
-    function add_child(parentId) {
+    function add_child(parentId, rootId) {
         layer.open({
             type: 2,
             title: '添加节点',
             maxmin: true,
             area: ['80%', '80%'],
             shadeClose: true,
-            content: '@Url.Action("AddNode", new { callback = "add_child_success" })' + '&parentGuid=' + parentId + '&rootGuid=' + current.RootGuid,
+            content: '@Url.Action("AddNode", new { callback = "add_child_success" })' + '&parentGuid=' + parentId + '&rootGuid=' + rootId,
         });
     }
 
     function add_child_success(result) {
         var array = tree.getOption().series[0].data;
-        var node = tool.findNode(result.ParentGuid, array);
+        var node = tool.findNode(result.parent, array);
 
         node.children = node.children || [];
-        node.children.push({
-            id: result.ID,
-            name: result.Name,
-        });
+        node.children.push(result);
 
         tree.refresh(array);
     }
@@ -295,7 +279,6 @@
             else {
                 tree.showLoading();
                 tree.refresh(result.Body);
-                current = result.Body;
                 tree.hideLoading();
             }
         });
@@ -356,15 +339,13 @@
         });
 
         tree.on('click', function (params) {
-            console.log(params);
-
             layer.open({
                 type: 2,
-                title: '设置备注',
+                title: '详情',
                 maxmin: true,
-                area: ['380px', '400px'],
+                area: ['80%', '80%'],
                 shadeClose: true,
-                content: '/IM/SetRemark?id=',
+                content: '@Url.Action("NodeDetail")' + '?id=' + params.data.id,
             });
         });
 
@@ -417,7 +398,7 @@
                         align: 'center',
                         fontSize: 9,
                         formatter: function (node) {
-                            return ['{name|' + node.data.name + '}'].join('\n');
+                            return ['{name|' + node.data.label + '}'].join('\n');
                         },
                         rich: {
                             name: {
@@ -427,7 +408,10 @@
                     },
                     tooltip: {
                         formatter: function (node) {
-                            return '<div class="tooltip-title">' + node.data.name + '</div>';
+                            return '<div class="tooltip">'
+                                + '<div class="tooltip-title">' + node.data.name + '</div>'
+                                + '<div class="tooltip-content">' + node.data.description + '</div>'
+                                + '</div>';
                         }
                     },
 

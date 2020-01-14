@@ -1,4 +1,5 @@
 ﻿using Coching.Model.Data;
+using Public.Model.Front;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,12 +13,14 @@ namespace Coching.Model.Front
 
         }
 
-        public FNote(Guid id, NoteData data)
+        public FNote(Guid id, NoteData data, FUser user)
             : base(data)
         {
             ID = id;
+            User = user;
         }
 
         public Guid ID { get; set; }
+        public FUser User { get; set; }
     }
 }

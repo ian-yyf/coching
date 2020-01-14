@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Coching.Model.Front;
 using Public.Containers;
+using Public.Model.Front;
 
 namespace Coching.Dal
 {
@@ -158,12 +159,23 @@ namespace Coching.Dal
             await delete(NodesTable, id);
         }
 
+        public async Task<FNote[]> getNotesOfNode(Guid nodeGuid)
+        {
+            var dbs = await (from n in NotesTable
+                             join u in UsersTable on n.CreatorGuid equals u.KeyGuid
+                             where n.NodeGuid == nodeGuid && n.Deleted == false
+                             orderby n.CreatedTime descending
+                             select new { n, u }).ToArrayAsync();
+            return dbs.Select(db => new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u))).ToArray();
+        }
+
         public async Task<FNote> getNote(Guid id)
         {
             var db = await (from n in NotesTable
+                            join u in UsersTable on n.CreatorGuid equals u.KeyGuid
                             where n.KeyGuid == id
-                            select n).SingleAsync();
-            return new FNote(db.KeyGuid, db);
+                            select new { n, u }).SingleAsync();
+            return new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u));
         }
 
         public async Task<Guid> insertNote(NoteData data)
@@ -183,10 +195,11 @@ namespace Coching.Dal
 
         public async Task<FPartner> getPartner(Guid id)
         {
-            var db = await (from n in PartnersTable
-                            where n.KeyGuid == id
-                            select n).SingleAsync();
-            return new FPartner(db.KeyGuid, db);
+            var db = await (from p in PartnersTable
+                            join u in UsersTable on p.UserGuid equals u.KeyGuid
+                            where p.KeyGuid == id
+                            select new { p, u }).SingleAsync();
+            return new FPartner(db.p.KeyGuid, db.p, new FUser(db.u.KeyGuid, db.u));
         }
 
         public async Task<Guid> insertPartner(PartnerData data)

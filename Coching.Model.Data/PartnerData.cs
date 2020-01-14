@@ -11,12 +11,12 @@ namespace Coching.Model.Data
 
         }
 
-        public PartnerData(Guid nodeGuid, Guid userGuid, PartnerRole role, DateTime joinTime)
+        public PartnerData(Guid nodeGuid, Guid userGuid, PartnerRole role)
         {
             NodeGuid = nodeGuid;
             UserGuid = userGuid;
             Role = (int)role;
-            JoinTime = joinTime;
+            JoinTime = DateTime.Now;
         }
 
         public PartnerData(PartnerData rhs)

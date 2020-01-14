@@ -62,7 +62,10 @@ namespace Coching.Web.Controllers
                 return new
                 {
                     id = i.ID,
-                    name = i.getLable(),
+                    root = i.RootGuid,
+                    name = i.Name,
+                    label = i.getLabel(),
+                    description = i.Description,
                     children = toTreeData(i.Children ?? new FNode[] { }),
                     collapsed = false
                 };
@@ -86,12 +89,12 @@ namespace Coching.Web.Controllers
 
         public IActionResult AddNode(Guid rootGuid, Guid parentGuid, string callback)
         {
-            return AutoView("NodeItem", new NodeItemModel("AddNode", "添加节点", rootGuid, parentGuid, callback));
+            return AutoView("NodeItem", new NodeItemViewModel("AddNode", "添加节点", rootGuid, parentGuid, callback));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddNode(NodeItemModel model)
+        public async Task<IActionResult> AddNode(NodeItemViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -117,12 +120,12 @@ namespace Coching.Web.Controllers
                 return Error(item.Message, AutoView("Error", new ErrorViewModel()));
             }
 
-            return AutoView("NodeItem", new NodeItemModel(id, "ModifyNode", "修改节点", item.Body, callback));
+            return AutoView("NodeItem", new NodeItemViewModel(id, "ModifyNode", "修改节点", item.Body, callback));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ModifyNode(NodeItemModel model)
+        public async Task<IActionResult> ModifyNode(NodeItemViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -138,6 +141,41 @@ namespace Coching.Web.Controllers
 
             model.Result = result.Body;
             return AutoView("NodeItem", model);
+        }
+
+        public async Task<IActionResult> NodeDetail(Guid id)
+        {
+            var detail = await _work.getNodeDetail(this.getUserToken(), id);
+            if (!detail.Success)
+            {
+                return Error(detail.Message, AutoView("Error", new ErrorViewModel()));
+            }
+            return AutoView("NodeDetail", new NodeDetailViewModel(detail.Body));
+        }
+
+        public IActionResult AddNote(Guid nodeGuid, string callback)
+        {
+            return AutoView("NoteItem", new NoteItemViewModel("AddNote", "添加批注", nodeGuid, callback));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddNote(NoteItemViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return AutoView("NoteItem", model);
+            }
+
+            var token = this.getUserToken();
+            var result = await _work.insertNote(token, new NoteData(model.NodeGuid, token.ID, model.Content));
+            if (!result.Success)
+            {
+                return Error(result.Message, AutoView("Error", new ErrorViewModel()));
+            }
+
+            model.Result = result.Body;
+            return AutoView("NoteItem", model);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
