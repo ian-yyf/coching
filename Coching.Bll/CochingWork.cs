@@ -75,7 +75,8 @@ namespace Coching.Bll
 
             var node = await _models.getNode(id);
             var notes = await _models.getNotesOfNode(node.ID);
-            return new Result<FNodeDetail>(new FNodeDetail(node, notes));
+            var partners = await _models.getPartnersOfNodeByRootGuid(node.RootGuid);
+            return new Result<FNodeDetail>(new FNodeDetail(node, notes, partners));
         }
 
         public async Task<Result<FNode>> insertNode(FUserToken token, NodeData data)

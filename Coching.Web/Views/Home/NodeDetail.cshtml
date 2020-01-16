@@ -16,8 +16,14 @@
         width: auto;
     }
     .pane {
-        padding: 5px;
+        padding: 3px;
         background-color: #F2F2F2;
+    }
+    .layout-row.card-container {
+        align-items: stretch;
+    }
+    .layui-card {
+        margin: 3px !important;
     }
     .layui-collapse {
         margin: 5px;
@@ -42,9 +48,56 @@
         border-radius: 50%;
         margin-right: 10px;
     }
+    .info-list {
+        padding: 14px 15px;
+    }
+    .info-list img {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    .layui-form-label {
+        width: 90px;
+        color: #ccc;
+    }
+    .layui-input-block {
+        margin-left: 100px;
+    }
     .layui-colla-title .flex {
         margin-right: 10px;
     }
+    .clickable:hover {
+        background-color: lightgoldenrodyellow;
+    }
+    .click-menu {
+        border: solid 1px #eee;
+    }
+    .click-menu .layui-layer-content {
+        background-color: white !important;
+        color: #444 !important;
+    }
+    .click-menu .layui-layer-TipsG {
+        display: none;
+    }
+    .click-menu .layui-layer-content {
+        padding: 2px 0px !important;
+    }
+    .click-menu img {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    .click-menu li {
+        padding: 0 15px;
+        line-height: 32px;
+    }
+
+        .click-menu li:hover {
+            cursor: pointer;
+            background-color: #eee;
+        }
 </style>
 
 <fieldset class="layui-elem-field layui-field-title">
@@ -52,17 +105,54 @@
 </fieldset>
 
 <div class="pane">
-    <div class="layui-row">
-        <div class="layui-col-md12">
-            <div class="layui-card">
-                <div class="layui-card-header">
-                    @Model.Data.Node.Name
-                </div>
-                <div class="layui-card-body text-color-descrip">
-                    @Model.Data.Node.Description
-                </div>
+    <div class="layui-row layout-row card-container">
+        <div class="layui-card flex">
+            <div id="NodeName" class="layui-card-header clickable" onclick="modify()">
+                @Model.Data.Node.Name
+            </div>
+            <div id="NodeDescription" class="layui-card-body text-color-descrip clickable" onclick="modify()">
+                @Model.Data.Node.Description
             </div>
         </div>
+        <form class="layui-card flex info-list layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">状态</label>
+                <div class="layui-input-block">
+                    <select name="interest" lay-filter="status">
+                        @foreach (var item in Model.StatusList)
+                        {
+                            <option value="@item.Key" class="@(Model.Data.Node.Status == item.Key ? "layui-this" : "")">@item.Value</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">创建者</label>
+                <div class="layout-row layout-center-h layui-input-block">
+                    <img src="@Url.header(Model.Data.Node.Creator.Header)" />
+                    <div>@Model.Data.Node.Creator.Name</div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">执行者</label>
+                <div class="layout-row layout-center-h layui-input-block clickable" onclick="selectWorker(this)">
+                    <img id="worker_header" src="@Url.header(Model.Data.Node.Worker?.Header)" />
+                    <div id="worker_name">@(Model.Data.Node.Worker == null ? "暂无" : Model.Data.Node.Worker.Name)</div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始时间</label>
+                <div class="layui-input-block">
+                    <input type="text" name="StartTime" id="StartTime" lay-verify="StartTime" placeholder="尚未开始" autocomplete="off" class="layui-input" value="@(Model.Data.Node.StartTime == null ? "" : Model.Data.Node.StartTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">完成时间</label>
+                <div class="layui-input-block">
+                    <input type="text" name="EndTime" id="EndTime" lay-verify="EndTime" placeholder="尚未完成" autocomplete="off" class="layui-input" value="@(Model.Data.Node.EndTime == null ? "" : Model.Data.Node.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -70,23 +160,12 @@
     <legend>批注</legend>
 </fieldset>
 
-@{ 
-    string header(string src)
-    {
-        if (string.IsNullOrEmpty(src))
-        {
-            return Url.Content("~/res/userHead.png");
-        }
-        return src;
-    }
-}
-
 <div class="layui-collapse" lay-filter="notes">
     @foreach (var note in Model.Data.Notes)
     {
         <div id="@note.ID" class="layui-colla-item">
             <h2 class="layui-colla-title layout-row layout-center-h">
-                <img src="@header(note.User.Header)" />
+                <img src="@Url.header(note.User.Header)" />
                 <span class="ellipsis-1 flex name" style="display: none">@note.User.Name</span>
                 <span class="ellipsis-1 flex content">@note.Content</span>
                 <span>@note.CreatedTime.ToString("yy-MM-dd HH:mm:ss")</span>
@@ -102,30 +181,75 @@
 </div>
 
 <script>
-    function header(src) {
-        if (src) {
-            return src;
-        }
-        return '@Url.Content("~/res/userHead.png")';
-    }
+    var menu = null;
 
-    function use_layui() {
-        layui.use(['element', 'layer'], function() {
-            var element = layui.element;
-            element.on('collapse(notes)', function (data) {
-                if (data.show) {
-                    $(data.title).children('.name').show();
-                    $(data.title).children('.content').hide();
-                }
-                else {
-                    $(data.title).children('.name').hide();
-                    $(data.title).children('.content').show();
-                }
-            });
+    function modify() {
+        layer.open({
+            type: 2,
+            title: '修改',
+            maxmin: true,
+            area: ['80%', '80%'],
+            shadeClose: true,
+            content: '@Html.Raw(Url.Action("ModifyNode", new { id = Model.Data.Node.ID, callback = "modify_success" }))',
         });
     }
 
-    use_layui();
+    function modify_success(node) {
+        $('#NodeName').html(node.name);
+        $('#NodeDescription').html(node.description);
+    }
+
+    function selectWorker(e) {
+        var n = '';
+        @foreach (var p in Model.Data.Partners)
+        {
+            <text>
+            n += '<li id="@p.User.ID" class="layout-row layout-center-h"><img src="@Url.header(p.User.Header)"/>@p.User.Name</li>'
+            </text>
+        }
+
+        n = '<ul>' + n + '</ul>';
+        menu = layui.layer.tips(n, $(e), {
+            tips: 3,
+            time: 0,
+            fixed: !0,
+            skin: "layui-box click-menu",
+            success: function (i) {
+                i.find("li").on("mousedown",
+                    function (i) {
+                        layui.stope(i);
+                    }).on("click", function () {
+                        var id = $(this).attr('id');
+                        $.post('@Html.Raw(Url.Action("ModifyWorker"))', {
+                            id: '@Model.Data.Node.ID',
+                            userGuid: id
+                        }, function (result) {
+                                if (!result.Success) {
+                                    top.layer.msg(result.Message);
+                                }
+                                else if (result.Body.WorkerGuid != id) {
+                                    top.layer.msg('修改失败，请刷新页面');
+                                }
+                                else {
+                                    $('#worker_header').attr('src', header(result.Body.Worker.Header));
+                                    $('#worker_name').html(result.Body.Worker.Name);
+                                }
+                        });
+
+                        closeMenu();
+                    })
+            }
+        });
+        $(document).off("mousedown", closeMenu).on("mousedown", closeMenu);
+        $(window).off("resize", closeMenu).on("resize", closeMenu);
+    }
+
+    function closeMenu() {
+        if (menu) {
+            layui.layer.close(menu);
+            menu = null;
+        }
+    }
 
     function add_note() {
         layer.open({
@@ -134,7 +258,7 @@
             maxmin: true,
             area: ['80%', '80%'],
             shadeClose: true,
-            content: '@Url.Action("AddNote", new { nodeGuid = Model.Data.Node.ID })' + '&callback=add_note_success',
+            content: '@Html.Raw(Url.Action("AddNote", new { nodeGuid = Model.Data.Node.ID, callback = "add_note_success" }))',
         });
     }
 
@@ -152,6 +276,78 @@
             + '</div>'
             + '</div>'
         );
-        use_layui();
     }
+</script>
+
+<script>
+    function use_layui() {
+        layui.use(['element', 'layer', 'form', 'layedit', 'laydate'], function() {
+            var element = layui.element, form = layui.form, laydate = layui.laydate;
+            element.on('collapse(notes)', function (data) {
+                if (data.show) {
+                    $(data.title).children('.name').show();
+                    $(data.title).children('.content').hide();
+                }
+                else {
+                    $(data.title).children('.name').hide();
+                    $(data.title).children('.content').show();
+                }
+            });
+
+            form.on('select(status)', function (data) {
+                $.post('@Html.Raw(Url.Action("ModifyStatus"))', {
+                    id: '@Model.Data.Node.ID',
+                    status: data.value
+                }, function (result) {
+                    if (!result.Success) {
+                        top.layer.msg(result.Message);
+                    }
+                    else if (result.Body.Status != data.value) {
+                        top.layer.msg('修改失败，请刷新页面');
+                    }
+                });
+            });
+
+            laydate.render({
+                elem: '#StartTime',
+                type: 'datetime',
+                format: 'yyyy-MM-dd HH:mm:ss',
+                calendar: true,
+                done: function (value, date, endDate) {
+                    $.post('@Html.Raw(Url.Action("ModifyStartTime"))', {
+                        id: '@Model.Data.Node.ID',
+                        startTime: value
+                    }, function (result) {
+                        if (!result.Success) {
+                            top.layer.msg(result.Message);
+                        }
+                        else if (result.Body.StartTime != value) {
+                            top.layer.msg('修改失败，请刷新页面');
+                        }
+                    });
+                }
+            });
+            laydate.render({
+                elem: '#EndTime',
+                type: 'datetime',
+                format: 'yyyy-MM-dd HH:mm:ss',
+                calendar: true,
+                done: function (value, date, endDate) {
+                    $.post('@Html.Raw(Url.Action("ModifyEndTime"))', {
+                        id: '@Model.Data.Node.ID',
+                        endTime: value
+                    }, function (result) {
+                        if (!result.Success) {
+                            top.layer.msg(result.Message);
+                        }
+                        else if (result.Body.EndTime != value) {
+                            top.layer.msg('修改失败，请刷新页面');
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    use_layui();
 </script>

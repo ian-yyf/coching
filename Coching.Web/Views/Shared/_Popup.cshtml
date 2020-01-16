@@ -37,6 +37,12 @@
                 </text>
             }
         })
+        function header(src) {
+            if (src) {
+                return src;
+            }
+            return '@Url.Content("~/res/userHead.png")';
+        }
     </script>
     @RenderSection("Scripts", required: false)
 </body>

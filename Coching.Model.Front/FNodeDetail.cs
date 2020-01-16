@@ -12,13 +12,15 @@ namespace Coching.Model.Front
 
         }
 
-        public FNodeDetail(FNode node, FNote[] notes)
+        public FNodeDetail(FNode node, FNote[] notes, FPartner[] partners)
         {
             Node = node;
             Notes = notes;
+            Partners = partners;
         }
 
         public FNode Node { get; set; }
         public FNote[] Notes { get; set; }
+        public FPartner[] Partners { get; set; }
     }
 }

@@ -33,8 +33,8 @@ namespace Coching.Web
             services.AddControllersWithViews().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = null;
-                options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
-                options.JsonSerializerOptions.Converters.Add(new DateTimeNullConverter());
+                options.JsonSerializerOptions.Converters.Add(new JsonUtils.DateTimeConverter());
+                options.JsonSerializerOptions.Converters.Add(new JsonUtils.DateTimeNullConverter());
             });
             services.AddSession(o => o.IdleTimeout = TimeSpan.FromHours(1));
             services.AddDbContext<CochingModels>(o => o.UseSqlServer(Configuration.GetConnectionString("conn"), providerOptions => providerOptions.CommandTimeout(60)));

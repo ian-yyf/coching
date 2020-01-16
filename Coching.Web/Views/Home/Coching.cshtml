@@ -74,15 +74,36 @@
         height: 1px;
         opacity: 0;
     }
-    .tooltip {
+    .tooltip-container {
         max-width: 300px;
     }
     .tooltip-title {
         color: white;
+        text-align: center;
     }
     .tooltip-content {
         color: #eee;
+        display: -webkit-box;
+        overflow: hidden;
+        white-space: normal !important;
+        text-overflow: ellipsis;
+        word-wrap: break-word;
+        -webkit-line-clamp: 6;
+        -webkit-box-orient: vertical;
+        border-bottom: solid 1px white;
+        border-top: solid 1px white;
+        padding: 5px 0;
+        margin: 5px 0;
     }
+    .tooltip-status {
+        text-align: right;
+    }
+        .tooltip-status img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
     .right-click-menu .layui-layer-content {
         background-color: white !important;
         color: #444 !important;
@@ -234,7 +255,7 @@
             maxmin: true,
             area: ['80%', '80%'],
             shadeClose: true,
-            content: '@Url.Action("AddNode", new { rootGuid = Guid.Empty, parentGuid = Guid.Empty, callback = "add_root_success" })',
+            content: '@Html.Raw(Url.Action("AddNode", new { rootGuid = Guid.Empty, parentGuid = Guid.Empty, callback = "add_root_success" }))',
         });
     }
 
@@ -255,7 +276,7 @@
             maxmin: true,
             area: ['80%', '80%'],
             shadeClose: true,
-            content: '@Url.Action("AddNode", new { callback = "add_child_success" })' + '&parentGuid=' + parentId + '&rootGuid=' + rootId,
+            content: '@Html.Raw(Url.Action("AddNode", new { callback = "add_child_success" }))' + '&parentGuid=' + parentId + '&rootGuid=' + rootId,
         });
     }
 
@@ -345,7 +366,7 @@
                 maxmin: true,
                 area: ['80%', '80%'],
                 shadeClose: true,
-                content: '@Url.Action("NodeDetail")' + '?id=' + params.data.id,
+                content: '@Html.Raw(Url.Action("NodeDetail"))' + '?id=' + params.data.id,
             });
         });
 
@@ -408,9 +429,18 @@
                     },
                     tooltip: {
                         formatter: function (node) {
-                            return '<div class="tooltip">'
+                            var status = '<img src="' + header(node.data.creator.Header) + '">';
+                            if (node.data.worker) {
+                                status += '<img src="' + header(node.data.worker.Header) + '">';
+                            }
+                            status += '<div class="flex">' + node.data.status.title + '</div>';
+
+                            return '<div class="tooltip-container">'
                                 + '<div class="tooltip-title">' + node.data.name + '</div>'
-                                + '<div class="tooltip-content">' + node.data.description + '</div>'
+                                + '<div class="tooltip-content">' + (node.data.description || '无详细内容') + '</div>'
+                                + '<div class="tooltip-status layout-row layout-center-h">'
+                                + status
+                                + '</div>';
                                 + '</div>';
                         }
                     },

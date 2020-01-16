@@ -55,23 +55,6 @@ namespace Coching.Web.Controllers
             return AutoView("Coching", new CochingViewModel(roots.Body.Items));
         }
 
-        private dynamic[] toTreeData(FNode[] items)
-        {
-            return items.Select(i =>
-            {
-                return new
-                {
-                    id = i.ID,
-                    root = i.RootGuid,
-                    name = i.Name,
-                    label = i.getLabel(),
-                    description = i.Description,
-                    children = toTreeData(i.Children ?? new FNode[] { }),
-                    collapsed = false
-                };
-            }).ToArray();
-        }
-
         [HttpPost]
         public async Task<IActionResult> Tree(Guid id)
         {
@@ -83,7 +66,7 @@ namespace Coching.Web.Controllers
                     return Json(result);
                 }
 
-                return Json(new Result<dynamic>(toTreeData(new FNode[] { result.Body })));
+                return Json(new Result<dynamic>(FNode.toTreeData(new FNode[] { result.Body })));
             });
         }
 
@@ -141,6 +124,70 @@ namespace Coching.Web.Controllers
 
             model.Result = result.Body;
             return AutoView("NodeItem", model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ModifyStatus(Guid id, int status)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var node = await _work.getNode(token, id);
+                if (!node.Success)
+                {
+                    return Json(new Result<FNode>(false, null, node.Message));
+                }
+                var result = await _work.modifyNode(token, id, new NodeData() { Status = node.Body.Status }, new NodeData() { Status = status });
+                return Json(result);
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ModifyWorker(Guid id, Guid userGuid)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var node = await _work.getNode(token, id);
+                if (!node.Success)
+                {
+                    return Json(new Result<FNode>(false, null, node.Message));
+                }
+                var result = await _work.modifyNode(token, id, new NodeData() { WorkerGuid = node.Body.WorkerGuid }, new NodeData() { WorkerGuid = userGuid });
+                return Json(result);
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ModifyStartTime(Guid id, DateTime startTime)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var node = await _work.getNode(token, id);
+                if (!node.Success)
+                {
+                    return Json(new Result<FNode>(false, null, node.Message));
+                }
+                var result = await _work.modifyNode(token, id, new NodeData() { StartTime = node.Body.StartTime }, new NodeData() { StartTime = startTime });
+                return Json(result);
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ModifyEndTime(Guid id, DateTime endTime)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var node = await _work.getNode(token, id);
+                if (!node.Success)
+                {
+                    return Json(new Result<FNode>(false, null, node.Message));
+                }
+                var result = await _work.modifyNode(token, id, new NodeData() { EndTime = node.Body.EndTime }, new NodeData() { EndTime = endTime });
+                return Json(result);
+            });
         }
 
         public async Task<IActionResult> NodeDetail(Guid id)

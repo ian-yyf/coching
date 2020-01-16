@@ -1,4 +1,6 @@
-﻿using Public.Mvc.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using Public.Mvc.Models;
+using Public.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,28 +10,18 @@ using System.Threading.Tasks;
 
 namespace Coching.Web.Models
 {
-    public class DateTimeConverter : JsonConverter<DateTime>
+    public static class ModelUtils
     {
-        public string DateTimeFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";
-
-        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => DateTime.Parse(reader.GetString());
-
-        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
-            => writer.WriteStringValue(value.ToString(this.DateTimeFormat));
+        public static string header(this IUrlHelper url, string src)
+        {
+            if (string.IsNullOrEmpty(src))
+            {
+                return url.Content("~/res/userHead.png");
+            }
+            return src;
+        }
     }
 
-    public class DateTimeNullConverter : JsonConverter<DateTime?>
-    {
-        public string DateTimeFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";
-
-        public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => string.IsNullOrEmpty(reader.GetString()) ? default(DateTime?) : DateTime.Parse(reader.GetString());
-
-        public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
-            => writer.WriteStringValue(value?.ToString(this.DateTimeFormat));
-    }
-    
     public class PopupItemViewModel<T, R> : ItemViewModel<T>
     {
         public PopupItemViewModel()
@@ -62,10 +54,7 @@ namespace Coching.Web.Models
 
         public string getResult()
         {
-            var options = new JsonSerializerOptions();
-            options.Converters.Add(new DateTimeConverter());
-            options.Converters.Add(new DateTimeNullConverter());
-            return JsonSerializer.Serialize(Result, options);
+            return Result.jsonEncode();
         }
     }
 }

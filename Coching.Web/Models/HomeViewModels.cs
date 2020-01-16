@@ -73,6 +73,14 @@ namespace Coching.Web.Models
         }
 
         public FNodeDetail Data { get; set; }
+
+        public List<KeyValuePair<int, string>> StatusList
+        {
+            get
+            {
+                return Public.Mvc.ExtendUtils.toKeyValues<NodeStatus>();
+            }
+        }
     }
 
     public class NoteItemViewModel : PopupItemViewModel<NoteData, FNote>

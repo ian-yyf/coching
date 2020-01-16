@@ -1,4 +1,6 @@
 ﻿@using Coching.Model;
+@using Coching.Model.Front;
+@using Public.Utils;
 @model NodeItemViewModel
 
 @{
@@ -14,15 +16,7 @@
 @if (Model.Success)
 {
     <script>
-        parent.@(Model.Callback)({
-            id: '@Model.Result.ID',
-            root: '@Model.Result.RootGuid',
-            parent: '@Model.Result.ParentGuid',
-            name: '@Html.Raw(Model.Result.Name)',
-            label: '@Html.Raw(Model.Result.getLabel())',
-            description: '@Html.Raw(Model.Result.Description)',
-            collapsed: false
-        });
+        parent.@(Model.Callback)(eval(@Html.Raw(JsonUtils.jsonEncode(FNode.toTreeData(new FNode[] { Model.Result })[0]))));
 
         var open = parent.layer.getFrameIndex(window.name);
         parent.layer.close(open);

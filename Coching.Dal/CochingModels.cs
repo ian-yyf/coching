@@ -108,19 +108,23 @@ namespace Coching.Dal
         {
             var tables = (from n in NodesTable
                           join p in PartnersTable on n.KeyGuid equals p.NodeGuid
-                          select new { n, p.JoinTime, p.UserGuid });
+                          join c in UsersTable on n.CreatorGuid equals c.KeyGuid
+                          join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
+                          from w in ws.DefaultIfEmpty()
+                          select new { n, c, w, p.JoinTime, p.UserGuid });
 
             var sql = tables.build(db => db.n.Deleted == false && db.UserGuid == userGuid && db.n.ParentGuid == Guid.Empty);
             var dbs = await tables.Where(sql).OrderByDescending(db => db.JoinTime).pageAsync(pageSize, pageIndex);
 
-            return new Page<FNode>(dbs.TotalCount, dbs.Items.Select(db => new FNode(db.n.KeyGuid, db.n)).ToArray());
+            return new Page<FNode>(dbs.TotalCount, dbs.Items.Select(db => 
+                new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w))).ToArray());
         }
 
-        private FNode[] findNodes(Nodes[] nodes, Guid parentGuid)
+        private FNode[] findNodes(dynamic[] nodes, Guid parentGuid)
         {
-            var result = (from n in nodes
-                          where n.ParentGuid == parentGuid
-                          select new FNode(n.KeyGuid, n)).ToArray();
+            var result = (from db in nodes
+                          where db.n.ParentGuid == parentGuid
+                          select new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w))).ToArray();
             foreach (var n in result)
             {
                 n.Children = findNodes(nodes, n.ID);
@@ -131,17 +135,23 @@ namespace Coching.Dal
         public async Task<FNode> getTree(Guid id)
         {
             var dbs = await (from n in NodesTable
+                             join c in UsersTable on n.CreatorGuid equals c.KeyGuid
+                             join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
+                             from w in ws.DefaultIfEmpty()
                              where n.RootGuid == id
-                             select n).ToArrayAsync();
+                             select new { n, c, w }).ToArrayAsync();
             return findNodes(dbs, Guid.Empty).Single();
         }
 
         public async Task<FNode> getNode(Guid id)
         {
             var db = await (from n in NodesTable
+                            join c in UsersTable on n.CreatorGuid equals c.KeyGuid
+                            join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
+                            from w in ws.DefaultIfEmpty()
                             where n.KeyGuid == id
-                            select n).SingleAsync();
-            return new FNode(db.KeyGuid, db);
+                            select new { n, c, w }).SingleAsync();
+            return new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w));
         }
 
         public async Task<Guid> insertNode(NodeData data)
@@ -191,6 +201,16 @@ namespace Coching.Dal
         public async Task deleteNote(Guid id)
         {
             await delete(NotesTable, id);
+        }
+
+        public async Task<FPartner[]> getPartnersOfNodeByRootGuid(Guid rootGuid)
+        {
+            var dbs = await (from p in PartnersTable
+                             join u in UsersTable on p.UserGuid equals u.KeyGuid
+                             where p.NodeGuid == rootGuid && p.Deleted == false
+                             orderby p.JoinTime
+                             select new { p, u }).ToArrayAsync();
+            return dbs.Select(db => new FPartner(db.p.KeyGuid, db.p, new FUser(db.u.KeyGuid, db.u))).ToArray();
         }
 
         public async Task<FPartner> getPartner(Guid id)
