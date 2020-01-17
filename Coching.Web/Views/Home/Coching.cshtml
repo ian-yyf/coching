@@ -533,9 +533,9 @@
                     },
                     tooltip: {
                         formatter: function (node) {
-                            var status = '<img src="' + header(node.data.creator.Header) + '">';
+                            var status = '<img src="' + header(node.data.creator.header) + '">';
                             if (node.data.worker) {
-                                status += '<img src="' + header(node.data.worker.Header) + '">';
+                                status += '<img src="' + header(node.data.worker.header) + '">';
                             }
                             status += '<div class="flex">' + node.data.status.title + '</div>';
 
