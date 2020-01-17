@@ -102,7 +102,7 @@
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: 3px;
         }
     .right-click-menu .layui-layer-content {
         background-color: white !important;
@@ -126,6 +126,34 @@
             height: 1px;
             background-color: lightgray;
         }
+    .root-status {
+        padding-top: 5px;
+    }
+    .root-status img {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-right: 3px;
+    }
+    .root-status .flex {
+        overflow-x: hidden;
+        margin-right: 10px;
+    }
+    .status-color0 {
+        color: #62b7f4;
+    }
+    .status-color1 {
+        color: #FF4500;
+    }
+    .status-color2 {
+        color: #32CD32;
+    }
+    .status-color3 {
+        color: #888888;
+    }
+    .status-color4 {
+        color: #080808;
+    }
 </style>
 
 <script src="~/lib/echarts/echarts.min.js"></script>
@@ -134,9 +162,18 @@
     <div class="catalogue">
         @foreach (var root in Model.Roots)
         {
-            <div id="@root.ID" class="catalogue-item" onclick="root(this)">
-                <div class="ellipsis-1 text-size-descrip text-color-common">@root.Name</div>
-                <div class="ellipsis-2 text-size-min text-color-descrip">@root.Description</div>
+            <div id="@root.Node.ID" class="catalogue-item" onclick="root(this)">
+                <div class="ellipsis-1 text-size-descrip text-color-common">@root.Node.Name</div>
+                <div class="ellipsis-2 text-size-min text-color-descrip">@root.Node.Description</div>
+                <div class="layout-row layout-center-h root-status">
+                    <div class="layout-row layout-center-h flex">
+                        @foreach (var partner in root.Partners)
+                        {
+                            <img src="@Url.header(partner.User.Header)" />
+                        }
+                    </div>
+                    <div class="text-size-descrip text-color-descrip status-color@(root.Node.Status)">@root.Node.StatusTitle</div>
+                </div>
             </div>
         }
         <div class="add-button" onclick="add_root()">
@@ -151,6 +188,20 @@
 
 <script>
     var tree = null;
+    var NodeStatus = {
+        未进行: 0,
+        进行中: 1,
+        完成: 2,
+        取消: 3,
+        暂停: 4
+    }
+    var NodeColors = [
+        '#62b7f4',
+        '#FF4500',
+        '#32CD32',
+        '#888888',
+        '#080808',
+    ]
     var tool = {
         findNode: function (id, array) {
             for (var i = 0; i < array.length; i++) {
@@ -195,6 +246,59 @@
                 x: x,
                 y: y
             }
+        },
+        toTreeData: function (array) {
+            return YFUtils.select(array, i => {
+                return {
+                    id: i.ID,
+                    root: i.RootGuid,
+                    parent: i.ParentGuid,
+                    name: i.Name,
+                    label: i.Label,
+                    description: i.Description,
+                    creator: {
+                        id: i.Creator.ID,
+                        name: i.Creator.Name,
+                        header: i.Creator.Header
+                    },
+                    worker: i.Worker == null ? null : {
+                        id: i.Worker.ID,
+                        name: i.Worker.Name,
+                        header: i.Worker.Header
+                    },
+                    status: {
+                        value: i.Status,
+                        title: i.StatusTitle,
+                    },
+                    children: this.toTreeData(i.Children || []),
+                    collapsed: false,
+                    itemStyle: {
+                        color: NodeColors[i.Status],
+                        borderWidth: 0
+                    },
+                }
+            });
+        },
+        statusHtml: function (result) {
+            var status = '<div class="layout-row layout-center-h root-status">';
+            status += '<div class="layout-row layout-center-h flex">';
+            for (var i = 0; i < result.Partners.length; i++) {
+                status += '<img src="' + header(result.Partners[i].User.Header) + '" />';
+            }
+            status += '</div>';
+            status += '<div class="text-size-descrip text-color-descrip status-color' + result.Node.Status + '">' + result.Node.StatusTitle + '</div>';
+            status += '</div>';
+            return status;
+        },
+        innerHtml: function (result) {
+            return '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.Node.Name + '</div>'
+                + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.Node.Description + '</div>'
+                + this.statusHtml(result);
+        },
+        itemHtml: function (result) {
+            return '<div id="' + result.Node.ID + '" class="catalogue-item" onclick="root(this)">'
+                + this.innerHtml(result)
+                + '</div>';
         }
     }
     var menu = {
@@ -260,12 +364,7 @@
     }
 
     function add_root_success(result) {
-        var item = '<div id="' + result.id + '" class="catalogue-item" onclick="root(this)">'
-            + '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.name + '</div>'
-            + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.description + '</div>'
-            + '</div>';
-
-        $('.catalogue').prepend(item);
+        $('.catalogue').prepend(tool.itemHtml(result));
         top.layer.msg("提交成功!");
     }
 
@@ -282,10 +381,10 @@
 
     function add_child_success(result) {
         var array = tree.getOption().series[0].data;
-        var node = tool.findNode(result.parent, array);
+        var node = tool.findNode(result.Node.ParentGuid, array);
 
         node.children = node.children || [];
-        node.children.push(result);
+        node.children.push(tool.toTreeData([result.Node])[0]);
 
         tree.refresh(array);
     }
@@ -299,10 +398,30 @@
             }
             else {
                 tree.showLoading();
-                tree.refresh(result.Body);
+                tree.refresh(tool.toTreeData([result.Body]));
                 tree.hideLoading();
             }
         });
+    }
+
+    function changed_notify(result) {
+        if (result.Node.ID == result.Node.RootGuid) {
+            $('#' + result.Node.ID).html(tool.innerHtml(result));
+        }
+
+        var array = tree.getOption().series[0].data;
+        var node = tool.findNode(result.Node.ID, array);
+
+        if (node) {
+            var newNode = tool.toTreeData([result.Node])[0];
+            for (var p in newNode) {
+                if (p == 'id' || p == 'children' || p == 'collapsed') {
+                    continue;
+                }
+                node[p] = newNode[p];
+            }
+            tree.refresh(array);
+        }
     }
 </script>
 
@@ -366,7 +485,7 @@
                 maxmin: true,
                 area: ['80%', '80%'],
                 shadeClose: true,
-                content: '@Html.Raw(Url.Action("NodeDetail"))' + '?id=' + params.data.id,
+                content: '@Html.Raw(Url.Action("NodeDetail"))' + '?id=' + params.data.id + '&notify=changed_notify',
             });
         });
 
@@ -397,21 +516,6 @@
                     initialTreeDepth: -1,
 
                     expandAndCollapse: false,
-                    itemStyle: {
-                        color: {
-                            type: 'radial',
-                            x: 0.5,
-                            y: 0.5,
-                            r: 0.5,
-                            colorStops: [{
-                                offset: 0, color: '#108ee9' // 0% 处的颜色
-                            }, {
-                                offset: 1, color: '#62b7f4' // 100% 处的颜色
-                            }],
-                            globalCoord: false // 缺省为 false
-                        },
-                        borderWidth: 0
-                    },
                     label: {
                         position: 'inside',
                         rotate: 0,

@@ -1,4 +1,5 @@
 ﻿@using Coching.Model;
+@using Coching.Model.Front;
 @model NodeDetailViewModel
 
 @{
@@ -15,89 +16,116 @@
     legend {
         width: auto;
     }
+
     .pane {
         padding: 3px;
         background-color: #F2F2F2;
     }
+
     .layout-row.card-container {
         align-items: stretch;
     }
+
     .layui-card {
         margin: 3px !important;
     }
+
     .layui-collapse {
         margin: 5px;
     }
+
     .layui-field-title {
         margin-top: 20px;
         margin-bottom: 10px;
     }
+
     .add-note-btn .layui-icon {
         line-height: 42px;
         font-size: 14px;
         color: #0171c2;
         padding: 0 14px;
     }
-    .add-note-btn .layui-icon:hover {
-        color: #0171f2;
-        cursor: pointer;
-    }
+
+        .add-note-btn .layui-icon:hover {
+            color: #0171f2;
+            cursor: pointer;
+        }
+
     .layui-colla-title img {
         width: 32px;
         height: 32px;
         border-radius: 50%;
         margin-right: 10px;
     }
+
     .info-list {
         padding: 14px 15px;
     }
-    .info-list img {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        margin-right: 10px;
-    }
+
+        .info-list img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
     .layui-form-label {
         width: 90px;
         color: #ccc;
     }
+
     .layui-input-block {
-        margin-left: 100px;
+        margin-left: 90px;
     }
+
     .layui-colla-title .flex {
         margin-right: 10px;
     }
+
     .clickable:hover {
         background-color: lightgoldenrodyellow;
     }
+
     .click-menu {
         border: solid 1px #eee;
     }
-    .click-menu .layui-layer-content {
-        background-color: white !important;
-        color: #444 !important;
-    }
-    .click-menu .layui-layer-TipsG {
-        display: none;
-    }
-    .click-menu .layui-layer-content {
-        padding: 2px 0px !important;
-    }
-    .click-menu img {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
+
+        .click-menu .layui-layer-content {
+            background-color: white !important;
+            color: #444 !important;
+        }
+
+        .click-menu .layui-layer-TipsG {
+            display: none;
+        }
+
+        .click-menu .layui-layer-content {
+            padding: 2px 0px !important;
+        }
+
+        .click-menu img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .click-menu li {
+            padding: 0 15px;
+            line-height: 32px;
+        }
+
+            .click-menu li:hover {
+                cursor: pointer;
+                background-color: #eee;
+            }
+
+    .inline-item {
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 36px;
         margin-right: 10px;
     }
-    .click-menu li {
-        padding: 0 15px;
-        line-height: 32px;
-    }
-
-        .click-menu li:hover {
-            cursor: pointer;
-            background-color: #eee;
-        }
 </style>
 
 <fieldset class="layui-elem-field layui-field-title">
@@ -121,35 +149,109 @@
                     <select name="interest" lay-filter="status">
                         @foreach (var item in Model.StatusList)
                         {
-                            <option value="@item.Key" class="@(Model.Data.Node.Status == item.Key ? "layui-this" : "")">@item.Value</option>
+                            if (Model.Data.Node.Status == item.Key)
+                            {
+                                <option value="@item.Key" selected>@item.Value</option>
+                            }
+                            else
+                            {
+                                <option value="@item.Key">@item.Value</option>
+                            }
                         }
                     </select>
                 </div>
             </div>
-            <div class="layui-form-item">
-                <label class="layui-form-label">创建者</label>
-                <div class="layout-row layout-center-h layui-input-block">
-                    <img src="@Url.header(Model.Data.Node.Creator.Header)" />
-                    <div>@Model.Data.Node.Creator.Name</div>
-                </div>
-            </div>
-            <div class="layui-form-item">
-                <label class="layui-form-label">执行者</label>
-                <div class="layout-row layout-center-h layui-input-block clickable" onclick="selectWorker(this)">
-                    <img id="worker_header" src="@Url.header(Model.Data.Node.Worker?.Header)" />
-                    <div id="worker_name">@(Model.Data.Node.Worker == null ? "暂无" : Model.Data.Node.Worker.Name)</div>
-                </div>
-            </div>
-            <div class="layui-form-item">
-                <label class="layui-form-label">开始时间</label>
+            <div class="layui-form-item offer">
+                <label class="layui-form-label">报时</label>
                 <div class="layui-input-block">
-                    <input type="text" name="StartTime" id="StartTime" lay-verify="StartTime" placeholder="尚未开始" autocomplete="off" class="layui-input" value="@(Model.Data.Node.StartTime == null ? "" : Model.Data.Node.StartTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
+                    @{
+                        FOffer me = null;
+                        foreach (var offer in Model.Data.Offers)
+                        {
+                            <div class="inline-item">
+                                @if (offer.User.ID == Model.Me.ID)
+                                {
+                                    me = offer;
+                                    <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{offer.User.Name} {offer.TotalTime}")">
+                                        <img src="@Url.header(offer.User.Header)" />
+                                        <div class="offer_info">@offer.TotalTime</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="layout-row layout-center-h" title="@($"{offer.User.Name} {offer.TotalTime}")">
+                                        <img src="@Url.header(offer.User.Header)" />
+                                        <div>@offer.TotalTime</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        if (me == null)
+                        {
+                            <div class="inline-item">
+                                <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{Model.Me.Name} 尚未报时")">
+                                    <img src="@Url.header(Model.Me.Header)" />
+                                    <div class="offer_info">我尚未报时</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="layui-form-item offer_edit" style="display: none;">
+                <label class="layui-form-label">我的报时</label>
+                <div class="layui-input-inline">
+                    <input type="text" autocomplete="off" placeholder="请输入时间（分钟）" class="layui-input" value="@(me == null ? 0 : me.TotalMinutes)">
+                </div>
+                <div class="layui-form-mid layui-word-aux">请填写分钟</div>
+            </div>
+            <div class="layui-form-item offer_edit" style="display: none;">
+                <div class="layui-input-block">
+                    <button type="button" class="layui-btn" onclick="offer()">确定</button>
+                    <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.offer'], ['.offer_edit'])">取消</button>
+                </div>
+            </div>
+            <div class="layui-form-item node_time">
+                <label class="layui-form-label">预估用时</label>
+                <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
+                    <div class="node_time_info">@Model.Data.Node.TotalTime</div>
+                </div>
+            </div>
+            <div class="layui-form-item node_time_edit" style="display: none;">
+                <label class="layui-form-label">预估用时</label>
+                <div class="layui-input-inline">
+                    <input type="text" autocomplete="off" placeholder="请输入时间（分钟）" class="layui-input" value="@Model.Data.Node.TotalMinutes">
+                </div>
+                <div class="layui-form-mid layui-word-aux">请填写分钟</div>
+            </div>
+            <div class="layui-form-item node_time_edit" style="display: none;">
+                <div class="layui-input-block">
+                    <button type="button" class="layui-btn" onclick="modify_total_minutes()">确定</button>
+                    <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_time'], ['.node_time_edit'])">取消</button>
+                </div>
+            </div>
+            <div class="layui-form-item layout-row">
+                <div class="flex">
+                    <label class="layui-form-label">创建者</label>
+                    <div class="layout-row layout-center-h layui-input-block">
+                        <img src="@Url.header(Model.Data.Node.Creator.Header)" />
+                        <div>@Model.Data.Node.Creator.Name</div>
+                    </div>
+                </div>
+                <div class="flex">
+                    <label class="layui-form-label">执行者</label>
+                    <div class="layout-row layout-center-h layui-input-block clickable" onclick="select_worker(this)">
+                        <img id="worker_header" src="@Url.header(Model.Data.Node.Worker?.Header)" />
+                        <div id="worker_name">@(Model.Data.Node.Worker == null ? "暂无" : Model.Data.Node.Worker.Name)</div>
+                    </div>
                 </div>
             </div>
             <div class="layui-form-item">
-                <label class="layui-form-label">完成时间</label>
-                <div class="layui-input-block">
-                    <input type="text" name="EndTime" id="EndTime" lay-verify="EndTime" placeholder="尚未完成" autocomplete="off" class="layui-input" value="@(Model.Data.Node.EndTime == null ? "" : Model.Data.Node.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
+                <label class="layui-form-label">起止时间</label>
+                <div class="layui-input-block layout-row">
+                    <input type="text" name="StartTime" id="StartTime" lay-verify="StartTime" placeholder="尚未开始" autocomplete="off" class="layui-input flex" value="@(Model.Data.Node.StartTime == null ? "" : Model.Data.Node.StartTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
+                    <div style="width: 10px"></div>
+                    <input type="text" name="EndTime" id="EndTime" lay-verify="EndTime" placeholder="尚未完成" autocomplete="off" class="layui-input flex" value="@(Model.Data.Node.EndTime == null ? "" : Model.Data.Node.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
                 </div>
             </div>
         </form>
@@ -166,7 +268,7 @@
         <div id="@note.ID" class="layui-colla-item">
             <h2 class="layui-colla-title layout-row layout-center-h">
                 <img src="@Url.header(note.User.Header)" />
-                <span class="ellipsis-1 flex name" style="display: none">@note.User.Name</span>
+                <span class="ellipsis-1 flex name" style="display: none;">@note.User.Name</span>
                 <span class="ellipsis-1 flex content">@note.Content</span>
                 <span>@note.CreatedTime.ToString("yy-MM-dd HH:mm:ss")</span>
             </h2>
@@ -183,6 +285,15 @@
 <script>
     var menu = null;
 
+    function show_hide(show, hide) {
+        for (var i = 0; i < show.length; i++) {
+            $(show[i]).show();
+        }
+        for (var i = 0; i < hide.length; i++) {
+            $(hide[i]).hide();
+        }
+    }
+
     function modify() {
         layer.open({
             type: 2,
@@ -194,12 +305,53 @@
         });
     }
 
-    function modify_success(node) {
-        $('#NodeName').html(node.name);
-        $('#NodeDescription').html(node.description);
+    function modify_success(result) {
+        $('#NodeName').html(result.Node.Name);
+        $('#NodeDescription').html(result.Node.Description);
+        parent.@(Model.Notify)(result);
     }
 
-    function selectWorker(e) {
+    function modify_total_minutes() {
+        var value = $('.node_time_edit input').val();
+        $.post('@Html.Raw(Url.Action("ModifyTotalMinutes"))', {
+            id: '@Model.Data.Node.ID',
+            totalMinutes: value
+        }, function (result) {
+            if (!result.Success) {
+                top.layer.msg(result.Message);
+            }
+            else if (result.Body.Node.TotalMinutes != value) {
+                top.layer.msg('修改失败，请刷新页面');
+            }
+            else {
+                $('.node_time .node_time_info').html(result.Body.Node.TotalTime);
+                parent.@(Model.Notify)(result.Body);
+                show_hide(['.node_time'], ['.node_time_edit']);
+            }
+        });
+    }
+
+    function offer() {
+        var value = $('.offer_edit input').val();
+        $.post('@Html.Raw(Url.Action("Offer"))', {
+            id: '@Model.Data.Node.ID',
+            totalMinutes: value
+        }, function (result) {
+            if (!result.Success) {
+                top.layer.msg(result.Message);
+            }
+            else if (result.Body.TotalMinutes != value) {
+                top.layer.msg('修改失败，请刷新页面');
+            }
+            else {
+                $('.offer .offer_info').html(result.Body.TotalTime);
+                $('.offer .clickable').attr('title', result.Body.User.Name + ' ' + result.Body.TotalTime);
+                show_hide(['.offer'], ['.offer_edit']);
+            }
+        });
+    }
+
+    function select_worker(e) {
         var n = '';
         @foreach (var p in Model.Data.Partners)
         {
@@ -224,16 +376,17 @@
                             id: '@Model.Data.Node.ID',
                             userGuid: id
                         }, function (result) {
-                                if (!result.Success) {
-                                    top.layer.msg(result.Message);
-                                }
-                                else if (result.Body.WorkerGuid != id) {
-                                    top.layer.msg('修改失败，请刷新页面');
-                                }
-                                else {
-                                    $('#worker_header').attr('src', header(result.Body.Worker.Header));
-                                    $('#worker_name').html(result.Body.Worker.Name);
-                                }
+                            if (!result.Success) {
+                                top.layer.msg(result.Message);
+                            }
+                            else if (result.Body.Node.WorkerGuid != id) {
+                                top.layer.msg('修改失败，请刷新页面');
+                            }
+                            else {
+                                $('#worker_header').attr('src', header(result.Body.Node.Worker.Header));
+                                $('#worker_name').html(result.Body.Node.Worker.Name);
+                                parent.@(Model.Notify)(result.Body);
+                            }
                         });
 
                         closeMenu();
@@ -266,7 +419,7 @@
         $('.layui-collapse').prepend('<div id="' + note.ID + '" class="layui-colla-item">'
             + '<h2 class="layui-colla-title layout-row layout-center-h">'
             + '<img src="' + header(note.User.Header) + '" />'
-            + '<span class="ellipsis-1 flex name" style="display: none">' + note.User.Name + '</span>'
+            + '<span class="ellipsis-1 flex name" style="display: none;">' + note.User.Name + '</span>'
             + '<span class="ellipsis-1 flex content">' + note.Content + '</span>'
             + '<span>' + note.CreatedTime + '</span>'
             + '<i class="layui-icon layui-colla-icon"></i>'
@@ -302,8 +455,11 @@
                     if (!result.Success) {
                         top.layer.msg(result.Message);
                     }
-                    else if (result.Body.Status != data.value) {
+                    else if (result.Body.Node.Status != data.value) {
                         top.layer.msg('修改失败，请刷新页面');
+                    }
+                    else {
+                        parent.@(Model.Notify)(result.Body);
                     }
                 });
             });
@@ -321,8 +477,11 @@
                         if (!result.Success) {
                             top.layer.msg(result.Message);
                         }
-                        else if (result.Body.StartTime != value) {
+                        else if (result.Body.Node.StartTime != value) {
                             top.layer.msg('修改失败，请刷新页面');
+                        }
+                        else {
+                            parent.@(Model.Notify)(result.Body);
                         }
                     });
                 }
@@ -340,8 +499,11 @@
                         if (!result.Success) {
                             top.layer.msg(result.Message);
                         }
-                        else if (result.Body.EndTime != value) {
+                        else if (result.Body.Node.EndTime != value) {
                             top.layer.msg('修改失败，请刷新页面');
+                        }
+                        else {
+                            parent.@(Model.Notify)(result.Body);
                         }
                     });
                 }

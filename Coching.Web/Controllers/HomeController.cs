@@ -61,12 +61,7 @@ namespace Coching.Web.Controllers
             return await JsonActionAsync(async () =>
             {
                 var result = await _work.getTree(this.getUserToken(), id);
-                if (!result.Success)
-                {
-                    return Json(result);
-                }
-
-                return Json(new Result<dynamic>(FNode.toTreeData(new FNode[] { result.Body })));
+                return Json(result);
             });
         }
 
@@ -190,14 +185,47 @@ namespace Coching.Web.Controllers
             });
         }
 
-        public async Task<IActionResult> NodeDetail(Guid id)
+        [HttpPost]
+        public async Task<IActionResult> ModifyTotalMinutes(Guid id, int totalMinutes)
         {
-            var detail = await _work.getNodeDetail(this.getUserToken(), id);
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var node = await _work.getNode(token, id);
+                if (!node.Success)
+                {
+                    return Json(new Result<FNode>(false, null, node.Message));
+                }
+                var result = await _work.modifyNode(token, id, new NodeData() { TotalMinutes = node.Body.TotalMinutes }, new NodeData() { TotalMinutes = totalMinutes });
+                return Json(result);
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Offer(Guid id, int totalMinutes)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var result = await _work.offerToNode(token, id, token.ID, totalMinutes);
+                return Json(result);
+            });
+        }
+
+        public async Task<IActionResult> NodeDetail(Guid id, string notify)
+        {
+            var token = this.getUserToken();
+            var detail = await _work.getNodeDetail(token, id);
             if (!detail.Success)
             {
                 return Error(detail.Message, AutoView("Error", new ErrorViewModel()));
             }
-            return AutoView("NodeDetail", new NodeDetailViewModel(detail.Body));
+            var me = await _work.getUser(token, token.ID);
+            if (!me.Success)
+            {
+                return Error(me.Message, AutoView("Error", new ErrorViewModel()));
+            }
+            return AutoView("NodeDetail", new NodeDetailViewModel(detail.Body, me.Body, notify));
         }
 
         public IActionResult AddNote(Guid nodeGuid, string callback)

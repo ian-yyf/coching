@@ -66,19 +66,38 @@ namespace Coching.Model.Data
             return (NodeStatus)Status;
         }
 
+        public string StatusTitle
+        {
+            get
+            {
+                return getStatus().ToString();
+            }
+        }
+
         public bool isRoot()
         {
             return ParentGuid == Guid.Empty;
         }
 
-        public string getLabel()
+        public string Label
         {
-            if (Name.Length <= 10)
+            get
             {
-                return Name;
-            }
+                if (Name.Length <= 10)
+                {
+                    return Name;
+                }
 
-            return Name.Substring(0, 8) + "...";
+                return Name.Substring(0, 8) + "...";
+            }
+        }
+
+        public string TotalTime
+        {
+            get
+            {
+                return $"{(int)Math.Floor(TotalMinutes/60.0)}小时{TotalMinutes%60}分钟";
+            }
         }
     }
 }

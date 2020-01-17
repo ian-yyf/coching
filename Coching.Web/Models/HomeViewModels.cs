@@ -1,5 +1,6 @@
 ﻿using Coching.Model.Data;
 using Coching.Model.Front;
+using Public.Model.Front;
 using Public.Mvc.Models;
 using System;
 using System.Collections.Generic;
@@ -16,15 +17,15 @@ namespace Coching.Web.Models
 
         }
 
-        public CochingViewModel(FNode[] roots)
+        public CochingViewModel(FNodeInfo[] roots)
         {
             Roots = roots;
         }
 
-        public FNode[] Roots { get; set; }
+        public FNodeInfo[] Roots { get; set; }
     }
 
-    public class NodeItemViewModel : PopupItemViewModel<NodeData, FNode>
+    public class NodeItemViewModel : PopupItemViewModel<NodeData, FNodeInfo>
     {
         public NodeItemViewModel()
         {
@@ -67,12 +68,16 @@ namespace Coching.Web.Models
 
         }
 
-        public NodeDetailViewModel(FNodeDetail data)
+        public NodeDetailViewModel(FNodeDetail data, FUser me, string notify)
         {
             Data = data;
+            Me = me;
+            Notify = notify;
         }
 
         public FNodeDetail Data { get; set; }
+        public FUser Me { get; set; }
+        public string Notify { get; set; }
 
         public List<KeyValuePair<int, string>> StatusList
         {

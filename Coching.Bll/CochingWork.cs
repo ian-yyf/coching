@@ -16,19 +16,19 @@ namespace Coching.Bll
 
         }
 
-        public async Task<Result<Page<FNode>>> getUserRoots(FUserToken token, Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
+        public async Task<Result<Page<FNodeInfo>>> getUserRoots(FUserToken token, Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
-                return new Result<Page<FNode>>(false, null, "请重新登录");
+                return new Result<Page<FNodeInfo>>(false, null, "请重新登录");
             }
 
             if (token.ID != userGuid)
             {
-                return new Result<Page<FNode>>(false, null, "没有权限");
+                return new Result<Page<FNodeInfo>>(false, null, "没有权限");
             }
 
-            return new Result<Page<FNode>>(await _models.getUserRoots(userGuid, condition, pageSize, pageIndex));
+            return new Result<Page<FNodeInfo>>(await _models.getUserRoots(userGuid, condition, pageSize, pageIndex));
         }
 
         public async Task<Result<FNode>> getTree(FUserToken token, Guid id)
@@ -76,46 +76,57 @@ namespace Coching.Bll
             var node = await _models.getNode(id);
             var notes = await _models.getNotesOfNode(node.ID);
             var partners = await _models.getPartnersOfNodeByRootGuid(node.RootGuid);
-            return new Result<FNodeDetail>(new FNodeDetail(node, notes, partners));
+            FOffer[] offers;
+            if (await _models.checkNodeAdminPartner(id, token.ID))
+            {
+                offers = await _models.getOffersOfNode(id);
+            }
+            else
+            {
+                var offer = await _models.getOffer(id, token.ID);
+                offers = offer == null ? new FOffer[] { } : new FOffer[] { offer };
+            }
+
+            return new Result<FNodeDetail>(new FNodeDetail(node, notes, partners, offers));
         }
 
-        public async Task<Result<FNode>> insertNode(FUserToken token, NodeData data)
+        public async Task<Result<FNodeInfo>> insertNode(FUserToken token, NodeData data)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
-                return new Result<FNode>(false, null, "请重新登录");
+                return new Result<FNodeInfo>(false, null, "请重新登录");
             }
 
             if (data.CreatorGuid != token.ID)
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeInfo>(false, null, "没有权限");
             }
 
             if (data.WorkerGuid != null)
             {
                 if (data.isRoot() && data.WorkerGuid != token.ID)
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeInfo>(false, null, "没有权限");
                 }
                 if (data.ParentGuid != Guid.Empty && !await _models.checkNodeModifyPartner(data.ParentGuid, data.WorkerGuid.Value))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeInfo>(false, null, "没有权限");
                 }
             }
 
             if (data.ParentGuid != Guid.Empty && !await _models.checkNodeModifyPartner(data.ParentGuid, token.ID))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeInfo>(false, null, "没有权限");
             }
 
             if (data.isRoot() && data.RootGuid != Guid.Empty)
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeInfo>(false, null, "没有权限");
             }
 
             if (data.ParentGuid != Guid.Empty && !await _models.checkRoot(data.ParentGuid, data.RootGuid))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeInfo>(false, null, "没有权限");
             }
 
             Guid id;
@@ -132,35 +143,37 @@ namespace Coching.Bll
                 id = await _models.insertNode(data);
             }
 
-            return new Result<FNode>(await _models.getNode(id));
+            var node = await _models.getNode(id);
+            var partners = await _models.getPartnersOfNodeByRootGuid(node.RootGuid);
+            return new Result<FNodeInfo>(new FNodeInfo(node, partners));
         }
 
-        public async Task<Result<FNode>> modifyNode(FUserToken token, Guid id, NodeData oldData, NodeData newData)
+        public async Task<Result<FNodeInfo>> modifyNode(FUserToken token, Guid id, NodeData oldData, NodeData newData)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
-                return new Result<FNode>(false, null, "请重新登录");
+                return new Result<FNodeInfo>(false, null, "请重新登录");
             }
 
             if (oldData.CreatorGuid != newData.CreatorGuid)
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeInfo>(false, null, "没有权限");
             }
 
             if (oldData.WorkerGuid != newData.WorkerGuid && newData.WorkerGuid != null && !await _models.checkNodeModifyPartner(id, newData.WorkerGuid.Value))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeInfo>(false, null, "没有权限");
             }
 
             if (oldData.ParentGuid != newData.ParentGuid)
             {
                 if (oldData.ParentGuid != Guid.Empty && !await _models.checkNodeModifyPartner(oldData.ParentGuid, token.ID))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeInfo>(false, null, "没有权限");
                 }
                 if (newData.ParentGuid != Guid.Empty && !await _models.checkNodeModifyPartner(newData.ParentGuid, token.ID))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeInfo>(false, null, "没有权限");
                 }
             }
 
@@ -168,21 +181,24 @@ namespace Coching.Bll
             {
                 if (newData.isRoot() && newData.RootGuid != id)
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeInfo>(false, null, "没有权限");
                 }
                 if (newData.ParentGuid != Guid.Empty && !await _models.checkRoot(newData.ParentGuid, newData.RootGuid))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeInfo>(false, null, "没有权限");
                 }
             }
 
             if (!await _models.checkNodeModifyPartner(id, token.ID))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeInfo>(false, null, "没有权限");
             }
 
             await _models.modifyNode(id, oldData, newData);
-            return new Result<FNode>(await _models.getNode(id));
+
+            var node = await _models.getNode(id);
+            var partners = await _models.getPartnersOfNodeByRootGuid(node.RootGuid);
+            return new Result<FNodeInfo>(new FNodeInfo(node, partners));
         }
 
         public async Task<Result<bool>> deleteNode(FUserToken token, Guid id)
@@ -264,7 +280,7 @@ namespace Coching.Bll
                 return new Result<FPartner>(false, null, "请重新登录");
             }
 
-            if (!await _models.checkNodeModifyPartner(data.NodeGuid, token.ID))
+            if (!await _models.checkNodeAdminPartner(data.NodeGuid, token.ID))
             {
                 return new Result<FPartner>(false, null, "没有权限");
             }
@@ -292,6 +308,22 @@ namespace Coching.Bll
 
             await _models.deletePartner(id);
             return new Result<bool>(true);
+        }
+
+        public async Task<Result<FOffer>> offerToNode(FUserToken token, Guid nodeGuid, Guid userGuid, int totalMinutes)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FOffer>(false, null, "请重新登录");
+            }
+
+            if (token.ID != userGuid || !await _models.checkNodeModifyPartner(nodeGuid, token.ID))
+            {
+                return new Result<FOffer>(false, null, "没有权限");
+            }
+
+            var id = await _models.offerToNode(nodeGuid, userGuid, totalMinutes);
+            return new Result<FOffer>(await _models.getOffer(id));
         }
     }
 }
