@@ -8,7 +8,7 @@
 
 <style>
     .out-container {
-        height: calc(100vh - 50px - 1rem);
+        height: calc(100vh - 70px);
     }
     .tree {
         width: 100%;
@@ -305,7 +305,7 @@
         commands: function (node) {
             var cmds = [
                 {
-                    name: '添加子节点',
+                    name: '添加分支',
                     command: 'addChild'
                 },
                 {
@@ -397,9 +397,7 @@
                 top.layer.msg(result.Message);
             }
             else {
-                tree.showLoading();
-                tree.refresh(tool.toTreeData([result.Body]));
-                tree.hideLoading();
+                init_tree(tool.toTreeData([result.Body]));
             }
         });
     }
@@ -426,13 +424,31 @@
 </script>
 
 <script>
-    $(function () {
-        layui.define(["layer"],
-            function (i) {
-            }
-        );
+    function optimizeSize(data) {
+        var size = tool.minSize(data);
+        $('.tree').css('min-width', size.x * 300);
+        $('.tree').css('min-height', size.y * 80);
+    }
 
+    function optimizeScroll() {
+        if ($('.tree').width() > $('.tree-container').width()) {
+            $('.tree-container').scrollLeft($('.tree').width() / 2 - $('.tree-container').width() / 2);
+        }
+        if ($('.tree').height() > $('.tree-container').height()) {
+            $('.tree-container').scrollTop($('.tree').height() / 2 - $('.tree-container').height() / 2);
+        }
+    }
+
+    function init_tree(data) {
+        data = data || [];
+        optimizeSize(data);
+        if (tree) {
+            tree.dispose();
+            tree = null;
+        }
         tree = echarts.init($('.tree')[0]);
+        optimizeScroll();
+        tree.showLoading();
 
         $('.tree-container').bind("contextmenu", function (x) {
             return !tree.contextmenu;
@@ -492,8 +508,6 @@
         $('.tree-container').click(function () {
             tree.closeContextmenu();
         })
-
-        var data = [];
 
         var option = {
             tooltip: {
@@ -558,11 +572,18 @@
 
         tree.refresh = function (data) {
             option.series[0].data = data || tree.getOption().series[0].data;
-            var size = tool.minSize(option.series[0].data);
-            $('.tree').css('min-width', size.x * 300);
-            $('.tree').css('min-height', size.y * 80);
+            optimizeSize(option.series[0].data);
             tree.resize();
             tree.setOption(option);
         }
+
+        tree.hideLoading();
+    }
+
+    $(function () {
+        layui.define(["layer"],
+            function (i) {
+            }
+        );
     })
 </script>

@@ -1,6 +1,5 @@
 ﻿@using Coching.Model;
-@using Public.Utils;
-@model NodeItemViewModel
+@model UserItemViewModel
 
 @{
     ViewData["Title"] = Model?.ActionName;
@@ -23,19 +22,28 @@
     return;
 }
 
-<style>
-    .layui-textarea {
-        height: calc(100vh - 160px);
-    }
-</style>
-
 <div class="layui-fluid">
     <div class="layui-card">
         <div>
-            @using (Html.BeginForm(Model.ActionName, "Home", FormMethod.Post, new { @class = "layui-form layui-row" }))
+            @using (Html.BeginForm(Model.ActionName, "User", FormMethod.Post, new { @class = "layui-form layui-row" }))
             {
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
+
+                @*<div class="layui-form-item">
+                    <label class="layui-form-label">绑定微信</label>
+                    <div class="layui-input-block">
+                        @if (Model.WechatOpenId == null)
+                        {
+                            <button type="button" class="layui-btn" onclick="empower()">开始绑定</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="layui-btn layui-btn-disabled">已绑定</button>
+                        }
+                    </div>
+                    <span id="span_id"><img id="image" style="padding-left: 15%;" /></span>
+                </div>*@
 
                 <div class="layui-form-item">
                     @Html.LabelFor(m => m.Name, new { @class = "layui-form-label" })
@@ -46,11 +54,12 @@
                 </div>
 
                 <div class="layui-form-item">
-                    @Html.LabelFor(m => m.Description, new { @class = "layui-form-label" })
+                    @Html.LabelFor(m => m.Header, new { @class = "layui-form-label" })
                     <div class="layui-input-block">
-                        @Html.TextAreaFor(m => m.Description, new { @class = "layui-textarea", @placeholder = "请输入详细信息" })
+                        @Html.HiddenFor(m => m.Header)
+                        @await Component.InvokeAsync("Upload", new { imageMaxCount = 1, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "HeaderUploader" })
                     </div>
-                    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                    @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
                 </div>
 
                 <div>
@@ -58,8 +67,6 @@
                     @Html.HiddenFor(m => m.ActionName)
                     @Html.HiddenFor(m => m.ActionTitle)
                     @Html.HiddenFor(m => m.OldJson)
-                    @Html.HiddenFor(m => m.RootGuid)
-                    @Html.HiddenFor(m => m.ParentGuid)
                     @Html.HiddenFor(m => m.Callback)
                 </div>
 
@@ -70,3 +77,11 @@
         </div>
     </div>
 </div>
+
+<script>
+    HeaderUploader.init(function (url) {
+        $("#Header").val(url);
+    }, function (url) {
+        $("#Header").val("");
+    }, [$("#Header").val()]);
+</script>
