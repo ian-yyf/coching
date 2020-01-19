@@ -3,8 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Coching.Web</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/css/site.css" />
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <link rel="stylesheet" href="~/lib/toastr.js/toastr.min.css">
@@ -14,44 +13,86 @@
     <script src="~/js/utils.js"></script>
     <link rel="stylesheet" href="~/lib/layui/css/layui.css" media="all">
     <script src="~/lib/layui/layui.js"></script>
+
+    <style>
+        .layui-layout-right {
+            margin-right: 30px;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Coching.Web</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+        <ul class="layui-nav" lay-filter="nav">
+            <li class="layui-nav-item">
+                <a href="@Url.Action("Index", "Project")">项目管理@*<span class="layui-badge">9</span>*@</a>
+            </li>
+            <li class="layui-nav-item">
+                <a href="">消息中心@*<span class="layui-badge-dot"></span>*@</a>
+            </li>
+            <li class="layui-nav-item layui-layout-right" lay-unselect="">
+                <a href="javascript:;">
+                    <img id="header" src="~/res/userHead.png" class="layui-nav-img">
+                    <span id="name"><br></span>
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="javascript:;" event="user">修改信息</a></dd>
+                    <dd><a href="@Url.Action("Logout","Auth")">安全退出</a></dd>
+                </dl>
+            </li>
+        </ul>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2020 - Coching.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    @RenderBody()
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
+        layui.use('element', function() {
+            var element = layui.element;
+
+            //监听导航点击
+            element.on('nav(nav)', function(elem) {
+                if (elem.attr('event') == 'user') {
+                    layer.open({
+                        type: 2,
+                        title: '修改资料',
+                        maxmin: true,
+                        area: ['400px', '280px'],
+                        shadeClose: true,
+                        content: '@Html.Raw(Url.Action("Modify", "User", new { callback = "modify_user_success" }))',
+                    });
+                }
+            });
+        });
+
+        function modify_user_success(result) {
+            if (result.Header) {
+                $('#header').attr("src", result.Header);
+            }
+            $('#name').html(result.Name);
+        }
+
         $(function () {
+            $.ajax({
+                type: "POST",
+                dataType: "JSON",
+                url: '@Url.Action("GetCurrentUser", "User")',
+                data: null,
+                success: function (json) {
+                    if (json.Success) {
+                        if (json.Body) {
+                            if (json.Body.Header) {
+                                $('#header').attr("src", json.Body.Header);
+                            }
+                            $('#name').html(json.Body.Name);
+                        }
+                    }
+                    else {
+                        layer.msg(json.Message, {icon: 2});
+                    }
+                }
+            });
+
             @if (!String.IsNullOrEmpty(ViewBag.Error))
             {
                 <text>
@@ -61,6 +102,12 @@
                 </text>
             }
         })
+        function header(src) {
+            if (src) {
+                return src;
+            }
+            return '@Url.Content("~/res/userHead.png")';
+        }
     </script>
     @RenderSection("Scripts", required: false)
 </body>

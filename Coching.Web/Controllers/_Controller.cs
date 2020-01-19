@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Public.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,6 +24,11 @@ namespace Coching.Web.Controllers
         public _Controller(CochingWork work)
         {
             _work = work;
+        }
+
+        protected IActionResult Error(string message)
+        {
+            return Error(message, AutoView("Error", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier }));
         }
 
         public override async Task<string> toAuthorizerAppid(Guid authorizerAppGuid)

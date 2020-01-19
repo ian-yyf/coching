@@ -2,6 +2,7 @@
 using Coching.Model.Front;
 using Public.Model.Front;
 using Public.Mvc.Models;
+using Public.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -17,15 +18,24 @@ namespace Coching.Web.Models
 
         }
 
-        public CochingViewModel(FNodeInfo[] roots)
+        public CochingViewModel(Guid projectGuid, FRoot[] roots, FPartner[] partners)
         {
+            ProjectGuid = projectGuid;
             Roots = roots;
+            Partners = partners;
         }
 
-        public FNodeInfo[] Roots { get; set; }
+        public Guid ProjectGuid { get; set; }
+        public FRoot[] Roots { get; set; }
+        public FPartner[] Partners { get; set; }
+
+        public string getPartners()
+        {
+            return Partners.jsonEncode();
+        }
     }
 
-    public class NodeItemViewModel : PopupItemViewModel<NodeData, FNodeInfo>
+    public class NodeItemViewModel : PopupItemViewModel<NodeData, FNode>
     {
         public NodeItemViewModel()
         {
@@ -35,21 +45,22 @@ namespace Coching.Web.Models
         public NodeItemViewModel(Guid keyGuid, string actionName, string actionTitle, NodeData oldData, string callback)
            : base(keyGuid, actionName, actionTitle, oldData, callback)
         {
+            ProjectGuid = oldData.ProjectGuid;
             ParentGuid = oldData.ParentGuid;
             RootGuid = oldData.RootGuid;
             Name = oldData.Name;
             Description = oldData.Description;
-            Status = oldData.getStatus();
         }
 
-        public NodeItemViewModel(string actionName, string actionTitle, Guid rootGuid, Guid parentGuid, string callback)
+        public NodeItemViewModel(string actionName, string actionTitle, Guid projectGuid, Guid rootGuid, Guid parentGuid, string callback)
             : base(actionName, actionTitle, callback)
         {
+            ProjectGuid = projectGuid;
             ParentGuid = parentGuid;
             RootGuid = rootGuid;
-            Status = NodeStatus.未进行;
         }
 
+        public Guid ProjectGuid { get; set; }
         public Guid RootGuid { get; set; }
         public Guid ParentGuid { get; set; }
         [Required]
@@ -58,7 +69,6 @@ namespace Coching.Web.Models
         public string Name { get; set; }
         [Display(Name = "详情")]
         public string Description { get; set; }
-        public NodeStatus Status { get; set; }
     }
 
     public class NodeDetailViewModel
@@ -68,13 +78,15 @@ namespace Coching.Web.Models
 
         }
 
-        public NodeDetailViewModel(FNodeDetail data, FUser me, string notify)
+        public NodeDetailViewModel(FPartner[] partners, FNodeDetail data, FUser me, string notify)
         {
+            Partners = partners;
             Data = data;
             Me = me;
             Notify = notify;
         }
 
+        public FPartner[] Partners { get; set; }
         public FNodeDetail Data { get; set; }
         public FUser Me { get; set; }
         public string Notify { get; set; }

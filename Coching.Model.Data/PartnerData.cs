@@ -11,9 +11,9 @@ namespace Coching.Model.Data
 
         }
 
-        public PartnerData(Guid nodeGuid, Guid userGuid, PartnerRole role)
+        public PartnerData(Guid projectGuid, Guid userGuid, PartnerRole role)
         {
-            NodeGuid = nodeGuid;
+            ProjectGuid = projectGuid;
             UserGuid = userGuid;
             Role = (int)role;
             JoinTime = DateTime.Now;
@@ -21,13 +21,13 @@ namespace Coching.Model.Data
 
         public PartnerData(PartnerData rhs)
         {
-            NodeGuid = rhs.NodeGuid;
+            ProjectGuid = rhs.ProjectGuid;
             UserGuid = rhs.UserGuid;
             Role = rhs.Role;
             JoinTime = rhs.JoinTime;
         }
 
-        public Guid NodeGuid { get; set; }
+        public Guid ProjectGuid { get; set; }
         public Guid UserGuid { get; set; }
         public int Role { get; set; }
         public DateTime JoinTime { get; set; }

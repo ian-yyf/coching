@@ -1,0 +1,119 @@
+﻿@using Coching.Model;
+@model ProjectViewModel
+
+@{
+    ViewData["Title"] = "项目";
+}
+
+<style>
+    .container {
+        padding: 5px;
+    }
+    .item-container {
+        width: 300px;
+        height: 150px;
+        display: inline-block;
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        border-radius: 5px;
+        margin: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        padding: 15px;
+        position: relative;
+    }
+        .item-container:hover {
+            transform: scale(1.05);
+        }
+    .add-item {
+        text-align: center;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.5;
+    }
+    .add-item img {
+        margin-bottom: 10px;
+    }
+    .logo, .partner-image {
+        border-radius: 50%;
+    }
+    .logo {
+        width: 50px;
+        height: 50px;
+        margin-left: 10px;
+    }
+    .partner-image {
+        width: 20px;
+        height: 20px;
+        margin-right: 5px;
+    }
+    .partners {
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        right: 15px;
+    }
+    .descrip {
+        margin-top: 15px;
+    }
+    .ellipsis-4 {
+        display: -webkit-box;
+        overflow: hidden;
+        white-space: normal !important;
+        text-overflow: ellipsis;
+        word-wrap: break-word;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+    }
+</style>
+
+<div class="container">
+    @foreach (var project in Model.Projects)
+    {
+        <div class="item-container" onclick="go_coching('@project.ID')">
+            <div class="ellipsis-1 text-color-important text-size-common-mid">@project.Name</div>
+            <div class="layout-row descrip">
+                <div class="ellipsis-4 flex text-color-descrip text-size-common-mini">@project.Description</div>
+                <img class="logo" src="@project.Header" />
+            </div>
+            <div class="layout-row layout-center-h partners">
+                @foreach (var p in project.Partners)
+                {
+                    <img class="partner-image" src="@p.User.Header" />
+                }
+            </div>
+        </div>
+    }
+    <div class="item-container" onclick="add_project()">
+        <div class="add-item">
+            <img src="~/res/add.png" />
+            <div>创建新项目</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    layui.define(["layer"],
+        function (i) {
+        }
+    );
+
+    function go_coching(id) {
+        location.href = '@Url.Action("Index", "Coching")' + '?projectGuid=' + id;
+    }
+
+    function add_project() {
+        layer.open({
+            type: 2,
+            title: '添加新项目',
+            maxmin: true,
+            area: ['80%', '80%'],
+            shadeClose: true,
+            content: '@Html.Raw(Url.Action("Add", new { callback = "add_project_success" }))',
+        });
+    }
+
+    function add_project_success(result) {
+
+    }
+</script>

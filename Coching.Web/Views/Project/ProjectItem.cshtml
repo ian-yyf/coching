@@ -1,0 +1,86 @@
+﻿@using Coching.Model;
+@model ProjectItemViewModel
+
+@{
+    ViewData["Title"] = Model?.ActionName;
+    Layout = "~/Views/Shared/_Popup.cshtml";
+}
+
+@if (Model == null)
+{
+    return;
+}
+
+@if (Model.Success)
+{
+    <script>
+        parent.@(Model.Callback)(eval(@Html.Raw(Model.getResult())));
+
+        var open = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(open);
+    </script>
+    return;
+}
+
+<style>
+    .layui-textarea {
+        height: calc(100vh - 260px);
+    }
+</style>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div>
+            @using (Html.BeginForm(Model.ActionName, "Project", FormMethod.Post, new { @class = "layui-form layui-row" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
+
+                <div class="layui-form-item">
+                    @Html.LabelFor(m => m.Name, new { @class = "layui-form-label" })
+                    <div class="layui-input-block">
+                        @Html.TextBoxFor(m => m.Name, new { @class = "layui-input", @placeholder = "请输入名称", @autofocus = true, @autocomplete = "off" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="layui-form-item">
+                    @Html.LabelFor(m => m.Header, new { @class = "layui-form-label" })
+                    <div class="layui-input-block">
+                        @Html.HiddenFor(m => m.Header)
+                        @await Component.InvokeAsync("Upload", new { imageMaxCount = 1, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "HeaderUploader" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="layui-form-item">
+                    @Html.LabelFor(m => m.Description, new { @class = "layui-form-label" })
+                    <div class="layui-input-block">
+                        @Html.TextAreaFor(m => m.Description, new { @class = "layui-textarea", @placeholder = "请输入详细信息" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                </div>
+
+                <div>
+                    @Html.HiddenFor(m => m.KeyGuid)
+                    @Html.HiddenFor(m => m.ActionName)
+                    @Html.HiddenFor(m => m.ActionTitle)
+                    @Html.HiddenFor(m => m.OldJson)
+                    @Html.HiddenFor(m => m.Callback)
+                </div>
+
+                <div class="layui-form-item" style="text-align: center;">
+                    <button class="layui-btn" type="submit" style="pointer-events: auto;"><i class="layui-icon">&#xe609;</i>提交</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    HeaderUploader.init(function (url) {
+        $("#Header").val(url);
+    }, function (url) {
+        $("#Header").val("");
+    }, $("#Header").val() ? [$("#Header").val()] : null);
+</script>

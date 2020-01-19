@@ -172,16 +172,16 @@
                                 @if (offer.User.ID == Model.Me.ID)
                                 {
                                     me = offer;
-                                    <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{offer.User.Name} {offer.TotalTime}")">
+                                    <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{offer.User.Name} {offer.EstimatedTime}")">
                                         <img src="@Url.header(offer.User.Header)" />
-                                        <div class="offer_info">@offer.TotalTime</div>
+                                        <div class="offer_info">@offer.EstimatedTime</div>
                                     </div>
                                 }
                                 else
                                 {
-                                    <div class="layout-row layout-center-h" title="@($"{offer.User.Name} {offer.TotalTime}")">
+                                    <div class="layout-row layout-center-h" title="@($"{offer.User.Name} {offer.EstimatedTime}")">
                                         <img src="@Url.header(offer.User.Header)" />
-                                        <div>@offer.TotalTime</div>
+                                        <div>@offer.EstimatedTime</div>
                                     </div>
                                 }
                             </div>
@@ -189,9 +189,9 @@
                         if (me == null)
                         {
                             <div class="inline-item">
-                                <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{Model.Me.Name} 尚未报时")">
+                                <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{Model.Me.Name} 尚未预估工时")">
                                     <img src="@Url.header(Model.Me.Header)" />
-                                    <div class="offer_info">我尚未报时</div>
+                                    <div class="offer_info">我尚未预估</div>
                                 </div>
                             </div>
                         }
@@ -199,11 +199,11 @@
                 </div>
             </div>
             <div class="layui-form-item offer_edit" style="display: none;">
-                <label class="layui-form-label">我的报时</label>
+                <label class="layui-form-label">预报工时</label>
                 <div class="layui-input-inline">
-                    <input type="text" autocomplete="off" placeholder="请输入时间（分钟）" class="layui-input" value="@(me == null ? 0 : me.TotalMinutes)">
+                    <input type="text" autocomplete="off" placeholder="请填写预估工时" class="layui-input" value="@(me == null ? 0 : me.EstimatedManHour)">
                 </div>
-                <div class="layui-form-mid layui-word-aux">请填写分钟</div>
+                <div class="layui-form-mid layui-word-aux">小时</div>
             </div>
             <div class="layui-form-item offer_edit" style="display: none;">
                 <div class="layui-input-block">
@@ -214,19 +214,19 @@
             <div class="layui-form-item node_time">
                 <label class="layui-form-label">预估用时</label>
                 <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
-                    <div class="node_time_info">@Model.Data.Node.TotalTime</div>
+                    <div class="node_time_info">@Model.Data.Node.EstimatedTime</div>
                 </div>
             </div>
             <div class="layui-form-item node_time_edit" style="display: none;">
                 <label class="layui-form-label">预估用时</label>
                 <div class="layui-input-inline">
-                    <input type="text" autocomplete="off" placeholder="请输入时间（分钟）" class="layui-input" value="@Model.Data.Node.TotalMinutes">
+                    <input type="text" autocomplete="off" placeholder="请输入工时" class="layui-input" value="@Model.Data.Node.EstimatedManHour">
                 </div>
-                <div class="layui-form-mid layui-word-aux">请填写分钟</div>
+                <div class="layui-form-mid layui-word-aux">小时</div>
             </div>
             <div class="layui-form-item node_time_edit" style="display: none;">
                 <div class="layui-input-block">
-                    <button type="button" class="layui-btn" onclick="modify_total_minutes()">确定</button>
+                    <button type="button" class="layui-btn" onclick="modify_estimated_manhour()">确定</button>
                     <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_time'], ['.node_time_edit'])">取消</button>
                 </div>
             </div>
@@ -306,25 +306,25 @@
     }
 
     function modify_success(result) {
-        $('#NodeName').html(result.Node.Name);
-        $('#NodeDescription').html(result.Node.Description);
+        $('#NodeName').html(result.Name);
+        $('#NodeDescription').html(result.Description);
         parent.@(Model.Notify)(result);
     }
 
-    function modify_total_minutes() {
+    function modify_estimated_manhour() {
         var value = $('.node_time_edit input').val();
-        $.post('@Html.Raw(Url.Action("ModifyTotalMinutes"))', {
+        $.post('@Html.Raw(Url.Action("ModifyEstimatedManHour"))', {
             id: '@Model.Data.Node.ID',
-            totalMinutes: value
+            estimatedManHour: value
         }, function (result) {
             if (!result.Success) {
                 top.layer.msg(result.Message);
             }
-            else if (result.Body.Node.TotalMinutes != value) {
+            else if (result.Body.EstimatedManHour != value) {
                 top.layer.msg('修改失败，请刷新页面');
             }
             else {
-                $('.node_time .node_time_info').html(result.Body.Node.TotalTime);
+                $('.node_time .node_time_info').html(result.Body.EstimatedTime);
                 parent.@(Model.Notify)(result.Body);
                 show_hide(['.node_time'], ['.node_time_edit']);
             }
@@ -335,17 +335,17 @@
         var value = $('.offer_edit input').val();
         $.post('@Html.Raw(Url.Action("Offer"))', {
             id: '@Model.Data.Node.ID',
-            totalMinutes: value
+            estimatedManHour: value
         }, function (result) {
             if (!result.Success) {
                 top.layer.msg(result.Message);
             }
-            else if (result.Body.TotalMinutes != value) {
+            else if (result.Body.EstimatedManHour != value) {
                 top.layer.msg('修改失败，请刷新页面');
             }
             else {
-                $('.offer .offer_info').html(result.Body.TotalTime);
-                $('.offer .clickable').attr('title', result.Body.User.Name + ' ' + result.Body.TotalTime);
+                $('.offer .offer_info').html(result.Body.EstimatedTime);
+                $('.offer .clickable').attr('title', result.Body.User.Name + ' ' + result.Body.EstimatedTime);
                 show_hide(['.offer'], ['.offer_edit']);
             }
         });
@@ -353,7 +353,7 @@
 
     function select_worker(e) {
         var n = '';
-        @foreach (var p in Model.Data.Partners)
+        @foreach (var p in Model.Partners)
         {
             <text>
             n += '<li id="@p.User.ID" class="layout-row layout-center-h"><img src="@Url.header(p.User.Header)"/>@p.User.Name</li>'
@@ -379,13 +379,13 @@
                             if (!result.Success) {
                                 top.layer.msg(result.Message);
                             }
-                            else if (result.Body.Node.WorkerGuid != id) {
+                            else if (result.Body.WorkerGuid != id) {
                                 top.layer.msg('修改失败，请刷新页面');
                             }
                             else {
-                                $('#worker_header').attr('src', header(result.Body.Node.Worker.Header));
-                                $('#worker_name').html(result.Body.Node.Worker.Name);
-                                parent.@(Model.Notify)(result.Body);
+                                $('#worker_header').attr('src', header(result.Body.Worker.Header));
+                                $('#worker_name').html(result.Body.Worker.Name);
+                                parent.@(Model.Notify)(result.Body, true);
                             }
                         });
 
@@ -455,7 +455,7 @@
                     if (!result.Success) {
                         top.layer.msg(result.Message);
                     }
-                    else if (result.Body.Node.Status != data.value) {
+                    else if (result.Body.Status != data.value) {
                         top.layer.msg('修改失败，请刷新页面');
                     }
                     else {
@@ -477,7 +477,7 @@
                         if (!result.Success) {
                             top.layer.msg(result.Message);
                         }
-                        else if (result.Body.Node.StartTime != value) {
+                        else if (result.Body.StartTime != value) {
                             top.layer.msg('修改失败，请刷新页面');
                         }
                         else {
@@ -499,7 +499,7 @@
                         if (!result.Success) {
                             top.layer.msg(result.Message);
                         }
-                        else if (result.Body.Node.EndTime != value) {
+                        else if (result.Body.EndTime != value) {
                             top.layer.msg('修改失败，请刷新页面');
                         }
                         else {

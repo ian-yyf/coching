@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace Coching.Model.Data
@@ -11,29 +12,30 @@ namespace Coching.Model.Data
 
         }
 
-        public OfferData(Guid nodeGuid, Guid userGuid, int totalMinutes)
+        public OfferData(Guid nodeGuid, Guid userGuid, decimal estimatedManHour)
         {
             NodeGuid = nodeGuid;
             UserGuid = userGuid;
-            TotalMinutes = totalMinutes;
+            EstimatedManHour = estimatedManHour;
         }
 
         public OfferData(OfferData rhs)
         {
             NodeGuid = rhs.NodeGuid;
             UserGuid = rhs.UserGuid;
-            TotalMinutes = rhs.TotalMinutes;
+            EstimatedManHour = rhs.EstimatedManHour;
         }
 
         public Guid NodeGuid { get; set; }
         public Guid UserGuid { get; set; }
-        public int TotalMinutes { get; set; }
+        [Column(TypeName = "decimal(10, 1)")]
+        public decimal EstimatedManHour { get; set; }
 
-        public string TotalTime
+        public string EstimatedTime
         {
             get
             {
-                return $"{(int)Math.Floor(TotalMinutes / 60.0)}小时{TotalMinutes % 60}分钟";
+                return $"{EstimatedManHour.ToString("0.#")}工时";
             }
         }
     }

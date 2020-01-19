@@ -34,7 +34,7 @@
 <div class="layui-fluid">
     <div class="layui-card">
         <div>
-            @using (Html.BeginForm(Model.ActionName, "Home", FormMethod.Post, new { @class = "layui-form layui-row", @id = "formId" }))
+            @using (Html.BeginForm(Model.ActionName, "Coching", FormMethod.Post, new { @class = "layui-form layui-row", @id = "formId" }))
             {
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })

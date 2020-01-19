@@ -35,7 +35,7 @@ namespace Coching.Web.Controllers
 
             if (!user.Success)
             {
-                return Error(user.Message, AutoView("Error", new ErrorViewModel()));
+                return Error(user.Message);
             }
 
             return AutoView("UserItem", new UserItemViewModel(user.Body.ID, "Modify", "修改资料", user.Body, callback));
@@ -45,6 +45,11 @@ namespace Coching.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Modify(UserItemViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return AutoView("UserItem", model);
+            }
+
             var token = this.getUserToken();
             var oldData = model.OldData;
             var result = await _work.modifyUser(token, model.KeyGuid, oldData, new UserData(oldData) { Name = model.Name, Header = model.Header }, null, null);

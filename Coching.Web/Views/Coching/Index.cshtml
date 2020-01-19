@@ -3,7 +3,6 @@
 
 @{
     ViewData["Title"] = "考成树";
-    Layout = "~/Views/Shared/_Tree.cshtml";
 }
 
 <style>
@@ -166,13 +165,13 @@
                 <div class="ellipsis-1 text-size-descrip text-color-common">@root.Node.Name</div>
                 <div class="ellipsis-2 text-size-min text-color-descrip">@root.Node.Description</div>
                 <div class="layout-row layout-center-h root-status">
-                    <div class="layout-row layout-center-h flex">
-                        @foreach (var partner in root.Partners)
+                    <div class="workers layout-row layout-center-h flex">
+                        @foreach (var partner in Model.Partners.Where(p => root.Workers.Contains(p.UserGuid)))
                         {
-                            <img src="@Url.header(partner.User.Header)" />
+                            <img worker="@partner.User.ID" src="@Url.header(partner.User.Header)" />
                         }
                     </div>
-                    <div class="text-size-descrip text-color-descrip status-color@(root.Node.Status)">@root.Node.StatusTitle</div>
+                    <div class="status-value text-size-descrip text-color-descrip status-color@(root.Node.Status)">@root.Node.StatusTitle</div>
                 </div>
             </div>
         }
@@ -281,24 +280,44 @@
         },
         statusHtml: function (result) {
             var status = '<div class="layout-row layout-center-h root-status">';
-            status += '<div class="layout-row layout-center-h flex">';
-            for (var i = 0; i < result.Partners.length; i++) {
-                status += '<img src="' + header(result.Partners[i].User.Header) + '" />';
+            status += '<div class="workers layout-row layout-center-h flex">';
+            if (result.Workers) {
+                var partners = eval(@Html.Raw(Model.getPartners()));
+                partners = YFUtils.where(partners, p => {
+                    return YFUtils.findIf(result.Workers, w => p.UserGuid == w) != null;
+                });
+                for (var i = 0; i < partners.length; i++) {
+                    status += '<img worker="' + partners[i].User.ID + '" src="' + header(partners[i].User.Header) + '" />';
+                }
             }
             status += '</div>';
-            status += '<div class="text-size-descrip text-color-descrip status-color' + result.Node.Status + '">' + result.Node.StatusTitle + '</div>';
+            status += '<div class="status-value text-size-descrip text-color-descrip status-color' + result.Status + '">' + result.StatusTitle + '</div>';
             status += '</div>';
             return status;
         },
         innerHtml: function (result) {
-            return '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.Node.Name + '</div>'
-                + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.Node.Description + '</div>'
+            return '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.Name + '</div>'
+                + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.Description + '</div>'
                 + this.statusHtml(result);
         },
         itemHtml: function (result) {
-            return '<div id="' + result.Node.ID + '" class="catalogue-item" onclick="root(this)">'
+            return '<div id="' + result.ID + '" class="catalogue-item" onclick="root(this)">'
                 + this.innerHtml(result)
                 + '</div>';
+        },
+        updateHtml: function (result) {
+            $('#' + result.ID + ' .ellipsis-1').html(result.Name);
+            $('#' + result.ID + ' .ellipsis-2').html(result.Description);
+            for (var status in NodeStatus) {
+                $('#' + result.ID + ' .status-value').removeClass('status-color' + NodeStatus[status]);
+            }
+            $('#' + result.ID + ' .status-value').addClass('status-color' + result.Status);
+            $('#' + result.ID + ' .status-value').html(result.StatusTitle);
+        },
+        addWorker: function (id, worker) {
+            if ($('#' + id + '[worker=' + worker.ID + ']').length == 0) {
+                $('#' + id + ' .workers').append('<img worker="' + worker.ID + '" src="' + header(worker.Header) + '" />');
+            }
         }
     }
     var menu = {
@@ -359,7 +378,7 @@
             maxmin: true,
             area: ['80%', '80%'],
             shadeClose: true,
-            content: '@Html.Raw(Url.Action("AddNode", new { rootGuid = Guid.Empty, parentGuid = Guid.Empty, callback = "add_root_success" }))',
+            content: '@Html.Raw(Url.Action("AddNode", new { projectGuid = Model.ProjectGuid, rootGuid = Guid.Empty, parentGuid = Guid.Empty, callback = "add_root_success" }))',
         });
     }
 
@@ -375,16 +394,16 @@
             maxmin: true,
             area: ['80%', '80%'],
             shadeClose: true,
-            content: '@Html.Raw(Url.Action("AddNode", new { callback = "add_child_success" }))' + '&parentGuid=' + parentId + '&rootGuid=' + rootId,
+            content: '@Html.Raw(Url.Action("AddNode", new { projectGuid = Model.ProjectGuid, callback = "add_child_success" }))' + '&parentGuid=' + parentId + '&rootGuid=' + rootId,
         });
     }
 
     function add_child_success(result) {
         var array = tree.getOption().series[0].data;
-        var node = tool.findNode(result.Node.ParentGuid, array);
+        var node = tool.findNode(result.ParentGuid, array);
 
         node.children = node.children || [];
-        node.children.push(tool.toTreeData([result.Node])[0]);
+        node.children.push(tool.toTreeData([result])[0]);
 
         tree.refresh(array);
     }
@@ -402,16 +421,30 @@
         });
     }
 
-    function changed_notify(result) {
-        if (result.Node.ID == result.Node.RootGuid) {
-            $('#' + result.Node.ID).html(tool.innerHtml(result));
+    function changed_notify(result, reload) {
+        if (result.ID == result.RootGuid) {
+            if (reload) {
+                $.post('@Url.Action("Root")', {
+                    id: result.ID
+                }, function (result) {
+                    if (!result.Success) {
+                        top.layer.msg(result.Message);
+                    }
+                    else {
+                        $('#' + result.ID).html(tool.innerHtml(result));
+                    }
+                });
+            }
+            else {
+                tool.updateHtml(result);
+            }
         }
 
         var array = tree.getOption().series[0].data;
-        var node = tool.findNode(result.Node.ID, array);
+        var node = tool.findNode(result.ID, array);
 
         if (node) {
-            var newNode = tool.toTreeData([result.Node])[0];
+            var newNode = tool.toTreeData([result])[0];
             for (var p in newNode) {
                 if (p == 'id' || p == 'children' || p == 'collapsed') {
                     continue;
