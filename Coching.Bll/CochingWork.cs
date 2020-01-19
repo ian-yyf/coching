@@ -254,12 +254,12 @@ namespace Coching.Bll
                 return new Result<FNode>(false, null, "没有权限");
             }
 
-            if (!await _models.checkProjectModifyPartner(newData.ProjectGuid, token.ID))
+            if (!await _models.checkNodeModifyPartner(id, token.ID))
             {
                 return new Result<FNode>(false, null, "没有权限");
             }
 
-            if (oldData.WorkerGuid != newData.WorkerGuid && newData.WorkerGuid != Guid.Empty && !await _models.checkProjectModifyPartner(newData.ProjectGuid, newData.WorkerGuid))
+            if (oldData.WorkerGuid != newData.WorkerGuid && newData.WorkerGuid != Guid.Empty && !await _models.checkNodeModifyPartner(id, newData.WorkerGuid))
             {
                 return new Result<FNode>(false, null, "没有权限");
             }
@@ -290,11 +290,6 @@ namespace Coching.Bll
                 {
                     return new Result<FNode>(false, null, "没有权限");
                 }
-            }
-
-            if (!await _models.checkNodeModifyPartner(id, token.ID))
-            {
-                return new Result<FNode>(false, null, "没有权限");
             }
 
             await _models.modifyNode(id, oldData, newData);
@@ -425,7 +420,7 @@ namespace Coching.Bll
             return new Result<bool>(true);
         }
 
-        public async Task<Result<FOffer>> offerToNode(FUserToken token, Guid nodeGuid, Guid userGuid, int totalMinutes)
+        public async Task<Result<FOffer>> offerToNode(FUserToken token, Guid nodeGuid, Guid userGuid, decimal estimatedManHour)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
@@ -437,7 +432,7 @@ namespace Coching.Bll
                 return new Result<FOffer>(false, null, "没有权限");
             }
 
-            var id = await _models.offerToNode(nodeGuid, userGuid, totalMinutes);
+            var id = await _models.offerToNode(nodeGuid, userGuid, estimatedManHour);
             return new Result<FOffer>(await _models.getOffer(id));
         }
     }

@@ -236,6 +236,7 @@ namespace Coching.Dal
                              join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
                              from w in ws.DefaultIfEmpty()
                              where n.RootGuid == id
+                             orderby n.CreatedTime
                              select new { n, c, w }).ToArrayAsync();
             return findNodes(dbs, Guid.Empty).Single();
         }

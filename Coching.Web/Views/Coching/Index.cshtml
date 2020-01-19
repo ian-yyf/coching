@@ -421,23 +421,22 @@
         });
     }
 
-    function changed_notify(result, reload) {
+    function changed_notify(result, reload_root) {
         if (result.ID == result.RootGuid) {
-            if (reload) {
-                $.post('@Url.Action("Root")', {
-                    id: result.ID
-                }, function (result) {
-                    if (!result.Success) {
-                        top.layer.msg(result.Message);
-                    }
-                    else {
-                        $('#' + result.ID).html(tool.innerHtml(result));
-                    }
-                });
-            }
-            else {
-                tool.updateHtml(result);
-            }
+            tool.updateHtml(result);
+        }
+
+        if (reload_root) {
+            $.post('@Url.Action("Root")', {
+                id: result.RootGuid
+            }, function (result) {
+                if (!result.Success) {
+                    top.layer.msg(result.Message);
+                }
+                else {
+                    $('#' + result.ID).html(tool.innerHtml(result));
+                }
+            });
         }
 
         var array = tree.getOption().series[0].data;

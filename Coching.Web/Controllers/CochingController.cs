@@ -195,7 +195,7 @@ namespace Coching.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Offer(Guid id, int estimatedManHour)
+        public async Task<IActionResult> Offer(Guid id, decimal estimatedManHour)
         {
             return await JsonActionAsync(async () =>
             {
