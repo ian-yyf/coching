@@ -301,13 +301,35 @@ namespace Coching.Dal
             await delete(NotesTable, id);
         }
 
-        public async Task<FUser[]> getUsers(string key)
+        public async Task<FUser[]> getUsers(Guid userGuid, UserCondition condition)
         {
-            var dbs = await (from u in UsersTable
-                             where (u.Tel.Contains(key) || u.Name.Contains(key)) && u.Deleted == false
-                             orderby u.Tel
-                             select u).Take(10).ToArrayAsync();
-            return dbs.Select(db => new FUser(db.KeyGuid, db)).ToArray();
+            if (condition.ProjectName == null)
+            {
+                var dbs = await (from u in UsersTable
+                                 where u.Deleted == false && (u.Tel.Contains(condition.Key) || u.Name.Contains(condition.Key))
+                                 orderby u.Tel
+                                 select u).Take(20).ToArrayAsync();
+                return dbs.Select(db => new FUser(db.KeyGuid, db)).ToArray();
+            }
+            else
+            {
+                var projectGuid = await (from pr in ProjectsTable
+                                         join pa in PartnersTable on new { k = pr.KeyGuid, d = false } equals new { k = pa.ProjectGuid, d = pa.Deleted }
+                                         where pr.Deleted == false && pa.UserGuid == userGuid && pr.Name.Contains(condition.ProjectName)
+                                         select pr.KeyGuid).FirstOrDefaultAsync();
+
+                if (projectGuid == Guid.Empty)
+                {
+                    return new FUser[] { };
+                }
+
+                var dbs = await (from p in PartnersTable
+                                 join u in UsersTable on p.UserGuid equals u.KeyGuid
+                                 where p.ProjectGuid == projectGuid && p.Deleted == false
+                                 orderby u.Tel
+                                 select u).ToArrayAsync();
+                return dbs.Select(db => new FUser(db.KeyGuid, db)).ToArray();
+            }
         }
 
         public async Task<FPartner[]> getPartnersOfProject(Guid projectGuid, PartnerCondition condition)

@@ -386,9 +386,19 @@ namespace Coching.Bll
             return new Result<bool>(true);
         }
 
-        public async Task<Result<FUser[]>> getUsers(string key)
+        public async Task<Result<FUser[]>> getUsers(FUserToken token, Guid userGuid, UserCondition condition)
         {
-            return new Result<FUser[]>(await _models.getUsers(key));
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FUser[]>(false, null, "请重新登录");
+            }
+
+            if (userGuid != token.ID)
+            {
+                return new Result<FUser[]>(false, null, "没有权限");
+            }
+
+            return new Result<FUser[]>(await _models.getUsers(userGuid, condition));
         }
 
         public async Task<Result<FPartner[]>> getPartnersOfProject(FUserToken token, Guid projectGuid, PartnerCondition condition)

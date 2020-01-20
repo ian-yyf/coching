@@ -21,6 +21,12 @@
     .layui-form.layui-card-header.layuiadmin-card-header-auto {
         height: auto;
     }
+    .layui-form-label {
+        width: 100px;
+    }
+    .layui-input-block {
+        margin-left: 130px;
+    }
 </style>
 
 <link rel="stylesheet" href="~/css/layui_menu.css">
@@ -32,9 +38,15 @@
             <div type="form" class="layui-form-item">
                 <div class="layui-row">
                     <div class="layui-inline">
-                        <label class="layui-form-label">搜索用户</label>
+                        <label class="layui-form-label">搜索全局用户</label>
                         <div class="layui-input-block">
                             @Html.TextBoxFor(m => m.Key, new { @class = "layui-input", @placeholder = "手机号/昵称", @autocomplete = "off" })
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">搜索项目用户</label>
+                        <div class="layui-input-block">
+                            @Html.TextBoxFor(m => m.ProjectName, new { @class = "layui-input", @placeholder = "项目名称", @autocomplete = "off" })
                         </div>
                     </div>
                     <div class="layui-inline">

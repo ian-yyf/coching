@@ -55,27 +55,16 @@ namespace Coching.Web.Models
         public string Description { get; set; }
     }
 
-    public class PartnersViewModel
+    public class PartnersViewCondition : UserCondition
     {
-        public PartnersViewModel()
-        {
-
-        }
-
-        public PartnersViewModel(Guid projectGuid, string notify, string key, FUser[] users, FPartner[] partners)
-        {
-            ProjectGuid = projectGuid;
-            Notify = notify;
-            Key = key;
-            Users = users;
-            Partners = partners;
-        }
-
         public Guid ProjectGuid { get; set; }
         public string Notify { get; set; }
+    }
+
+    public class PartnersViewModel : PartnersViewCondition
+    {
         public FUser[] Users { get; set; }
         public FPartner[] Partners { get; set; }
-        public string Key { get; set; }
 
         public List<KeyValuePair<int, string>> Roles
         {

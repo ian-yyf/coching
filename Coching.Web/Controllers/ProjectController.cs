@@ -90,26 +90,27 @@ namespace Coching.Web.Controllers
             return AutoView("ProjectItem", model);
         }
 
-        public async Task<IActionResult> Partners(Guid projectGuid, string notify, string key)
+        public async Task<IActionResult> Partners(PartnersViewModel model)
         {
-            FUser[] users = null;
-            if (key != null)
+            var token = this.getUserToken();
+            if (model.Key != null || model.ProjectName != null)
             {
-                var us = await _work.getUsers(key);
-                if (!us.Success)
+                var users = await _work.getUsers(token, token.ID, model);
+                if (!users.Success)
                 {
-                    return Error(us.Message);
+                    return Error(users.Message);
                 }
-                users = us.Body;
+                model.Users = users.Body;
             }
 
-            var result = await _work.getPartnersOfProject(this.getUserToken(), projectGuid, new PartnerCondition());
+            var result = await _work.getPartnersOfProject(token, model.ProjectGuid, new PartnerCondition());
             if (!result.Success)
             {
                 return Error(result.Message);
             }
+            model.Partners = result.Body;
 
-            return AutoView("Partners", new PartnersViewModel(projectGuid, notify, key, users, result.Body));
+            return AutoView("Partners", model);
         }
 
         [HttpPost]

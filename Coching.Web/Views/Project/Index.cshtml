@@ -211,6 +211,9 @@
             if ($('#' + project + ' #' + add.ID).length == 0) {
                 $('#' + project + ' .partners').append(tool.partnerHtml(add));
             }
+            else {
+                $('#' + project + ' #' + add.ID).replaceWith(tool.partnerHtml(add));
+            }
         }
     }
 </script>
