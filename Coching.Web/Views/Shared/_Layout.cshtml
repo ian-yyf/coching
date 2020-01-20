@@ -108,6 +108,12 @@
             }
             return '@Url.Content("~/res/userHead.png")';
         }
+        function projectHeader(src) {
+            if (src) {
+                return src;
+            }
+            return '@Url.Content("~/res/project.png")';
+        }
     </script>
     @RenderSection("Scripts", required: false)
 </body>

@@ -301,6 +301,15 @@ namespace Coching.Dal
             await delete(NotesTable, id);
         }
 
+        public async Task<FUser[]> getUsers(string key)
+        {
+            var dbs = await (from u in UsersTable
+                             where (u.Tel.Contains(key) || u.Name.Contains(key)) && u.Deleted == false
+                             orderby u.Tel
+                             select u).Take(10).ToArrayAsync();
+            return dbs.Select(db => new FUser(db.KeyGuid, db)).ToArray();
+        }
+
         public async Task<FPartner[]> getPartnersOfProject(Guid projectGuid, PartnerCondition condition)
         {
             var roles = condition.Roles == null ? null : condition.Roles.Select(r => (int)r);
@@ -326,6 +335,25 @@ namespace Coching.Dal
         public async Task<Guid> insertPartner(PartnerData data)
         {
             return await insert(PartnersTable, data);
+        }
+
+        public async Task<Guid> setPartner(Guid projectGuid, Guid userGuid, PartnerRole role)
+        {
+            var db = await (from p in PartnersTable
+                            where p.ProjectGuid == projectGuid && p.UserGuid == userGuid && p.Deleted == false
+                            select p).SingleOrDefaultAsync();
+            if (db == null)
+            {
+                return await insert(PartnersTable, new PartnerData(projectGuid, userGuid, role));
+            }
+
+            if (db.getRole() != role)
+            {
+                db.Role = (int)role;
+                await _safeSaveChanges();
+            }
+
+            return db.KeyGuid;
         }
 
         public async Task deletePartner(Guid id)

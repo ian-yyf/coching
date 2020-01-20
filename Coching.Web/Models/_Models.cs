@@ -20,6 +20,15 @@ namespace Coching.Web.Models
             }
             return src;
         }
+
+        public static string projectHeader(this IUrlHelper url, string src)
+        {
+            if (string.IsNullOrEmpty(src))
+            {
+                return url.Content("~/res/project.png");
+            }
+            return src;
+        }
     }
 
     public class PopupItemViewModel<T, R> : ItemViewModel<T>

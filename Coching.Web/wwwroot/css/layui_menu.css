@@ -1,0 +1,36 @@
+﻿.layui-menu .layui-layer-content {
+    background-color: white !important;
+    color: #444 !important;
+}
+
+.layui-menu .layui-layer-TipsG {
+    display: none;
+}
+
+.layui-menu .layui-layer-content {
+    padding: 2px 0px !important;
+}
+
+.layui-menu li {
+    padding: 0 20px;
+    line-height: 30px;
+}
+
+    .layui-menu li:hover {
+        cursor: pointer;
+        background-color: #eee;
+    }
+
+.layui-menu .layui-this {
+    background-color: #5FB878;
+    color: #fff;
+}
+
+    .layui-menu .layui-this:hover {
+        background-color: #4FA868;
+        color: #fff;
+    }
+.layui-menu .line {
+    height: 1px;
+    background-color: lightgray;
+}

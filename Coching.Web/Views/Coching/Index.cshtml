@@ -9,10 +9,12 @@
     .out-container {
         height: calc(100vh - 70px);
     }
+
     .tree {
         width: 100%;
         height: 100%;
     }
+
     .catalogue {
         width: 250px;
         background-color: #F7F7F7;
@@ -20,18 +22,22 @@
         height: 100%;
         padding: 5px 0;
     }
+
         .catalogue::-webkit-scrollbar {
             width: 6px;
         }
+
         .catalogue::-webkit-scrollbar-thumb {
             border-radius: 6px;
             -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
             background: #535353;
         }
+
         .catalogue::-webkit-scrollbar-track {
             -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
             background: #EDEDED;
         }
+
     .catalogue-item {
         background-color: white;
         border-radius: 5px;
@@ -41,12 +47,15 @@
         margin: 0 5px;
         cursor: pointer;
     }
+
         .catalogue-item:hover {
             opacity: 0.8;
         }
-        .catalogue > .catalogue-item:not(:first-child) {
-            margin-top: 10px;
-        }
+
+    .catalogue > .catalogue-item:not(:first-child) {
+        margin-top: 10px;
+    }
+
     .add-button {
         position: fixed;
         bottom: 20px;
@@ -56,14 +65,17 @@
         background-color: white;
         padding: 10px;
     }
-    .add-button:hover {
-        opacity: 0.8;
-        cursor: pointer;
-    }
+
+        .add-button:hover {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
     .tree-container {
         position: relative;
         overflow: auto;
     }
+
     .right-click-menu-pos {
         position: absolute;
         left: -99999px;
@@ -73,13 +85,16 @@
         height: 1px;
         opacity: 0;
     }
+
     .tooltip-container {
         max-width: 300px;
     }
+
     .tooltip-title {
         color: white;
         text-align: center;
     }
+
     .tooltip-content {
         color: #eee;
         display: -webkit-box;
@@ -94,68 +109,58 @@
         padding: 5px 0;
         margin: 5px 0;
     }
+
     .tooltip-status {
         text-align: right;
     }
+
         .tooltip-status img {
             width: 24px;
             height: 24px;
             border-radius: 50%;
             margin-right: 3px;
         }
-    .right-click-menu .layui-layer-content {
-        background-color: white !important;
-        color: #444 !important;
-    }
-    .right-click-menu .layui-layer-TipsG {
-        display: none;
-    }
-    .right-click-menu .layui-layer-content {
-        padding: 2px 0px !important;
-    }
-    .right-click-menu li {
-        padding: 0 15px;
-        line-height: 26px;
-    }
-        .right-click-menu li:hover {
-            cursor: pointer;
-            background-color: #eee;
-        }
-        .right-click-menu .line {
-            height: 1px;
-            background-color: lightgray;
-        }
+
     .root-status {
         padding-top: 5px;
     }
-    .root-status img {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        margin-right: 3px;
-    }
-    .root-status .flex {
-        overflow-x: hidden;
-        margin-right: 10px;
-    }
+
+        .root-status img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 3px;
+        }
+
+        .root-status .flex {
+            overflow-x: hidden;
+            margin-right: 10px;
+        }
+
     .status-color0 {
         color: #62b7f4;
     }
+
     .status-color1 {
         color: #FF4500;
     }
+
     .status-color2 {
         color: #32CD32;
     }
+
     .status-color3 {
         color: #888888;
     }
+
     .status-color4 {
         color: #080808;
     }
 </style>
 
 <script src="~/lib/echarts/echarts.min.js"></script>
+<link rel="stylesheet" href="~/css/layui_menu.css">
+<script src="~/js/layui_menu.js"></script>
 
 <div class="layout-row out-container">
     <div class="catalogue">
@@ -168,7 +173,7 @@
                     <div class="workers layout-row layout-center-h flex">
                         @foreach (var partner in Model.Partners.Where(p => root.Workers.Contains(p.UserGuid)))
                         {
-                            <img worker="@partner.User.ID" src="@Url.header(partner.User.Header)" />
+                            <img worker="@partner.User.ID" src="@Url.header(partner.User.Header)" title="@partner.User.Name" />
                         }
                     </div>
                     <div class="status-value text-size-descrip text-color-descrip status-color@(root.Node.Status)">@root.Node.StatusTitle</div>
@@ -187,6 +192,8 @@
 
 <script>
     var tree = null;
+    var right_menu = new LayuiMenu();
+
     var NodeStatus = {
         未进行: 0,
         进行中: 1,
@@ -273,21 +280,22 @@
                     collapsed: false,
                     itemStyle: {
                         color: NodeColors[i.Status],
-                        borderWidth: 0
+                        borderWidth: 0,
+                        borderColor: '#000000'
                     },
                 }
             });
         },
-        statusHtml: function (result) {
+        statusHtml: function (result, workers) {
             var status = '<div class="layout-row layout-center-h root-status">';
             status += '<div class="workers layout-row layout-center-h flex">';
-            if (result.Workers) {
+            if (workers) {
                 var partners = eval(@Html.Raw(Model.getPartners()));
                 partners = YFUtils.where(partners, p => {
-                    return YFUtils.findIf(result.Workers, w => p.UserGuid == w) != null;
+                    return YFUtils.findIf(workers, w => p.UserGuid == w) != null;
                 });
                 for (var i = 0; i < partners.length; i++) {
-                    status += '<img worker="' + partners[i].User.ID + '" src="' + header(partners[i].User.Header) + '" />';
+                    status += '<img worker="' + partners[i].User.ID + '" src="' + header(partners[i].User.Header) + '" title="' + partners[i].User.Name + '" />';
                 }
             }
             status += '</div>';
@@ -295,14 +303,14 @@
             status += '</div>';
             return status;
         },
-        innerHtml: function (result) {
+        innerHtml: function (result, workers) {
             return '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.Name + '</div>'
                 + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.Description + '</div>'
-                + this.statusHtml(result);
+                + this.statusHtml(result, workers);
         },
-        itemHtml: function (result) {
+        itemHtml: function (result, workers) {
             return '<div id="' + result.ID + '" class="catalogue-item" onclick="root(this)">'
-                + this.innerHtml(result)
+                + this.innerHtml(result, workers)
                 + '</div>';
         },
         updateHtml: function (result) {
@@ -361,11 +369,13 @@
         },
         expand: function (node) {
             node.data.collapsed = false;
-            tree.refresh();
+            node.data.itemStyle.borderWidth = 0;
+            tree.refresh(null, true);
         },
         collapse: function (node) {
             node.data.collapsed = true;
-            tree.refresh();
+            node.data.itemStyle.borderWidth = 2;
+            tree.refresh(null, true);
         }
     }
 </script>
@@ -425,7 +435,6 @@
         if (result.ID == result.RootGuid) {
             tool.updateHtml(result);
         }
-
         if (reload_root) {
             $.post('@Url.Action("Root")', {
                 id: result.RootGuid
@@ -434,7 +443,7 @@
                     top.layer.msg(result.Message);
                 }
                 else {
-                    $('#' + result.ID).html(tool.innerHtml(result));
+                    $('#' + result.Body.Node.ID).html(tool.innerHtml(result.Body.Node, result.Body.Workers));
                 }
             });
         }
@@ -483,47 +492,31 @@
         tree.showLoading();
 
         $('.tree-container').bind("contextmenu", function (x) {
-            return !tree.contextmenu;
+            return !right_menu.visible();
         });
-
-        tree.closeContextmenu = function () {
-            if (tree.contextmenu) {
-                layui.layer.close(tree.contextmenu);
-                tree.contextmenu = null;
-            }
-        }
 
         tree.on('contextmenu', function (params) {
             var commands = menu.commands(params);
-            var n = YFUtils.select(commands, cmd => {
+            var datas = YFUtils.select(commands, cmd => {
                 if (cmd.line) {
-                    return '<li class="line"/>';
+                    return {
+                        line: true
+                    }
                 }
-                return '<li cmd-event="' + cmd.command + '">' + cmd.name + '</li>';
-            }).join('');
+                return {
+                    value: cmd.command,
+                    title: cmd.name
+                }
+            });
 
-            var n = '<ul>' + n + '</ul>';
             $('.right-click-menu-pos').css({
                 'left': params.event.offsetX,
                 'top': params.event.offsetY
             });
-            tree.contextmenu = layui.layer.tips(n, $('.right-click-menu-pos'), {
-                tips: 3,
-                time: 0,
-                fixed: !0,
-                skin: "layui-box right-click-menu",
-                success: function (i) {
-                    i.find("li").on("mousedown",
-                        function (i) {
-                            layui.stope(i);
-                        }).on("click", function () {
-                            menu.execute($(this).attr('cmd-event'), params);
-                            tree.closeContextmenu();
-                        })
-                }
+
+            right_menu.show($('.right-click-menu-pos'), datas, function (value) {
+                menu.execute(value, params);
             });
-            $(document).off("mousedown", tree.closeContextmenu).on("mousedown", tree.closeContextmenu);
-            $(window).off("resize", tree.closeContextmenu).on("resize", tree.closeContextmenu);
         });
 
         tree.on('click', function (params) {
@@ -538,7 +531,7 @@
         });
 
         $('.tree-container').click(function () {
-            tree.closeContextmenu();
+            right_menu.close();
         })
 
         var option = {
@@ -579,9 +572,12 @@
                     },
                     tooltip: {
                         formatter: function (node) {
-                            var status = '<img src="' + header(node.data.creator.header) + '">';
+                            var status = null;
                             if (node.data.worker) {
-                                status += '<img src="' + header(node.data.worker.header) + '">';
+                                status = '<img src="' + header(node.data.worker.header) + '">';
+                            }
+                            else {
+                                status = '<img src="' + header(node.data.creator.header) + '">';
                             }
                             status += '<div class="flex">' + node.data.status.title + '</div>';
 
@@ -602,11 +598,14 @@
 
         tree.setOption(option);
 
-        tree.refresh = function (data) {
+        tree.refresh = function (data, scroll) {
             option.series[0].data = data || tree.getOption().series[0].data;
             optimizeSize(option.series[0].data);
             tree.resize();
             tree.setOption(option);
+            if (scroll) {
+                optimizeScroll();
+            }
         }
 
         tree.hideLoading();

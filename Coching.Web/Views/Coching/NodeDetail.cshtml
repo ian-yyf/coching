@@ -70,12 +70,7 @@
         }
 
     .layui-form-label {
-        width: 90px;
         color: #ccc;
-    }
-
-    .layui-input-block {
-        margin-left: 90px;
     }
 
     .layui-colla-title .flex {
@@ -222,7 +217,7 @@
                 <div class="layui-input-inline">
                     <input type="text" autocomplete="off" placeholder="请确定预估工时" class="layui-input" value="@Model.Data.Node.EstimatedManHour">
                 </div>
-                <div class="layui-form-mid layui-word-aux">确定预估工时</div>
+                <div class="layui-form-mid layui-word-aux">最终确定的预估工时（管理员）</div>
             </div>
             <div class="layui-form-item node_time_edit" style="display: none;">
                 <div class="layui-input-block">
@@ -460,6 +455,8 @@
                     }
                     else {
                         parent.@(Model.Notify)(result.Body);
+                        $('#StartTime').val(result.Body.StartTime);
+                        $('#EndTime').val(result.Body.EndTime);
                     }
                 });
             });

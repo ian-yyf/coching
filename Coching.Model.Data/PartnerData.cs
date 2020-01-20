@@ -36,5 +36,13 @@ namespace Coching.Model.Data
         {
             return (PartnerRole)Role;
         }
+
+        public string RoleTitle
+        {
+            get
+            {
+                return getRole().ToString();
+            }
+        }
     }
 }

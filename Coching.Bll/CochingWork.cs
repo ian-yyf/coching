@@ -254,6 +254,11 @@ namespace Coching.Bll
                 return new Result<FNode>(false, null, "没有权限");
             }
 
+            if (oldData.EstimatedManHour != newData.EstimatedManHour && !await _models.checkNodeAdminPartner(id, token.ID))
+            {
+                return new Result<FNode>(false, null, "没有权限");
+            }
+
             if (!await _models.checkNodeModifyPartner(id, token.ID))
             {
                 return new Result<FNode>(false, null, "没有权限");
@@ -289,6 +294,19 @@ namespace Coching.Bll
                 if (newData.ParentGuid != Guid.Empty && !await _models.checkRoot(newData.ParentGuid, newData.RootGuid))
                 {
                     return new Result<FNode>(false, null, "没有权限");
+                }
+            }
+
+            if (oldData.Status != newData.Status)
+            {
+                if (newData.getStatus() == NodeStatus.进行中 && oldData.StartTime == newData.StartTime && newData.StartTime == null)
+                {
+                    newData.StartTime = DateTime.Now;
+                }
+
+                if (newData.getStatus() == NodeStatus.完成 && oldData.EndTime == newData.EndTime && newData.EndTime == null)
+                {
+                    newData.EndTime = DateTime.Now;
                 }
             }
 
@@ -368,6 +386,11 @@ namespace Coching.Bll
             return new Result<bool>(true);
         }
 
+        public async Task<Result<FUser[]>> getUsers(string key)
+        {
+            return new Result<FUser[]>(await _models.getUsers(key));
+        }
+
         public async Task<Result<FPartner[]>> getPartnersOfProject(FUserToken token, Guid projectGuid, PartnerCondition condition)
         {
             if (!await _models.checkToken(token.ID, token.Token))
@@ -383,24 +406,19 @@ namespace Coching.Bll
             return new Result<FPartner[]>(await _models.getPartnersOfProject(projectGuid, condition));
         }
 
-        public async Task<Result<FPartner>> insertPartner(FUserToken token, PartnerData data)
+        public async Task<Result<FPartner>> setPartner(FUserToken token, Guid projectGuid, Guid userGuid, PartnerRole role)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
                 return new Result<FPartner>(false, null, "请重新登录");
             }
 
-            if (!await _models.checkProjectAdminPartner(data.ProjectGuid, token.ID))
+            if (!await _models.checkProjectAdminPartner(projectGuid, token.ID))
             {
                 return new Result<FPartner>(false, null, "没有权限");
             }
 
-            if (await _models.checkProjectPartner(data.ProjectGuid, data.UserGuid))
-            {
-                return new Result<FPartner>(false, null, "此成员已经存在");
-            }
-
-            var id = await _models.insertPartner(data);
+            var id = await _models.setPartner(projectGuid, userGuid, role);
             return new Result<FPartner>(await _models.getPartner(id));
         }
 

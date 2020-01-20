@@ -1,0 +1,90 @@
+﻿@using Coching.Web.Models;
+@using X.PagedList.Mvc.Core;
+@using X.PagedList.Mvc.Core.Common;
+@model TableWidgetModel
+
+<div class="layui-card-body">
+    <table class="layui-table">
+        <thead>
+            <tr>
+                @foreach (var h in Model.Headers)
+                {
+                    <th>@h</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Datas == null || Model.Datas.Count() == 0)
+            {
+                <tr>
+                    @await Html.PartialAsync("_Widgets/_DataEmpty") 
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Datas)
+                {
+                    <tr id="@item.Id">
+                        @foreach (var v in item.Values)
+                        {
+                        <td>@Html.Raw(v)</td>
+                        }
+                        @if (item.Commands != null)
+                        {
+                            <td>
+                                @foreach (var c in item.Commands)
+                                {
+                                    String pattern = "";
+                                    switch (@c.Grade.ToString())
+                                    {
+                                        case "EasyMatching":
+                                            pattern = "layui-btn layui-btn-sm layui-btn-normal";
+                                            break;
+                                        case "Warm":
+                                            pattern = "layui-btn layui-btn-sm layui-btn-warm";
+                                            break;
+                                        case "Danger":
+                                            pattern = "layui-btn layui-btn-sm layui-btn-danger";
+                                            break;
+                                        case "Prohibit":
+                                            pattern = "layui-btn layui-btn-sm layui-btn-disabled";
+                                            break;
+                                        default:
+                                            pattern = "layui-btn layui-btn-sm";
+                                            break;
+                                    }
+                                    <button type="button" class="@pattern" onclick="table_command('@c.FunctionName', '@c.Kind', '@c.Value')">@c.Name</button>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    <div>
+        @if (Model.Page != null)
+        {
+            @Html.PagedListPager(Model.Page, page => Model.Url(page),
+            new PagedListRenderOptions()
+            {
+                ContainerDivClasses = new String[] { "layui-box layui-laypage layui-laypage-default" },
+                UlElementClasses = new String[] { "layui-tab-title" },
+                ActiveLiElementClass = "layui-laypage-curr active",
+                LinkToNextPageFormat = "下一页",
+                LinkToPreviousPageFormat = "上一页",
+            })
+        }
+    </div>
+</div>
+
+<script>
+    function table_command(Name, kind, value) {
+        if (kind == "Href") {
+            location.href = value;
+        }
+        else if (kind == "Js") {
+            eval(Name + "('" + value + "')");
+        }
+    }
+</script>

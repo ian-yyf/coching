@@ -36,7 +36,7 @@ namespace Coching.Web
                 options.JsonSerializerOptions.Converters.Add(new JsonUtils.DateTimeConverter());
                 options.JsonSerializerOptions.Converters.Add(new JsonUtils.DateTimeNullConverter());
             });
-            services.AddSession(o => o.IdleTimeout = TimeSpan.FromHours(1));
+            services.AddSession(o => o.IdleTimeout = TimeSpan.FromHours(2));
             services.AddDbContext<CochingModels>(o => o.UseSqlServer(Configuration.GetConnectionString("conn"), providerOptions => providerOptions.CommandTimeout(60)));
             services.AddScoped<CochingWork>();
         }

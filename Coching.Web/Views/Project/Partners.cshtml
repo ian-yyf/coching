@@ -1,0 +1,149 @@
+﻿@using Coching.Model;
+@model PartnersViewModel
+
+@{
+    ViewData["Title"] = "成员管理";
+    Layout = "~/Views/Shared/_Popup.cshtml";
+}
+
+@if (Model == null)
+{
+    return;
+}
+
+<style>
+    td img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+    }
+
+    .layui-form.layui-card-header.layuiadmin-card-header-auto {
+        height: auto;
+    }
+</style>
+
+<link rel="stylesheet" href="~/css/layui_menu.css">
+<script src="~/js/layui_menu.js"></script>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <form class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div type="form" class="layui-form-item">
+                <div class="layui-row">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">搜索用户</label>
+                        <div class="layui-input-block">
+                            @Html.TextBoxFor(m => m.Key, new { @class = "layui-input", @placeholder = "手机号/昵称", @autocomplete = "off" })
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="LAY-user-front-search">搜索添加</button>
+                    </div>
+                </div>
+            </div>
+            @Html.HiddenFor(m => m.ProjectGuid)
+            @Html.HiddenFor(m => m.Notify)
+        </form>
+
+        @{
+            var headers = new string[]
+            {
+                "手机号",
+                "昵称",
+                "头像",
+                "角色",
+                "操作",
+            };
+
+            var datas = new List<TableWidgetModel.Item>();
+
+            if (Model.Users != null)
+            {
+                foreach (var item in Model.Users)
+                {
+                    var partner = Model.Partners.FirstOrDefault(p => p.User.ID == item.ID);
+                    var button = partner == null
+                        ? $"<button user=\"{item.ID}\" role=\"-1\" type=\"button\" class=\"layui-btn layui-btn-sm layui-btn-warm\" onclick=\"role(this)\">点击添加</button>"
+                        : $"<button user=\"{item.ID}\" role=\"{partner.Role}\" type=\"button\" class=\"layui-btn layui-btn-sm layui-btn-warm\" onclick=\"role(this)\">已添加</button>";
+
+                    datas.Add(new TableWidgetModel.Item(item.ID.ToString(), new string[] {
+                        item.getSecretTel(),
+                        item.Name,
+                        $"<img src={item.Header}>",
+                        button
+                    }
+                    , new TableWidgetModel.Command[] {}));
+                }
+            }
+
+            datas.AddRange(Model.Partners.Select(item => new TableWidgetModel.Item(item.ID.ToString(), new string[] {
+                item.User.getSecretTel(),
+                item.User.Name,
+                $"<img src={item.User.Header}>",
+                $"<button user=\"{item.User.ID}\" role=\"{item.Role}\" type=\"button\" class=\"layui-btn layui-btn-sm layui-btn-normal\" onclick=\"role(this)\">{item.RoleTitle}</button>"
+            }
+            , new TableWidgetModel.Command[] {
+                new TableWidgetModel.Command("删除", "del", @item.ID.ToString(), TableWidgetModel.CommandKind.Js, TableWidgetModel.CommandGrade.Danger),
+            })));
+
+            await Html.RenderPartialAsync("_Widgets/Table", new TableWidgetModel(headers, datas, null, null));
+        }
+    </div>
+</div>
+
+<script>
+    var role_menu = new LayuiMenu();
+
+    function role(e) {
+        var datas = [];
+        @foreach (var role in Model.Roles)
+        {
+            <text>
+            datas.push({
+                value: @role.Key,
+                title: '@role.Value',
+                active: $(e).attr('role') == @role.Key
+            })
+            </text>
+        }
+
+        role_menu.show($(e), datas, function (value) {
+            var user = $(e).attr('user');
+            $.post('@Html.Raw(Url.Action("SetPartner"))', {
+                projectGuid: '@Model.ProjectGuid',
+                userGuid: user,
+                role: value
+            }, function (result) {
+                if (!result.Success) {
+                    top.layer.msg(result.Message);
+                }
+                else if (result.Body.Role != value) {
+                    top.layer.msg('修改失败，请重试');
+                }
+                else {
+                    $('button[user=' + user + ']').attr('role', result.Body.Role);
+                    $('button[user=' + user + ']').html(result.Body.RoleTitle);
+                    parent.@(Model.Notify)('@Model.ProjectGuid', null, result.Body);
+                }
+            });
+        });
+    }
+    function del(id) {
+        layer.confirm('确定要删除么', function (index) {
+            $.post('@Html.Raw(Url.Action("DeletePartner"))', {
+                id: id
+            }, function (result) {
+                if (!result.Success) {
+                    top.layer.msg(result.Message);
+                }
+                else {
+                    $('#' + id).remove();
+                    parent.@(Model.Notify)('@Model.ProjectGuid', id, null);
+                }
+            });
+
+            layer.close(index);
+        });
+    }
+</script>
