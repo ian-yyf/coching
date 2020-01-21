@@ -94,7 +94,6 @@ namespace Coching.Web.Controllers
                 return Error(item.Message);
             }
 
-            var documents = await _work.getDocumentRefs(token, id);
             return AutoView("NodeItem", new NodeItemViewModel(id, "ModifyNode", "修改节点", item.Body, callback));
         }
 
@@ -109,7 +108,7 @@ namespace Coching.Web.Controllers
 
             var oldData = model.OldData;
             var newData = new NodeData(oldData, model.Name, model.Description);
-            var result = await _work.modifyNode(this.getUserToken(), model.KeyGuid, new NodeData(oldData), newData, oldData.Documents, model.Documents.jsonDecode<string[]>());
+            var result = await _work.modifyNode(this.getUserToken(), model.KeyGuid, new NodeData(oldData), newData, oldData.Documents, model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
                 return Error(result.Message, AutoView("NodeItem", model));
@@ -250,7 +249,41 @@ namespace Coching.Web.Controllers
             var result = await _work.insertNote(token, new NoteData(model.NodeGuid, token.ID, model.Content), model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
-                return Error(result.Message);
+                return Error(result.Message, AutoView("NoteItem", model));
+            }
+
+            model.Result = result.Body;
+            return AutoView("NoteItem", model);
+        }
+
+        public async Task<IActionResult> ModifyNote(Guid id, string callback)
+        {
+            var token = this.getUserToken();
+            var item = await _work.getNote(token, id);
+            if (!item.Success)
+            {
+                return Error(item.Message);
+            }
+
+            return AutoView("NoteItem", new NoteItemViewModel(id, "ModifyNote", "修改批注", item.Body, callback));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ModifyNote(NoteItemViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return AutoView("NoteItem", model);
+            }
+
+            var token = this.getUserToken();
+            var oldData = model.OldData;
+            var newData = new NoteData(oldData, model.Content);
+            var result = await _work.modifyNote(token, model.KeyGuid, new NoteData(oldData), newData, oldData.Documents, model.Documents?.jsonDecode<string[]>());
+            if (!result.Success)
+            {
+                return Error(result.Message, AutoView("NoteItem", model));
             }
 
             model.Result = result.Body;

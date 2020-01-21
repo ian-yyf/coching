@@ -309,7 +309,7 @@
         },
         innerHtml: function (result, workers) {
             return '<div class="ellipsis-1 text-size-descrip text-color-common">' + result.Name + '</div>'
-                + '<div class="ellipsis-2 text-size-min text-color-descrip">' + result.Description + '</div>'
+                + '<div class="ellipsis-2 text-size-min text-color-descrip">' + (result.Description || '') + '</div>'
                 + this.statusHtml(result, workers);
         },
         itemHtml: function (result, workers) {
@@ -319,7 +319,7 @@
         },
         updateHtml: function (result) {
             $('#' + result.ID + ' .ellipsis-1').html(result.Name);
-            $('#' + result.ID + ' .ellipsis-2').html(result.Description);
+            $('#' + result.ID + ' .ellipsis-2').html(result.Description || '');
             for (var status in NodeStatus) {
                 $('#' + result.ID + ' .status-value').removeClass('status-color' + NodeStatus[status]);
             }
@@ -376,9 +376,15 @@
                         top.layer.msg(result.Message);
                     }
                     else {
-                        var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
-                        tree.refresh(data);
-                        reload_root(node.data.root);
+                        if (node.data.id == node.data.root) {
+                            $('#' + node.data.id).remove();
+                            tree.refresh([]);
+                        }
+                        else {
+                            var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
+                            tree.refresh(data);
+                            reload_root(node.data.root);
+                        }
                     }
                 });
 

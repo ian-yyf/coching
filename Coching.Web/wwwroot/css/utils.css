@@ -118,7 +118,12 @@
     align-items: center;
 }
 
-.layout-right-h {
+.layout-top-h {
+    -webkit-align-items: flex-start;
+    align-items: flex-start;
+}
+
+.layout-bottom-h {
     -webkit-align-items: flex-end;
     align-items: flex-end;
 }
@@ -126,6 +131,11 @@
 .layout-center-v {
     -webkit-justify-content: center;
     justify-content: center;
+}
+
+.layout-start-v {
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
 }
 
 .layout-end-v {

@@ -126,19 +126,27 @@
         display: inline-block;
         padding: 15px;
     }
-    .documents img {
-        width: 60px;
-        height: 60px;
-    }
+
+        .documents img {
+            width: 60px;
+            height: 60px;
+        }
+
     .modify-icon {
         width: 24px;
         cursor: pointer;
         opacity: 0.8;
+        margin-left: 10px;
     }
-    .modify-icon:hover {
-        opacity: 1;
-    }
+
+        .modify-icon:hover {
+            opacity: 1;
+        }
 </style>
+
+<link type="text/css" rel="stylesheet" href="~/lib/lightgallery/css/lightgallery.min.css" />
+<script src="~/lib/lightgallery/js/lightgallery.min.js"></script>
+<script src="~/lib/lightgallery/js/lightgallery-all.min.js"></script>
 
 <fieldset class="layui-elem-field layui-field-title">
     <legend>基本信息</legend>
@@ -148,21 +156,24 @@
     <div class="layui-row layout-row card-container">
         <div class="layui-card flex layout-column">
             <div class="layui-card-header layout-row layout-center-h">
-                <div id="NodeName" class="flex">
+                <div id="NodeName" class="flex ellipsis-1">
                     @Model.Data.Node.Name
                 </div>
-                <img class="modify-icon" src="~/res/edit.png" title="修改任务" onclick="modify()"/>
+                <img class="modify-icon" src="~/res/edit.png" title="修改任务" onclick="modify()" />
             </div>
             <div id="NodeDescription" class="layui-card-body text-color-descrip flex">
                 @Model.Data.Node.Description
             </div>
-            <div class="documents-container">
-                <div class="documents">
-                    @foreach (var doc in Model.Data.Node.Documents)
-                    {
-                        <a href="@doc.Document.Src" target="_blank"><img src="@doc.Document.Src" /></a>
-                    }
-                </div>
+            <div class="node-documents-container">
+                @if (Model.Data.Node.Documents.Length > 0)
+                {
+                    <div class="documents">
+                        @foreach (var doc in Model.Data.Node.Documents)
+                        {
+                            <a href="@doc.Document.Src"><img src="@doc.Document.Src" /></a>
+                        }
+                    </div>
+                }
             </div>
         </div>
         <form class="layui-card flex info-list layui-form">
@@ -296,7 +307,21 @@
                 <span>@note.CreatedTime.ToString("yy-MM-dd HH:mm:ss")</span>
             </h2>
             <div class="layui-colla-content">
-                <p>@note.Content</p>
+                <div class="layout-row layout-top-h">
+                    <p class="flex">@note.Content</p>
+                    <img class="modify-icon" src="~/res/edit.png" title="修改批注" onclick="modify_note(this)" />
+                </div>
+                <div class="note-documents-container">
+                    @if (note.Documents.Length > 0)
+                    {
+                        <div class="documents">
+                            @foreach (var doc in note.Documents)
+                            {
+                                <a href="@doc.Document.Src"><img src="@doc.Document.Src" /></a>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     }
@@ -308,11 +333,14 @@
 <script>
     var menu = null;
     var tool = {
-        documentsInnerHtml: function (result) {
+        documentsInnerHtml: function (documents) {
+            if (!documents || documents.length == 0) {
+                return '';
+            }
             var html = '<div class="documents">';
-            for (var i = 0; i < result.Documents.length; i++) {
-                var doc = result.Documents[i];
-                html += '<a href="' + doc.Document.Src + '" target="_blank"><img src="' + doc.Document.Src + '" /></a>\n';
+            for (var i = 0; i < documents.length; i++) {
+                var doc = documents[i];
+                html += '<a href="' + doc.Document.Src + '"><img src="' + doc.Document.Src + '" /></a>\n';
             }
             html += '</div>';
             return html;
@@ -342,7 +370,11 @@
     function modify_success(result) {
         $('#NodeName').html(result.Name);
         $('#NodeDescription').html(result.Description);
-        $('.documents-container').html(tool.documentsInnerHtml(result));
+        $('.node-documents-container').html(tool.documentsInnerHtml(result.Documents));
+        $('.node-documents-container .documents').lightGallery({
+            share: false
+        });
+
         parent.@(Model.Notify)(result);
     }
 
@@ -460,10 +492,42 @@
             + '<i class="layui-icon layui-colla-icon"></i>'
             + '</h2>'
             + '<div class="layui-colla-content layui-show">'
-            + '<p>' + note.Content + '</p>'
+            + '<div class="layout-row layout-top-h">'
+            + '<p class="flex">' + note.Content + '</p>'
+            + '<img class="modify-icon" src="@Url.Content("~/res/edit.png")" title="修改批注" onclick="modify_note(this)" />'
+            + '</div>'
+            + '<div class="note-documents-container">'
+            + tool.documentsInnerHtml(note.Documents)
+            + '</div>'
             + '</div>'
             + '</div>'
         );
+
+        $('#' + note.ID + ' .note-documents-container .documents').lightGallery({
+            share: false
+        });
+    }
+
+    function modify_note(e) {
+        var id = $(e).parents('*[id]').attr('id');
+        layer.open({
+            type: 2,
+            title: '修改批注',
+            maxmin: true,
+            area: ['80%', '80%'],
+            shadeClose: true,
+            content: '@Html.Raw(Url.Action("ModifyNote", new { callback = "modify_note_success" }))' + '&id=' + id,
+        });
+    }
+
+    function modify_note_success(note) {
+        $('#' + note.ID + ' .content').html(note.Content);
+        $('#' + note.ID + ' p').html(note.Content);
+        $('#' + note.ID + ' .note-documents-container').html(tool.documentsInnerHtml(note.Documents));
+
+        $('#' + note.ID + ' .note-documents-container .documents').lightGallery({
+            share: false
+        });
     }
 </script>
 
@@ -549,4 +613,10 @@
     }
 
     use_layui();
+
+    $(document).ready(function() {
+        $('.documents').lightGallery({
+            share: false
+        }); 
+    });
 </script>

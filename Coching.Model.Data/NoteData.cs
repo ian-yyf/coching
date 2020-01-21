@@ -29,6 +29,12 @@ namespace Coching.Model.Data
             CreatedTime = rhs.CreatedTime;
         }
 
+        public NoteData(NoteData rhs, string content)
+            : this(rhs)
+        {
+            Content = content;
+        }
+
         public Guid NodeGuid { get; set; }
         public Guid CreatorGuid { get; set; }
         [Required]

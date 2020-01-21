@@ -397,6 +397,21 @@ namespace Coching.Bll
             return new Result<bool>(true);
         }
 
+        public async Task<Result<FNote>> getNote(FUserToken token, Guid id)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FNote>(false, null, "请重新登录");
+            }
+
+            if (!await _models.checkNotePartner(id, token.ID))
+            {
+                return new Result<FNote>(false, null, "没有权限");
+            }
+
+            return new Result<FNote>(await _models.getNote(id));
+        }
+
         public async Task<Result<FNote>> insertNote(FUserToken token, NoteData data, string[] documents)
         {
             if (!await _models.checkToken(token.ID, token.Token))
