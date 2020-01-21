@@ -25,7 +25,7 @@
 
 <style>
     .layui-textarea {
-        height: calc(100vh - 160px);
+        height: calc(100vh - 240px);
     }
 </style>
 
@@ -53,6 +53,14 @@
                     @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
                 </div>
 
+                <div class="layui-form-item">
+                    <label class="layui-form-label">附件</label>
+                    <div class="layui-input-block">
+                        @Html.HiddenFor(m => m.Documents)
+                        @await Component.InvokeAsync("Upload", new { imageMaxCount = 10, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "DocumentUploader" })
+                    </div>
+                </div>
+
                 <div>
                     @Html.HiddenFor(m => m.KeyGuid)
                     @Html.HiddenFor(m => m.ActionName)
@@ -71,3 +79,26 @@
         </div>
     </div>
 </div>
+
+<script>
+    @if (Model.Documents == null)
+    {
+        <text>
+        var documents = [];
+        </text>
+    }
+    else
+    {
+        <text>
+        var documents = eval(@Html.Raw(Model.Documents));
+        </text>
+    }
+
+    DocumentUploader.init(function (url) {
+        documents.push(url);
+        $('#Documents').val(JSON.stringify(documents));
+    }, function (url) {
+        documents = documents.filter(d => d != url);
+        $('#Documents').val(JSON.stringify(documents));
+    }, documents);
+</script>

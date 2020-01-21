@@ -285,7 +285,9 @@ namespace Coching.Dal
                              where n.NodeGuid == nodeGuid && n.Deleted == false
                              orderby n.CreatedTime descending
                              select new { n, u }).ToArrayAsync();
-            return dbs.Select(db => new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u))).ToArray();
+
+            var documents = await getDocumentRefsOfOwners(dbs.Select(db => db.n.KeyGuid).ToArray());
+            return dbs.Select(db => new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u), documents.Where(d => d.OwnerGuid == db.n.KeyGuid).ToArray())).ToArray();
         }
 
         public async Task<FNote> getNote(Guid id)
@@ -294,7 +296,9 @@ namespace Coching.Dal
                             join u in UsersTable on n.CreatorGuid equals u.KeyGuid
                             where n.KeyGuid == id
                             select new { n, u }).SingleAsync();
-            return new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u));
+
+            var documents = await getDocumentRefs(db.n.KeyGuid);
+            return new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u), documents);
         }
 
         public async Task<Guid> insertNote(NoteData data)

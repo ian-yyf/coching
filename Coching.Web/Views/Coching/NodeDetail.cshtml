@@ -121,6 +121,23 @@
         line-height: 36px;
         margin-right: 10px;
     }
+
+    .documents {
+        display: inline-block;
+        padding: 15px;
+    }
+    .documents img {
+        width: 60px;
+        height: 60px;
+    }
+    .modify-icon {
+        width: 24px;
+        cursor: pointer;
+        opacity: 0.8;
+    }
+    .modify-icon:hover {
+        opacity: 1;
+    }
 </style>
 
 <fieldset class="layui-elem-field layui-field-title">
@@ -129,12 +146,23 @@
 
 <div class="pane">
     <div class="layui-row layout-row card-container">
-        <div class="layui-card flex">
-            <div id="NodeName" class="layui-card-header clickable" onclick="modify()">
-                @Model.Data.Node.Name
+        <div class="layui-card flex layout-column">
+            <div class="layui-card-header layout-row layout-center-h">
+                <div id="NodeName" class="flex">
+                    @Model.Data.Node.Name
+                </div>
+                <img class="modify-icon" src="~/res/edit.png" title="修改任务" onclick="modify()"/>
             </div>
-            <div id="NodeDescription" class="layui-card-body text-color-descrip clickable" onclick="modify()">
+            <div id="NodeDescription" class="layui-card-body text-color-descrip flex">
                 @Model.Data.Node.Description
+            </div>
+            <div class="documents-container">
+                <div class="documents">
+                    @foreach (var doc in Model.Data.Node.Documents)
+                    {
+                        <a href="@doc.Document.Src" target="_blank"><img src="@doc.Document.Src" /></a>
+                    }
+                </div>
             </div>
         </div>
         <form class="layui-card flex info-list layui-form">
@@ -279,6 +307,17 @@
 
 <script>
     var menu = null;
+    var tool = {
+        documentsInnerHtml: function (result) {
+            var html = '<div class="documents">';
+            for (var i = 0; i < result.Documents.length; i++) {
+                var doc = result.Documents[i];
+                html += '<a href="' + doc.Document.Src + '" target="_blank"><img src="' + doc.Document.Src + '" /></a>\n';
+            }
+            html += '</div>';
+            return html;
+        }
+    }
 
     function show_hide(show, hide) {
         for (var i = 0; i < show.length; i++) {
@@ -303,6 +342,7 @@
     function modify_success(result) {
         $('#NodeName').html(result.Name);
         $('#NodeDescription').html(result.Description);
+        $('.documents-container').html(tool.documentsInnerHtml(result));
         parent.@(Model.Notify)(result);
     }
 

@@ -6,23 +6,19 @@ using System.Text;
 
 namespace Coching.Model.Front
 {
-    public class FNote : NoteData
+    public class FNodeModify : FNode
     {
-        public FNote()
+        public FNodeModify()
         {
 
         }
 
-        public FNote(Guid id, NoteData data, FUser user, FDocumentRef[] documents)
-            : base(data)
+        public FNodeModify(FNode node, FDocumentRef[] documents)
+            : base(node)
         {
-            ID = id;
-            User = user;
             Documents = documents;
         }
 
-        public Guid ID { get; set; }
-        public FUser User { get; set; }
         public FDocumentRef[] Documents { get; set; }
     }
 }

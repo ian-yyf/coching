@@ -37,14 +37,14 @@ namespace Coching.Web.Models
         }
     }
 
-    public class NodeItemViewModel : PopupItemViewModel<NodeData, FNode>
+    public class NodeItemViewModel : PopupItemViewModel<FNodeModify, FNodeModify>
     {
         public NodeItemViewModel()
         {
 
         }
 
-        public NodeItemViewModel(Guid keyGuid, string actionName, string actionTitle, NodeData oldData, string callback)
+        public NodeItemViewModel(Guid keyGuid, string actionName, string actionTitle, FNodeModify oldData, string callback)
            : base(keyGuid, actionName, actionTitle, oldData, callback)
         {
             ProjectGuid = oldData.ProjectGuid;
@@ -52,6 +52,7 @@ namespace Coching.Web.Models
             RootGuid = oldData.RootGuid;
             Name = oldData.Name;
             Description = oldData.Description;
+            Documents = oldData.Documents.Select(d => d.Document.Src).jsonEncode();
         }
 
         public NodeItemViewModel(string actionName, string actionTitle, Guid projectGuid, Guid rootGuid, Guid parentGuid, string callback)
@@ -71,6 +72,7 @@ namespace Coching.Web.Models
         public string Name { get; set; }
         [Display(Name = "详情")]
         public string Description { get; set; }
+        public string Documents { get; set; }
     }
 
     public class NodeDetailViewModel
@@ -102,18 +104,19 @@ namespace Coching.Web.Models
         }
     }
 
-    public class NoteItemViewModel : PopupItemViewModel<NoteData, FNote>
+    public class NoteItemViewModel : PopupItemViewModel<FNote, FNote>
     {
         public NoteItemViewModel()
         {
 
         }
 
-        public NoteItemViewModel(Guid keyGuid, string actionName, string actionTitle, NoteData oldData, string callback)
+        public NoteItemViewModel(Guid keyGuid, string actionName, string actionTitle, FNote oldData, string callback)
            : base(keyGuid, actionName, actionTitle, oldData, callback)
         {
             NodeGuid = oldData.NodeGuid;
             Content = oldData.Content;
+            Documents = oldData.Documents.Select(d => d.Document.Src).jsonEncode();
         }
 
         public NoteItemViewModel(string actionName, string actionTitle, Guid nodeGuid, string callback)
@@ -126,5 +129,6 @@ namespace Coching.Web.Models
         [Required]
         [Display(Name = "批注内容")]
         public String Content { get; set; }
+        public string Documents { get; set; }
     }
 }

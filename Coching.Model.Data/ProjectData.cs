@@ -43,7 +43,7 @@ namespace Coching.Model.Data
         [Required]
         [StringLength(32)]
         public string Name { get; set; }
-        [Column(TypeName = "text")]
+        [StringLength(255)]
         public string Header { get; set; }
         [Column(TypeName = "text")]
         public string Description { get; set; }

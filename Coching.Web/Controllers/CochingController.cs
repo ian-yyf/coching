@@ -9,6 +9,7 @@ using Coching.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Public.Containers;
 using Public.Mvc;
+using Public.Utils;
 
 namespace Coching.Web.Controllers
 {
@@ -73,7 +74,8 @@ namespace Coching.Web.Controllers
             }
 
             var token = this.getUserToken();
-            var result = await _work.insertNode(token, new NodeData(model.ProjectGuid, model.RootGuid, model.ParentGuid, token.ID, model.Name, model.Description));
+            var data = new NodeData(model.ProjectGuid, model.RootGuid, model.ParentGuid, token.ID, model.Name, model.Description);
+            var result = await _work.insertNode(token, data, model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
                 return Error(result.Message, AutoView("NodeItem", model));
@@ -85,12 +87,14 @@ namespace Coching.Web.Controllers
 
         public async Task<IActionResult> ModifyNode(Guid id, string callback)
         {
-            var item = await _work.getNode(this.getUserToken(), id);
+            var token = this.getUserToken();
+            var item = await _work.getNodeModify(token, id);
             if (!item.Success)
             {
                 return Error(item.Message);
             }
 
+            var documents = await _work.getDocumentRefs(token, id);
             return AutoView("NodeItem", new NodeItemViewModel(id, "ModifyNode", "修改节点", item.Body, callback));
         }
 
@@ -104,7 +108,8 @@ namespace Coching.Web.Controllers
             }
 
             var oldData = model.OldData;
-            var result = await _work.modifyNode(this.getUserToken(), model.KeyGuid, oldData, new NodeData(oldData, model.Name, model.Description));
+            var newData = new NodeData(oldData, model.Name, model.Description);
+            var result = await _work.modifyNode(this.getUserToken(), model.KeyGuid, new NodeData(oldData), newData, oldData.Documents, model.Documents.jsonDecode<string[]>());
             if (!result.Success)
             {
                 return Error(result.Message, AutoView("NodeItem", model));
@@ -125,7 +130,7 @@ namespace Coching.Web.Controllers
                 {
                     return Json(new Result<FNode>(false, null, node.Message));
                 }
-                var result = await _work.modifyNode(token, id, new NodeData() { Status = node.Body.Status }, new NodeData() { Status = status });
+                var result = await _work.modifyNode(token, id, new NodeData() { Status = node.Body.Status }, new NodeData() { Status = status }, null, null);
                 return Json(result);
             });
         }
@@ -141,7 +146,7 @@ namespace Coching.Web.Controllers
                 {
                     return Json(new Result<FNode>(false, null, node.Message));
                 }
-                var result = await _work.modifyNode(token, id, new NodeData() { WorkerGuid = node.Body.WorkerGuid }, new NodeData() { WorkerGuid = userGuid });
+                var result = await _work.modifyNode(token, id, new NodeData() { WorkerGuid = node.Body.WorkerGuid }, new NodeData() { WorkerGuid = userGuid }, null, null);
                 return Json(result);
             });
         }
@@ -157,7 +162,7 @@ namespace Coching.Web.Controllers
                 {
                     return Json(new Result<FNode>(false, null, node.Message));
                 }
-                var result = await _work.modifyNode(token, id, new NodeData() { StartTime = node.Body.StartTime }, new NodeData() { StartTime = startTime });
+                var result = await _work.modifyNode(token, id, new NodeData() { StartTime = node.Body.StartTime }, new NodeData() { StartTime = startTime }, null, null);
                 return Json(result);
             });
         }
@@ -173,7 +178,7 @@ namespace Coching.Web.Controllers
                 {
                     return Json(new Result<FNode>(false, null, node.Message));
                 }
-                var result = await _work.modifyNode(token, id, new NodeData() { EndTime = node.Body.EndTime }, new NodeData() { EndTime = endTime });
+                var result = await _work.modifyNode(token, id, new NodeData() { EndTime = node.Body.EndTime }, new NodeData() { EndTime = endTime }, null, null);
                 return Json(result);
             });
         }
@@ -189,7 +194,7 @@ namespace Coching.Web.Controllers
                 {
                     return Json(new Result<FNode>(false, null, node.Message));
                 }
-                var result = await _work.modifyNode(token, id, new NodeData() { EstimatedManHour = node.Body.EstimatedManHour }, new NodeData() { EstimatedManHour = estimatedManHour });
+                var result = await _work.modifyNode(token, id, new NodeData() { EstimatedManHour = node.Body.EstimatedManHour }, new NodeData() { EstimatedManHour = estimatedManHour }, null, null);
                 return Json(result);
             });
         }
@@ -242,7 +247,7 @@ namespace Coching.Web.Controllers
             }
 
             var token = this.getUserToken();
-            var result = await _work.insertNote(token, new NoteData(model.NodeGuid, token.ID, model.Content));
+            var result = await _work.insertNote(token, new NoteData(model.NodeGuid, token.ID, model.Content), model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
                 return Error(result.Message);

@@ -83,5 +83,5 @@
         $("#Header").val(url);
     }, function (url) {
         $("#Header").val("");
-    }, [$("#Header").val()]);
+    }, $("#Header").val() ? [$("#Header").val()] : null);
 </script>

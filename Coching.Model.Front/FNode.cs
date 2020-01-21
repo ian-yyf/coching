@@ -20,6 +20,15 @@ namespace Coching.Model.Front
             Worker = worker;
         }
 
+        public FNode(FNode rhs)
+            : base(rhs)
+        {
+            ID = rhs.ID;
+            Creator = rhs.Creator;
+            Worker = rhs.Worker;
+            Children = rhs.Children;
+        }
+
         public Guid ID { get; set; }
         public FUser Creator { get; set; }
         public FUser Worker { get; set; }

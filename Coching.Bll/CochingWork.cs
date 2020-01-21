@@ -2,8 +2,11 @@
 using Coching.Model.Data;
 using Coching.Model.Front;
 using Public.Containers;
+using Public.Model.Data;
 using Public.Model.Front;
+using Public.Utils;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Coching.Bll
@@ -163,6 +166,23 @@ namespace Coching.Bll
             return new Result<FNode>(await _models.getNode(id));
         }
 
+        public async Task<Result<FNodeModify>> getNodeModify(FUserToken token, Guid id)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FNodeModify>(false, null, "请重新登录");
+            }
+
+            if (!await _models.checkNodeModifyPartner(id, token.ID))
+            {
+                return new Result<FNodeModify>(false, null, "没有权限");
+            }
+
+            var node = await _models.getNode(id);
+            var documents = await _models.getDocumentRefs(id);
+            return new Result<FNodeModify>(new FNodeModify(node, documents));
+        }
+
         public async Task<Result<FNodeDetail>> getNodeDetail(FUserToken token, Guid id)
         {
             if (!await _models.checkToken(token.ID, token.Token))
@@ -187,101 +207,120 @@ namespace Coching.Bll
                 var offer = await _models.getOffer(id, token.ID);
                 offers = offer == null ? new FOffer[] { } : new FOffer[] { offer };
             }
-
-            return new Result<FNodeDetail>(new FNodeDetail(node, notes, offers));
+            var documents = await _models.getDocumentRefs(id);
+            return new Result<FNodeDetail>(new FNodeDetail(new FNodeModify(node, documents), notes, offers));
         }
 
-        public async Task<Result<FNode>> insertNode(FUserToken token, NodeData data)
+        public async Task<Result<FNodeModify>> insertNode(FUserToken token, NodeData data, string[] documents)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
-                return new Result<FNode>(false, null, "请重新登录");
+                return new Result<FNodeModify>(false, null, "请重新登录");
             }
 
             if (data.CreatorGuid != token.ID)
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (!await _models.checkProjectModifyPartner(data.ProjectGuid, token.ID))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (data.WorkerGuid != Guid.Empty)
             {
                 if (!await _models.checkProjectModifyPartner(data.ProjectGuid, data.WorkerGuid))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeModify>(false, null, "没有权限");
                 }
             }
 
             if (data.isRoot() && data.RootGuid != Guid.Empty)
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (data.ParentGuid != Guid.Empty && !await _models.checkRoot(data.ParentGuid, data.RootGuid))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
-            Guid id;
+            var tran = _models.Database.BeginTransaction();
+            var id = await _models.insertNode(data);
+
+            if (documents != null && documents.Length > 0)
+            {
+                var documentIds = await _models.addDocuments(documents.Select(d => new DocumentData(data.CreatorGuid, d, d.extension(false))).ToArray());
+                await _models.addDocumentRefs(documentIds.Select(d => new DocumentRefData(d, id)).ToArray());
+            }
+
             if (data.isRoot())
             {
-                var tran = _models.Database.BeginTransaction();
-                id = await _models.insertNode(data);
                 await _models.modifyNode(id, new NodeData() { RootGuid = Guid.Empty }, new NodeData() { RootGuid = id });
-                await tran.CommitAsync();
-            }
-            else
-            {
-                id = await _models.insertNode(data);
             }
 
-            return new Result<FNode>(await _models.getNode(id));
+            await tran.CommitAsync();
+
+            var node = await _models.getNode(id);
+            var docs = await _models.getDocumentRefs(id);
+
+            return new Result<FNodeModify>(new FNodeModify(node, docs));
         }
 
-        public async Task<Result<FNode>> modifyNode(FUserToken token, Guid id, NodeData oldData, NodeData newData)
+        private bool __equals(FDocumentRef[] oldDocuments, string[] newDocuments)
+        {
+            if (oldDocuments.Length != newDocuments.Length)
+            {
+                return false;
+            }
+            if (oldDocuments.FirstOrDefault(d => !newDocuments.Contains(d.Document.Src)) != null)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public async Task<Result<FNodeModify>> modifyNode(FUserToken token, Guid id, NodeData oldData, NodeData newData, FDocumentRef[] oldDocuments, string[] newDocuments)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
-                return new Result<FNode>(false, null, "请重新登录");
+                return new Result<FNodeModify>(false, null, "请重新登录");
             }
 
             if (oldData.CreatorGuid != newData.CreatorGuid || oldData.ProjectGuid != newData.ProjectGuid)
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (oldData.EstimatedManHour != newData.EstimatedManHour && !await _models.checkNodeAdminPartner(id, token.ID))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (!await _models.checkNodeModifyPartner(id, token.ID))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (oldData.WorkerGuid != newData.WorkerGuid && newData.WorkerGuid != Guid.Empty && !await _models.checkNodeModifyPartner(id, newData.WorkerGuid))
             {
-                return new Result<FNode>(false, null, "没有权限");
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (oldData.ParentGuid != newData.ParentGuid)
             {
                 if (oldData.ParentGuid != Guid.Empty && !await _models.checkNodeModifyPartner(oldData.ParentGuid, token.ID))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeModify>(false, null, "没有权限");
                 }
                 if (newData.ParentGuid != Guid.Empty && !await _models.checkNodeModifyPartner(newData.ParentGuid, token.ID))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeModify>(false, null, "没有权限");
                 }
                 if (newData.ParentGuid != Guid.Empty && !await _models.checkRoot(newData.ParentGuid, newData.RootGuid))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeModify>(false, null, "没有权限");
                 }
             }
 
@@ -289,11 +328,11 @@ namespace Coching.Bll
             {
                 if (newData.isRoot() && newData.RootGuid != id)
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeModify>(false, null, "没有权限");
                 }
                 if (newData.ParentGuid != Guid.Empty && !await _models.checkRoot(newData.ParentGuid, newData.RootGuid))
                 {
-                    return new Result<FNode>(false, null, "没有权限");
+                    return new Result<FNodeModify>(false, null, "没有权限");
                 }
             }
 
@@ -310,8 +349,36 @@ namespace Coching.Bll
                 }
             }
 
-            await _models.modifyNode(id, oldData, newData);
-            return new Result<FNode>(await _models.getNode(id));
+            if (oldDocuments != null && newDocuments != null && !__equals(oldDocuments, newDocuments))
+            {
+                var tran = _models.Database.BeginTransaction();
+                await _models.modifyNode(id, oldData, newData);
+                foreach (var d in oldDocuments)
+                {
+                    if (!newDocuments.Contains(d.Document.Src))
+                    {
+                        await _models.deleteDocumentRef(d.ID);
+                    }
+                }
+                foreach (var d in newDocuments)
+                {
+                    if (oldDocuments.FirstOrDefault(o => o.Document.Src == d) == null)
+                    {
+                        var documentId = await _models.addDocument(new DocumentData(newData.CreatorGuid, d, d.extension(false)));
+                        await _models.addDocumentRef(new DocumentRefData(documentId, id));
+                    }
+                }
+                await tran.CommitAsync();
+            }
+            else
+            {
+                await _models.modifyNode(id, oldData, newData);
+            }
+
+            var node = await _models.getNode(id);
+            var documents = await _models.getDocumentRefs(id);
+
+            return new Result<FNodeModify>(new FNodeModify(node, documents));
         }
 
         public async Task<Result<bool>> deleteNode(FUserToken token, Guid id)
@@ -330,7 +397,7 @@ namespace Coching.Bll
             return new Result<bool>(true);
         }
 
-        public async Task<Result<FNote>> insertNote(FUserToken token, NoteData data)
+        public async Task<Result<FNote>> insertNote(FUserToken token, NoteData data, string[] documents)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
@@ -347,11 +414,21 @@ namespace Coching.Bll
                 return new Result<FNote>(false, null, "没有权限");
             }
 
+            var tran = _models.Database.BeginTransaction();
             var id = await _models.insertNote(data);
+
+            if (documents != null && documents.Length > 0)
+            {
+                var documentIds = await _models.addDocuments(documents.Select(d => new DocumentData(data.CreatorGuid, d, d.extension(false))).ToArray());
+                await _models.addDocumentRefs(documentIds.Select(d => new DocumentRefData(d, id)).ToArray());
+            }
+
+            await tran.CommitAsync();
+
             return new Result<FNote>(await _models.getNote(id));
         }
 
-        public async Task<Result<FNote>> modifyNote(FUserToken token, Guid id, NoteData oldData, NoteData newData)
+        public async Task<Result<FNote>> modifyNote(FUserToken token, Guid id, NoteData oldData, NoteData newData, FDocumentRef[] oldDocuments, string[] newDocuments)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
@@ -366,6 +443,32 @@ namespace Coching.Bll
             if (!await _models.checkNoteModifyPartner(id, token.ID))
             {
                 return new Result<FNote>(false, null, "没有权限");
+            }
+
+            if (oldDocuments != null && newDocuments != null && !__equals(oldDocuments, newDocuments))
+            {
+                var tran = _models.Database.BeginTransaction();
+                await _models.modifyNote(id, oldData, newData);
+                foreach (var d in oldDocuments)
+                {
+                    if (!newDocuments.Contains(d.Document.Src))
+                    {
+                        await _models.deleteDocumentRef(d.ID);
+                    }
+                }
+                foreach (var d in newDocuments)
+                {
+                    if (oldDocuments.FirstOrDefault(o => o.Document.Src == d) == null)
+                    {
+                        var documentId = await _models.addDocument(new DocumentData(newData.CreatorGuid, d, d.extension(false)));
+                        await _models.addDocumentRef(new DocumentRefData(documentId, id));
+                    }
+                }
+                await tran.CommitAsync();
+            }
+            else
+            {
+                await _models.modifyNote(id, oldData, newData);
             }
 
             return new Result<FNote>(await _models.getNote(id));
