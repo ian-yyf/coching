@@ -56,6 +56,10 @@
         margin-top: 10px;
     }
 
+    .catalogue-item.layui-this {
+        border-left: solid 3px #62b7f4;
+    }
+
     .add-button {
         position: fixed;
         bottom: 20px;
@@ -364,8 +368,22 @@
             add_child(node.data.id, node.data.root);
         },
         delete: function (node) {
-            var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
-            tree.refresh(data);
+            layer.confirm('确定要删除么', function (index) {
+                $.post('@Html.Raw(Url.Action("DeleteNode"))', {
+                    id: node.data.id
+                }, function (result) {
+                    if (!result.Success) {
+                        top.layer.msg(result.Message);
+                    }
+                    else {
+                        var data = tool.removeNode(node.data.id, tree.getOption().series[0].data);
+                        tree.refresh(data);
+                        reload_root(node.data.root);
+                    }
+                });
+
+                layer.close(index);
+            });
         },
         expand: function (node) {
             node.data.collapsed = false;
@@ -418,34 +436,55 @@
         tree.refresh(array);
     }
 
-    function root(e) {
+    function root_id(id) {
         $.post('@Url.Action("Tree")', {
-            id: $(e).attr('id')
+            id: id
         }, function (result) {
             if (!result.Success) {
                 top.layer.msg(result.Message);
             }
             else {
+                if (window.location.href.toLowerCase().indexOf(('rootGuid=' + id).toLowerCase()) < 0) {
+                    var regex = /rootGuid=[0-9a-zA-Z-]+/i;
+                    var newUrl = null;
+                    if (window.location.href.match(regex)) {
+                        newUrl = window.location.href.replace(regex, 'rootGuid=' + id);
+                    }
+                    else {
+                        newUrl = window.location.href + '&rootGuid=' + id;
+                    }
+                    history.pushState(null, result.Body.Name, newUrl);
+                }
+                $('.catalogue-item').removeClass('layui-this');
+                $('#' + id).addClass('layui-this');
                 init_tree(tool.toTreeData([result.Body]));
             }
         });
     }
 
-    function changed_notify(result, reload_root) {
+    function root(e) {
+        root_id($(e).attr('id'));
+    }
+
+    function reload_root(id) {
+        $.post('@Url.Action("Root")', {
+            id: id
+        }, function (result) {
+            if (!result.Success) {
+                top.layer.msg(result.Message);
+            }
+            else {
+                $('#' + result.Body.Node.ID).html(tool.innerHtml(result.Body.Node, result.Body.Workers));
+            }
+        });
+    }
+
+    function changed_notify(result, reload) {
         if (result.ID == result.RootGuid) {
             tool.updateHtml(result);
         }
-        if (reload_root) {
-            $.post('@Url.Action("Root")', {
-                id: result.RootGuid
-            }, function (result) {
-                if (!result.Success) {
-                    top.layer.msg(result.Message);
-                }
-                else {
-                    $('#' + result.Body.Node.ID).html(tool.innerHtml(result.Body.Node, result.Body.Workers));
-                }
-            });
+        if (reload) {
+            reload_root(result.RootGuid);
         }
 
         var array = tree.getOption().series[0].data;
@@ -616,5 +655,18 @@
             function (i) {
             }
         );
+
+        @if (Model.RootGuid != null && Model.Roots.FirstOrDefault(r => r.Node.ID == Model.RootGuid.Value) != null)
+        {
+            <text>
+            root_id('@Model.RootGuid.Value');
+            </text>
+        }
+        else if (Model.Roots.Length > 0)
+        {
+            <text>
+            root_id('@Model.Roots[0].Node.ID');
+            </text>
+        }
     })
 </script>

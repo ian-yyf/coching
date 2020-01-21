@@ -235,7 +235,7 @@ namespace Coching.Dal
                              join c in UsersTable on n.CreatorGuid equals c.KeyGuid
                              join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
                              from w in ws.DefaultIfEmpty()
-                             where n.RootGuid == id
+                             where n.RootGuid == id && n.Deleted == false
                              orderby n.CreatedTime
                              select new { n, c, w }).ToArrayAsync();
             return findNodes(dbs, Guid.Empty).Single();
@@ -262,8 +262,19 @@ namespace Coching.Dal
             await modify(NodesTable, id, oldData, newData);
         }
 
+        private async Task __deleteChildren(Guid id)
+        {
+            var dbs = await (from n in NodesTable where n.ParentGuid == id && n.Deleted == false select n).ToArrayAsync();
+            foreach (var db in dbs)
+            {
+                db.Deleted = true;
+                await __deleteChildren(db.KeyGuid);
+            }
+        }
+
         public async Task deleteNode(Guid id)
         {
+            await __deleteChildren(id);
             await delete(NodesTable, id);
         }
 

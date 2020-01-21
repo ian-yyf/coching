@@ -20,7 +20,7 @@ namespace Coching.Web.Controllers
 
         }
 
-        public async Task<IActionResult> Index(Guid projectGuid)
+        public async Task<IActionResult> Index(Guid projectGuid, Guid? rootGuid)
         {
             var token = this.getUserToken();
             var roots = await _work.getRootsOfProject(token, projectGuid, new NodeCondition(), PageSize, 1);
@@ -35,7 +35,7 @@ namespace Coching.Web.Controllers
                 return Error(partners.Message);
             }
 
-            return AutoView("Index", new CochingViewModel(projectGuid, roots.Body.Items, partners.Body));
+            return AutoView("Index", new CochingViewModel(projectGuid, rootGuid, roots.Body.Items, partners.Body));
         }
 
         [HttpPost]
@@ -250,6 +250,17 @@ namespace Coching.Web.Controllers
 
             model.Result = result.Body;
             return AutoView("NoteItem", model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteNode(Guid id)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var result = await _work.deleteNode(token, id);
+                return Json(result);
+            });
         }
     }
 }

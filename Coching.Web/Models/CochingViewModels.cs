@@ -18,14 +18,16 @@ namespace Coching.Web.Models
 
         }
 
-        public CochingViewModel(Guid projectGuid, FRoot[] roots, FPartner[] partners)
+        public CochingViewModel(Guid projectGuid, Guid? rootGuid, FRoot[] roots, FPartner[] partners)
         {
             ProjectGuid = projectGuid;
+            RootGuid = rootGuid;
             Roots = roots;
             Partners = partners;
         }
 
         public Guid ProjectGuid { get; set; }
+        public Guid? RootGuid { get; set; }
         public FRoot[] Roots { get; set; }
         public FPartner[] Partners { get; set; }
 
