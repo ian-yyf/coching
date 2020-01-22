@@ -28,6 +28,9 @@
     }
 </style>
 
+<link rel="stylesheet" href="https://unpkg.com/wangeditor@3.1.1/release/wangEditor.min.css" />
+<script src="https://unpkg.com/wangeditor@3.1.1/release/wangEditor.min.js"></script>
+
 <div class="layui-fluid">
     <div class="layui-card">
         <div>
@@ -52,6 +55,8 @@
                     </div>
                     @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
                 </div>
+
+                <div id="editor"></div>
 
                 <div class="layui-form-item">
                     @Html.LabelFor(m => m.Description, new { @class = "layui-form-label" })
@@ -83,4 +88,9 @@
     }, function (url) {
         $("#Header").val("");
     }, $("#Header").val() ? [$("#Header").val()] : null);
+
+    var E = window.wangEditor;
+    var editor = new E('#editor');
+    editor.customConfig.uploadImgShowBase64 = true;
+    editor.create();
 </script>
