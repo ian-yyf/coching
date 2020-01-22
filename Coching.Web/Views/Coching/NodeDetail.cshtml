@@ -162,7 +162,7 @@
                 <img class="modify-icon" src="~/res/edit.png" title="修改任务" onclick="modify()" />
             </div>
             <div id="NodeDescription" class="layui-card-body text-color-descrip flex">
-                @Model.Data.Node.Description
+                @Html.Raw(Model.Data.Node.HtmlDescription)
             </div>
             <div class="node-documents-container">
                 @if (Model.Data.Node.Documents.Length > 0)
@@ -329,7 +329,7 @@
             </h2>
             <div class="layui-colla-content">
                 <div class="layout-row layout-top-h">
-                    <p class="flex">@note.Content</p>
+                    <p class="flex">@Html.Raw(note.HtmlContent)</p>
                     <img class="modify-icon" src="~/res/edit.png" title="修改批注" onclick="modify_note(this)" />
                 </div>
                 <div class="note-documents-container">
@@ -390,7 +390,7 @@
 
     function modify_success(result) {
         $('#NodeName').html(result.Name);
-        $('#NodeDescription').html(result.Description);
+        $('#NodeDescription').html(result.HtmlDescription);
         $('.node-documents-container').html(tool.documentsInnerHtml(result.Documents));
         $('.node-documents-container .documents').lightGallery({
             share: false
@@ -535,7 +535,7 @@
             + '</h2>'
             + '<div class="layui-colla-content layui-show">'
             + '<div class="layout-row layout-top-h">'
-            + '<p class="flex">' + note.Content + '</p>'
+            + '<p class="flex">' + note.HtmlContent + '</p>'
             + '<img class="modify-icon" src="@Url.Content("~/res/edit.png")" title="修改批注" onclick="modify_note(this)" />'
             + '</div>'
             + '<div class="note-documents-container">'
@@ -565,7 +565,7 @@
     function modify_note_success(note, id) {
         if (note) {
             $('#' + note.ID + ' .content').html(note.Content);
-            $('#' + note.ID + ' p').html(note.Content);
+            $('#' + note.ID + ' p').html(note.HtmlContent);
             $('#' + note.ID + ' .note-documents-container').html(tool.documentsInnerHtml(note.Documents));
 
             $('#' + note.ID + ' .note-documents-container .documents').lightGallery({
@@ -627,7 +627,9 @@
                         if (!result.Success) {
                             top.layer.msg(result.Message);
                         }
-                        else if (result.Body.StartTime != value) {
+                        else if ((result.Body.StartTime || '') != value) {
+                            console.log(result.Body.StartTime);
+                            console.log(value);
                             top.layer.msg('修改失败，请刷新页面');
                         }
                         else {
@@ -651,7 +653,7 @@
                         if (!result.Success) {
                             top.layer.msg(result.Message);
                         }
-                        else if (result.Body.EndTime != value) {
+                        else if ((result.Body.EndTime || '') != value) {
                             top.layer.msg('修改失败，请刷新页面');
                         }
                         else {

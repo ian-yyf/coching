@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.RegularExpressions;
 
 namespace Coching.Model.Data
 {
@@ -102,6 +103,19 @@ namespace Coching.Model.Data
             }
         }
 
+        public string HtmlDescription
+        {
+            get
+            {
+                if (Description == null)
+                {
+                    return Description;
+                }
+                var regex = new Regex("[\\r\\n]+");
+                return regex.Replace(Description, "<br>");
+            }
+        }
+
         public string EstimatedTime
         {
             get
@@ -157,7 +171,7 @@ namespace Coching.Model.Data
         {
             get
             {
-                if (ActualManHour == 0 || getStatus() != NodeStatus.完成)
+                if (ActualManHour == 0)
                 {
                     if (EstimatedManHour != 0)
                     {

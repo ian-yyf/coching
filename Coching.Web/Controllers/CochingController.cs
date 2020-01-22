@@ -162,7 +162,7 @@ namespace Coching.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ModifyStartTime(Guid id, DateTime startTime)
+        public async Task<IActionResult> ModifyStartTime(Guid id, DateTime? startTime)
         {
             return await JsonActionAsync(async () =>
             {
@@ -178,7 +178,7 @@ namespace Coching.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ModifyEndTime(Guid id, DateTime endTime)
+        public async Task<IActionResult> ModifyEndTime(Guid id, DateTime? endTime)
         {
             return await JsonActionAsync(async () =>
             {

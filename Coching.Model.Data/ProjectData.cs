@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Coching.Model.Data
 {
@@ -48,5 +49,18 @@ namespace Coching.Model.Data
         [Column(TypeName = "text")]
         public string Description { get; set; }
         public DateTime CreatedTime { get; set; }
+
+        public string HtmlDescription
+        {
+            get
+            {
+                if (Description == null)
+                {
+                    return Description;
+                }
+                var regex = new Regex("[\\r\\n]+");
+                return regex.Replace(Description, "<br>");
+            }
+        }
     }
 }
