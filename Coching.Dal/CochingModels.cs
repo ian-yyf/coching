@@ -126,6 +126,11 @@ namespace Coching.Dal
             return await checkProjectAdminPartner(partner.ProjectGuid, userGuid);
         }
 
+        public async Task<bool> checkLeaf(Guid nodeGuid)
+        {
+            return await (from n in NodesTable where n.ParentGuid == nodeGuid && n.Deleted == false select n.KeyGuid).FirstOrDefaultAsync() == Guid.Empty;
+        }
+
         public async Task<FProject[]> getProjectsOfUser(Guid userGuid, ProjectCondition condition)
         {
             var dbs = await (from n in ProjectsTable
@@ -241,6 +246,24 @@ namespace Coching.Dal
             return findNodes(dbs, Guid.Empty).Single();
         }
 
+        public async Task __addActualManHour(Guid id, decimal hour)
+        {
+            if (id == Guid.Empty)
+            {
+                return;
+            }
+
+            var db = await (from n in NodesTable where n.KeyGuid == id select n).SingleAsync();
+            db.ActualManHour += hour;
+            await __addActualManHour(db.ParentGuid, hour);
+        }
+
+        public async Task addActualManHour(Guid id, decimal hour)
+        {
+            await __addActualManHour(id, hour);
+            await _safeSaveChanges();
+        }
+
         public async Task<FNode> getNode(Guid id)
         {
             var db = await (from n in NodesTable
@@ -272,8 +295,18 @@ namespace Coching.Dal
             }
         }
 
+        private async Task __deleteDocumentRefs(Guid ownerGuid)
+        {
+            var dbs = await (from d in DocumentRefsTable where d.OwnerGuid == ownerGuid && d.Deleted == false select d).ToArrayAsync();
+            foreach (var db in dbs)
+            {
+                db.Deleted = true;
+            }
+        }
+
         public async Task deleteNode(Guid id)
         {
+            await __deleteDocumentRefs(id);
             await __deleteChildren(id);
             await delete(NodesTable, id);
         }
@@ -313,6 +346,7 @@ namespace Coching.Dal
 
         public async Task deleteNote(Guid id)
         {
+            await __deleteDocumentRefs(id);
             await delete(NotesTable, id);
         }
 

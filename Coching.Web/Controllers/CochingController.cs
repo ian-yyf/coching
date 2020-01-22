@@ -119,6 +119,17 @@ namespace Coching.Web.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> DeleteNode(Guid id)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var result = await _work.deleteNode(token, id);
+                return Json(result);
+            });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> ModifyStatus(Guid id, int status)
         {
             return await JsonActionAsync(async () =>
@@ -194,6 +205,22 @@ namespace Coching.Web.Controllers
                     return Json(new Result<FNode>(false, null, node.Message));
                 }
                 var result = await _work.modifyNode(token, id, new NodeData() { EstimatedManHour = node.Body.EstimatedManHour }, new NodeData() { EstimatedManHour = estimatedManHour }, null, null);
+                return Json(result);
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ModifyActualManHour(Guid id, decimal actualManHour)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var node = await _work.getNode(token, id);
+                if (!node.Success)
+                {
+                    return Json(new Result<FNode>(false, null, node.Message));
+                }
+                var result = await _work.modifyNode(token, id, new NodeData() { ActualManHour = node.Body.ActualManHour }, new NodeData() { ActualManHour = actualManHour }, null, null);
                 return Json(result);
             });
         }
@@ -291,12 +318,12 @@ namespace Coching.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteNode(Guid id)
+        public async Task<IActionResult> DeleteNote(Guid id)
         {
             return await JsonActionAsync(async () =>
             {
                 var token = this.getUserToken();
-                var result = await _work.deleteNode(token, id);
+                var result = await _work.deleteNote(token, id);
                 return Json(result);
             });
         }

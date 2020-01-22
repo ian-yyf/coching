@@ -31,7 +31,7 @@
 <div class="layui-fluid">
     <div class="layui-card">
         <div>
-            @using (Html.BeginForm(Model.ActionName, "Coching", FormMethod.Post, new { @class = "layui-form layui-row", @id = "formId" }))
+            @using (Html.BeginForm(Model.ActionName, "Coching", FormMethod.Post, new { @class = "layui-form layui-row" }))
             {
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
@@ -39,7 +39,7 @@
                 <div class="layui-form-item">
                     @Html.LabelFor(m => m.Content, new { @class = "layui-form-label" })
                     <div class="layui-input-block">
-                        @Html.TextAreaFor(m => m.Content, new { @class = "layui-textarea", @placeholder = "请输入详细批注", @autofocus = true })
+                        @Html.TextAreaFor(m => m.Content, new { @class = "layui-textarea", @placeholder = "请输入详细批注" })
                     </div>
                     @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger" })
                 </div>
@@ -63,6 +63,10 @@
 
                 <div class="layui-form-item" style="text-align: center;">
                     <button class="layui-btn" type="submit" style="pointer-events: auto;"><i class="layui-icon">&#xe609;</i>提交</button>
+                    @if (Model.OldJson != null)
+                    {
+                        <button class="layui-btn layui-btn-danger" type="button" style="pointer-events: auto;" onclick="delete_this()"><i class="layui-icon"></i>删除本条</button>
+                    }
                 </div>
             }
         </div>
@@ -70,6 +74,11 @@
 </div>
 
 <script>
+    layui.define(["layer"],
+        function (i) {
+        }
+    );
+
     @if (Model.Documents == null)
     {
         <text>
@@ -90,4 +99,23 @@
         documents = documents.filter(d => d != url);
         $('#Documents').val(JSON.stringify(documents));
     }, documents);
+
+    function delete_this() {
+        layer.confirm('确定要删除本条批注', function (index) {
+            $.post('@Html.Raw(Url.Action("DeleteNote"))', {
+                id: '@Model.KeyGuid'
+            }, function (result) {
+                if (!result.Success) {
+                    top.layer.msg(result.Message);
+                }
+                else {
+                    parent.@(Model.Callback)(null, '@Model.KeyGuid');
+                    var open = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(open);
+                }
+            });
+
+            layer.close(index);
+        });
+    }
 </script>

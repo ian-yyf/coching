@@ -106,7 +106,33 @@ namespace Coching.Model.Data
         {
             get
             {
+                if (EstimatedManHour == 0)
+                {
+                    return "请根据预报工时确定";
+                }
                 return $"{EstimatedManHour.ToString("0.#")}工时";
+            }
+        }
+
+        public string getResult()
+        {
+            if (ActualManHour == 0 || EstimatedManHour == 0)
+            {
+                return "尚无结果";
+            }
+
+            if (ActualManHour > EstimatedManHour)
+            {
+                return "超时";
+            }
+
+            if ((EstimatedManHour - ActualManHour) / EstimatedManHour < 0.1M)
+            {
+                return "准时";
+            }
+            else
+            {
+                return "未超时";
             }
         }
 
@@ -114,7 +140,33 @@ namespace Coching.Model.Data
         {
             get
             {
-                return $"{ActualManHour.ToString("0.#")}工时";
+                if (ActualManHour == 0)
+                {
+                    return "任务完成后自动计算";
+                }
+                var time = $"{ActualManHour.ToString("0.#")}工时";
+                if (EstimatedManHour != 0)
+                {
+                    time += $"（{getResult()}）";
+                }
+                return time;
+            }
+        }
+
+        public string TimeInfo
+        {
+            get
+            {
+                if (ActualManHour == 0 || getStatus() != NodeStatus.完成)
+                {
+                    if (EstimatedManHour != 0)
+                    {
+                        return $"预估{EstimatedManHour.ToString("0.#")}工时";
+                    }
+                    return null;
+                }
+
+                return $"{ActualManHour.ToString("0.#")}/{EstimatedManHour.ToString("0.#")}工时 {getResult()}";
             }
         }
     }

@@ -336,23 +336,84 @@ namespace Coching.Bll
                 }
             }
 
+            FNode _dbData = null;
+            Func<Task<FNode>> dbData = async () =>
+            {
+                if (_dbData == null)
+                {
+                    _dbData = await _models.getNode(id);
+                }
+                return _dbData;
+            };
+
+            Func<Task<DateTime?>> finalStartTime = async () =>
+            {
+                if (oldData.StartTime != newData.StartTime)
+                {
+                    return newData.StartTime;
+                }
+                return (await dbData()).StartTime;
+            };
+
+            Func<Task<DateTime?>> finalEndTime = async () =>
+            {
+                if (oldData.EndTime != newData.EndTime)
+                {
+                    return newData.EndTime;
+                }
+                return (await dbData()).EndTime;
+            };
+
+            Func<Task<NodeStatus>> finalStatus = async () =>
+            {
+                if (oldData.Status != newData.Status)
+                {
+                    return newData.getStatus();
+                }
+                return (await dbData()).getStatus();
+            };
+
             if (oldData.Status != newData.Status)
             {
-                if (newData.getStatus() == NodeStatus.进行中 && oldData.StartTime == newData.StartTime && newData.StartTime == null)
+                if (newData.getStatus() == NodeStatus.进行中 && oldData.StartTime == newData.StartTime && await finalStartTime() == null)
                 {
                     newData.StartTime = DateTime.Now;
                 }
 
-                if (newData.getStatus() == NodeStatus.完成 && oldData.EndTime == newData.EndTime && newData.EndTime == null)
+                if (newData.getStatus() == NodeStatus.完成 && oldData.EndTime == newData.EndTime && await finalEndTime() == null)
                 {
                     newData.EndTime = DateTime.Now;
                 }
             }
 
+            if (oldData.ActualManHour == newData.ActualManHour)
+            {
+                if (oldData.Status != newData.Status
+                    || oldData.StartTime != newData.StartTime
+                    || oldData.EndTime != newData.EndTime)
+                {
+                    if (await finalStatus() == NodeStatus.完成 && await finalStartTime() != null && await finalEndTime() != null)
+                    {
+                        if (await _models.checkLeaf(id))
+                        {
+                            oldData.ActualManHour = (await dbData()).ActualManHour;
+                            newData.ActualManHour = (decimal)Math.Round(((await finalEndTime()).Value - (await finalStartTime()).Value).TotalHours, 1);
+                        }
+                    }
+                }
+            }
+
+            var tran = _models.Database.BeginTransaction();
+
+            if (oldData.ActualManHour != newData.ActualManHour)
+            {
+                await _models.addActualManHour((await dbData()).ParentGuid, newData.ActualManHour - oldData.ActualManHour);
+            }
+
+            await _models.modifyNode(id, oldData, newData);
+
             if (oldDocuments != null && newDocuments != null && !__equals(oldDocuments, newDocuments))
             {
-                var tran = _models.Database.BeginTransaction();
-                await _models.modifyNode(id, oldData, newData);
                 foreach (var d in oldDocuments)
                 {
                     if (!newDocuments.Contains(d.Document.Src))
@@ -368,12 +429,9 @@ namespace Coching.Bll
                         await _models.addDocumentRef(new DocumentRefData(documentId, id));
                     }
                 }
-                await tran.CommitAsync();
             }
-            else
-            {
-                await _models.modifyNode(id, oldData, newData);
-            }
+
+            await tran.CommitAsync();
 
             var node = await _models.getNode(id);
             var documents = await _models.getDocumentRefs(id);

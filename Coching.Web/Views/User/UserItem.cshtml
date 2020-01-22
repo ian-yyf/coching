@@ -48,7 +48,7 @@
                 <div class="layui-form-item">
                     @Html.LabelFor(m => m.Name, new { @class = "layui-form-label" })
                     <div class="layui-input-block">
-                        @Html.TextBoxFor(m => m.Name, new { @class = "layui-input", @placeholder = "请输入名称", @autofocus = true, @autocomplete = "off" })
+                        @Html.TextBoxFor(m => m.Name, new { @class = "layui-input", @placeholder = "请输入名称", @autocomplete = "off" })
                     </div>
                     @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
                 </div>

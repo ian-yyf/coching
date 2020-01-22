@@ -235,7 +235,7 @@
             <div class="layui-form-item offer_edit" style="display: none;">
                 <label class="layui-form-label">预报工时</label>
                 <div class="layui-input-inline">
-                    <input type="text" autocomplete="off" placeholder="请填写你的预估工时" class="layui-input" value="@(me == null ? 0 : me.EstimatedManHour)">
+                    <input type="text" autocomplete="off" placeholder="请填写你的预估工时" class="layui-input" value="@(me == null ? "" : me.EstimatedManHour.ToString())">
                 </div>
                 <div class="layui-form-mid layui-word-aux">你的预估工时</div>
             </div>
@@ -245,16 +245,24 @@
                     <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.offer'], ['.offer_edit'])">取消</button>
                 </div>
             </div>
-            <div class="layui-form-item node_time">
-                <label class="layui-form-label">预估工时</label>
-                <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
-                    <div class="node_time_info">@Model.Data.Node.EstimatedTime</div>
+            <div class="layui-form-item node_time layout-row">
+                <div class="flex">
+                    <label class="layui-form-label">预估工时</label>
+                    <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
+                        <div class="node_time_info">@Model.Data.Node.EstimatedTime</div>
+                    </div>
+                </div>
+                <div class="flex">
+                    <label class="layui-form-label">实际工时</label>
+                    <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_actual_time_edit'], ['.node_time'])">
+                        <div class="node_actual_time_info">@Model.Data.Node.ActualTime</div>
+                    </div>
                 </div>
             </div>
             <div class="layui-form-item node_time_edit" style="display: none;">
                 <label class="layui-form-label">预估工时</label>
                 <div class="layui-input-inline">
-                    <input type="text" autocomplete="off" placeholder="请确定预估工时" class="layui-input" value="@Model.Data.Node.EstimatedManHour">
+                    <input type="text" autocomplete="off" placeholder="请确定预估工时" class="layui-input" value="@(Model.Data.Node.EstimatedManHour == 0 ? "" : Model.Data.Node.EstimatedManHour.ToString())">
                 </div>
                 <div class="layui-form-mid layui-word-aux">最终确定的预估工时（管理员）</div>
             </div>
@@ -262,6 +270,19 @@
                 <div class="layui-input-block">
                     <button type="button" class="layui-btn" onclick="modify_estimated_manhour()">确定</button>
                     <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_time'], ['.node_time_edit'])">取消</button>
+                </div>
+            </div>
+            <div class="layui-form-item node_actual_time_edit" style="display: none;">
+                <label class="layui-form-label">实际工时</label>
+                <div class="layui-input-inline">
+                    <input id="ActualManHour" type="text" autocomplete="off" placeholder="可指定实际工时" class="layui-input" value="@(Model.Data.Node.ActualManHour == 0 ? "" : Model.Data.Node.ActualManHour.ToString())">
+                </div>
+                <div class="layui-form-mid layui-word-aux">实际工时会自动计算，也可以修改</div>
+            </div>
+            <div class="layui-form-item node_actual_time_edit" style="display: none;">
+                <div class="layui-input-block">
+                    <button type="button" class="layui-btn" onclick="modify_actual_manhour()">确定</button>
+                    <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_time'], ['.node_actual_time_edit'])">取消</button>
                 </div>
             </div>
             <div class="layui-form-item layout-row">
@@ -392,8 +413,29 @@
             }
             else {
                 $('.node_time .node_time_info').html(result.Body.EstimatedTime);
+                $('.node_time .node_actual_time_info').html(result.Body.ActualTime);
                 parent.@(Model.Notify)(result.Body);
                 show_hide(['.node_time'], ['.node_time_edit']);
+            }
+        });
+    }
+
+    function modify_actual_manhour() {
+        var value = $('.node_actual_time_edit input').val();
+        $.post('@Html.Raw(Url.Action("ModifyActualManHour"))', {
+            id: '@Model.Data.Node.ID',
+            actualManHour: value
+        }, function (result) {
+            if (!result.Success) {
+                top.layer.msg(result.Message);
+            }
+            else if (result.Body.ActualManHour != value) {
+                top.layer.msg('修改失败，请刷新页面');
+            }
+            else {
+                $('.node_time .node_actual_time_info').html(result.Body.ActualTime);
+                parent.@(Model.Notify)(result.Body);
+                show_hide(['.node_time'], ['.node_actual_time_edit']);
             }
         });
     }
@@ -520,14 +562,19 @@
         });
     }
 
-    function modify_note_success(note) {
-        $('#' + note.ID + ' .content').html(note.Content);
-        $('#' + note.ID + ' p').html(note.Content);
-        $('#' + note.ID + ' .note-documents-container').html(tool.documentsInnerHtml(note.Documents));
+    function modify_note_success(note, id) {
+        if (note) {
+            $('#' + note.ID + ' .content').html(note.Content);
+            $('#' + note.ID + ' p').html(note.Content);
+            $('#' + note.ID + ' .note-documents-container').html(tool.documentsInnerHtml(note.Documents));
 
-        $('#' + note.ID + ' .note-documents-container .documents').lightGallery({
-            share: false
-        });
+            $('#' + note.ID + ' .note-documents-container .documents').lightGallery({
+                share: false
+            });
+        }
+        else {
+            $('#' + id).remove();
+        }
     }
 </script>
 
@@ -558,9 +605,11 @@
                         top.layer.msg('修改失败，请刷新页面');
                     }
                     else {
-                        parent.@(Model.Notify)(result.Body);
                         $('#StartTime').val(result.Body.StartTime);
                         $('#EndTime').val(result.Body.EndTime);
+                        $('.node_time .node_actual_time_info').html(result.Body.ActualTime);
+                        $('.node_actual_time_edit input').val(result.Body.ActualManHour == 0 ? '' : result.Body.ActualManHour);
+                        parent.@(Model.Notify)(result.Body);
                     }
                 });
             });
@@ -582,6 +631,8 @@
                             top.layer.msg('修改失败，请刷新页面');
                         }
                         else {
+                            $('.node_time .node_actual_time_info').html(result.Body.ActualTime);
+                            $('.node_actual_time_edit input').val(result.Body.ActualManHour == 0 ? '' : result.Body.ActualManHour);
                             parent.@(Model.Notify)(result.Body);
                         }
                     });
@@ -604,6 +655,8 @@
                             top.layer.msg('修改失败，请刷新页面');
                         }
                         else {
+                            $('.node_time .node_actual_time_info').html(result.Body.ActualTime);
+                            $('.node_actual_time_edit input').val(result.Body.ActualManHour == 0 ? '' : result.Body.ActualManHour);
                             parent.@(Model.Notify)(result.Body);
                         }
                     });
