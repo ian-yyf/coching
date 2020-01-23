@@ -329,7 +329,7 @@
             </h2>
             <div class="layui-colla-content">
                 <div class="layout-row layout-top-h">
-                    <p class="flex">@Html.Raw(note.HtmlContent)</p>
+                    <div class="flex html-content">@Html.Raw(note.HtmlContent)</div>
                     <img class="modify-icon" src="~/res/edit.png" title="修改批注" onclick="modify_note(this)" />
                 </div>
                 <div class="note-documents-container">
@@ -535,7 +535,7 @@
             + '</h2>'
             + '<div class="layui-colla-content layui-show">'
             + '<div class="layout-row layout-top-h">'
-            + '<p class="flex">' + note.HtmlContent + '</p>'
+            + '<div class="flex html-content">' + note.HtmlContent + '</div>'
             + '<img class="modify-icon" src="@Url.Content("~/res/edit.png")" title="修改批注" onclick="modify_note(this)" />'
             + '</div>'
             + '<div class="note-documents-container">'
@@ -565,7 +565,7 @@
     function modify_note_success(note, id) {
         if (note) {
             $('#' + note.ID + ' .content').html(note.Content);
-            $('#' + note.ID + ' p').html(note.HtmlContent);
+            $('#' + note.ID + ' .html-content').html(note.HtmlContent);
             $('#' + note.ID + ' .note-documents-container').html(tool.documentsInnerHtml(note.Documents));
 
             $('#' + note.ID + ' .note-documents-container .documents').lightGallery({
