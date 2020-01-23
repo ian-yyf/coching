@@ -9,6 +9,8 @@ using Coching.Model.Front;
 using Public.Containers;
 using Public.Model.Front;
 
+// add-migration
+// update-database
 namespace Coching.Dal
 {
     public class CochingModels : Models

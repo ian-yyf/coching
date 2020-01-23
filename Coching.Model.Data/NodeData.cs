@@ -12,7 +12,7 @@ namespace Coching.Model.Data
 
         }
 
-        public NodeData(Guid projectGuid, Guid rootGuid, Guid parentGuid, Guid creatorGuid, string name, string description)
+        public NodeData(Guid projectGuid, Guid rootGuid, Guid parentGuid, Guid creatorGuid, string name, string description, string htmlDescription)
         {
             ProjectGuid = projectGuid;
             RootGuid = rootGuid;
@@ -20,6 +20,7 @@ namespace Coching.Model.Data
             CreatorGuid = creatorGuid;
             Name = name;
             Description = description;
+            HtmlDescription = htmlDescription;
             EstimatedManHour = 0;
             ActualManHour = 0;
             StartTime = null;
@@ -37,6 +38,7 @@ namespace Coching.Model.Data
             CreatorGuid = rhs.CreatorGuid;
             Name = rhs.Name;
             Description = rhs.Description;
+            HtmlDescription = rhs.HtmlDescription;
             EstimatedManHour = rhs.EstimatedManHour;
             ActualManHour = rhs.ActualManHour;
             StartTime = rhs.StartTime;
@@ -46,11 +48,12 @@ namespace Coching.Model.Data
             CreatedTime = rhs.CreatedTime;
         }
 
-        public NodeData(NodeData rhs, string name, string description)
+        public NodeData(NodeData rhs, string name, string description, string htmlDescription)
             : this(rhs)
         {
             Name = name;
             Description = description;
+            HtmlDescription = htmlDescription;
         }
 
         public Guid ProjectGuid { get; set; }
@@ -62,6 +65,8 @@ namespace Coching.Model.Data
         public string Name { get; set; }
         [Column(TypeName = "text")]
         public string Description { get; set; }
+        [Column(TypeName = "text")]
+        public string HtmlDescription { get; set; }
         [Column(TypeName = "decimal(10, 1)")]
         public decimal EstimatedManHour { get; set; }
         [Column(TypeName = "decimal(10, 1)")]
@@ -100,19 +105,6 @@ namespace Coching.Model.Data
                 }
 
                 return Name.Substring(0, 8) + "...";
-            }
-        }
-
-        public string HtmlDescription
-        {
-            get
-            {
-                if (Description == null)
-                {
-                    return Description;
-                }
-                var regex = new Regex("[\\r\\n]+");
-                return regex.Replace(Description, "<br>");
             }
         }
 

@@ -1,0 +1,28 @@
+﻿@using Coching.Web.Models;
+@model HtmlEditorWidgetModel
+
+@{
+    Layout = null;
+}
+
+<style>
+    .w-e-text-container {
+        height: calc(100% - 20px) !important;
+    }
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/wangeditor@3.1.1/release/wangEditor.min.css" />
+<script src="https://unpkg.com/wangeditor@3.1.1/release/wangEditor.min.js"></script>
+
+<div id="@Model.Id">@Html.Raw(Model.Content)</div>
+
+<script>
+    var E = window.wangEditor;
+    var editor = new E('#@Model.Id');
+    editor.customConfig.uploadImgServer = '@Html.Raw(Url.Action("Upload", "File"))';
+    editor.customConfig.onchange = function (html) {
+        $('@Model.TextChanged').val(editor.txt.text());
+        $('@Model.HtmlChanged').val(editor.txt.html());
+    }
+    editor.create();
+</script>

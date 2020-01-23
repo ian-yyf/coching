@@ -46,7 +46,7 @@ namespace Coching.Web.Controllers
             }
 
             var token = this.getUserToken();
-            var result = await _work.insertProject(token, new ProjectData(token.ID, model.Name, model.Header, model.Description));
+            var result = await _work.insertProject(token, new ProjectData(token.ID, model.Name, model.Header, model.Description, model.HtmlDescription));
             if (!result.Success)
             {
                 return Error(result.Message, AutoView("ProjectItem", model));
@@ -80,7 +80,7 @@ namespace Coching.Web.Controllers
 
             var token = this.getUserToken();
             var oldData = model.OldData;
-            var result = await _work.modifyProject(token, model.KeyGuid, oldData, new ProjectData(oldData, model.Name, model.Header, model.Description));
+            var result = await _work.modifyProject(token, model.KeyGuid, oldData, new ProjectData(oldData, model.Name, model.Header, model.Description, model.HtmlDescription));
             if (!result.Success)
             {
                 return Error(result.Message, AutoView("ProjectItem", model));

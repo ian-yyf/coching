@@ -85,4 +85,25 @@ namespace Coching.Web.Models
         public IPagedList Page { get; set; }
         public UrlHandler Url { get; set; }
     }
+
+    public class HtmlEditorWidgetModel
+    {
+        public HtmlEditorWidgetModel()
+        {
+
+        }
+
+        public HtmlEditorWidgetModel(string id, string content, string textChanged, string htmlChanged)
+        {
+            Id = id;
+            Content = content;
+            TextChanged = textChanged;
+            HtmlChanged = htmlChanged;
+        }
+
+        public string Id { get; set; }
+        public string Content { get; set; }
+        public string TextChanged { get; set; }
+        public string HtmlChanged { get; set; }
+    }
 }

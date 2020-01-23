@@ -37,6 +37,7 @@ namespace Coching.Web.Models
             Name = oldData.Name;
             Header = oldData.Header;
             Description = oldData.Description;
+            HtmlDescription = oldData.HtmlDescription;
         }
 
         public ProjectItemViewModel(string actionName, string actionTitle, string callback)
@@ -53,6 +54,7 @@ namespace Coching.Web.Models
         public string Header { get; set; }
         [Display(Name = "详情")]
         public string Description { get; set; }
+        public string HtmlDescription { get; set; }
     }
 
     public class PartnersViewCondition : UserCondition

@@ -74,7 +74,7 @@ namespace Coching.Web.Controllers
             }
 
             var token = this.getUserToken();
-            var data = new NodeData(model.ProjectGuid, model.RootGuid, model.ParentGuid, token.ID, model.Name, model.Description);
+            var data = new NodeData(model.ProjectGuid, model.RootGuid, model.ParentGuid, token.ID, model.Name, model.Description, model.HtmlDescription);
             var result = await _work.insertNode(token, data, model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
@@ -107,7 +107,7 @@ namespace Coching.Web.Controllers
             }
 
             var oldData = model.OldData;
-            var newData = new NodeData(oldData, model.Name, model.Description);
+            var newData = new NodeData(oldData, model.Name, model.Description, model.HtmlDescription);
             var result = await _work.modifyNode(this.getUserToken(), model.KeyGuid, new NodeData(oldData), newData, oldData.Documents, model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
@@ -273,7 +273,7 @@ namespace Coching.Web.Controllers
             }
 
             var token = this.getUserToken();
-            var result = await _work.insertNote(token, new NoteData(model.NodeGuid, token.ID, model.Content), model.Documents?.jsonDecode<string[]>());
+            var result = await _work.insertNote(token, new NoteData(model.NodeGuid, token.ID, model.Content, model.HtmlContent), model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
                 return Error(result.Message, AutoView("NoteItem", model));
@@ -306,7 +306,7 @@ namespace Coching.Web.Controllers
 
             var token = this.getUserToken();
             var oldData = model.OldData;
-            var newData = new NoteData(oldData, model.Content);
+            var newData = new NoteData(oldData, model.Content, model.HtmlContent);
             var result = await _work.modifyNote(token, model.KeyGuid, new NoteData(oldData), newData, oldData.Documents, model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {

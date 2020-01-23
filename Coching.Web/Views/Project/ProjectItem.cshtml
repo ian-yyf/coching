@@ -23,13 +23,10 @@
 }
 
 <style>
-    .layui-textarea {
+    #editor {
         height: calc(100vh - 260px);
     }
 </style>
-
-<link rel="stylesheet" href="https://unpkg.com/wangeditor@3.1.1/release/wangEditor.min.css" />
-<script src="https://unpkg.com/wangeditor@3.1.1/release/wangEditor.min.js"></script>
 
 <div class="layui-fluid">
     <div class="layui-card">
@@ -56,12 +53,12 @@
                     @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
                 </div>
 
-                <div id="editor"></div>
-
                 <div class="layui-form-item">
                     @Html.LabelFor(m => m.Description, new { @class = "layui-form-label" })
                     <div class="layui-input-block">
-                        @Html.TextAreaFor(m => m.Description, new { @class = "layui-textarea", @placeholder = "请输入详细信息" })
+                        @Html.HiddenFor(m => m.Description)
+                        @Html.HiddenFor(m => m.HtmlDescription)
+                        @await Html.PartialAsync("_Widgets/HtmlEditor", new HtmlEditorWidgetModel("editor", Model.HtmlDescription, "#Description", "#HtmlDescription"))
                     </div>
                     @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
                 </div>
@@ -88,9 +85,4 @@
     }, function (url) {
         $("#Header").val("");
     }, $("#Header").val() ? [$("#Header").val()] : null);
-
-    var E = window.wangEditor;
-    var editor = new E('#editor');
-    editor.customConfig.uploadImgShowBase64 = true;
-    editor.create();
 </script>

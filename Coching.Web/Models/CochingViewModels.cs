@@ -52,6 +52,7 @@ namespace Coching.Web.Models
             RootGuid = oldData.RootGuid;
             Name = oldData.Name;
             Description = oldData.Description;
+            HtmlDescription = oldData.HtmlDescription;
             Documents = oldData.Documents.Select(d => d.Document.Src).jsonEncode();
         }
 
@@ -72,6 +73,7 @@ namespace Coching.Web.Models
         public string Name { get; set; }
         [Display(Name = "详情")]
         public string Description { get; set; }
+        public string HtmlDescription { get; set; }
         public string Documents { get; set; }
     }
 
@@ -116,6 +118,7 @@ namespace Coching.Web.Models
         {
             NodeGuid = oldData.NodeGuid;
             Content = oldData.Content;
+            HtmlContent = oldData.HtmlContent;
             Documents = oldData.Documents.Select(d => d.Document.Src).jsonEncode();
         }
 
@@ -129,6 +132,8 @@ namespace Coching.Web.Models
         [Required]
         [Display(Name = "批注内容")]
         public String Content { get; set; }
+        [Required]
+        public String HtmlContent { get; set; }
         public string Documents { get; set; }
     }
 }

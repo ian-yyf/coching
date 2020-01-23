@@ -14,12 +14,13 @@ namespace Coching.Model.Data
 
         }
 
-        public ProjectData(Guid creatorGuid, string name, string header, string description)
+        public ProjectData(Guid creatorGuid, string name, string header, string description, string htmlDescription)
         {
             CreatorGuid = creatorGuid;
             Name = name;
             Header = header;
             Description = description;
+            HtmlDescription = htmlDescription;
             CreatedTime = DateTime.Now;
         }
 
@@ -29,15 +30,17 @@ namespace Coching.Model.Data
             Name = rhs.Name;
             Header = rhs.Header;
             Description = rhs.Description;
+            HtmlDescription = rhs.HtmlDescription;
             CreatedTime = rhs.CreatedTime;
         }
 
-        public ProjectData(ProjectData rhs, string name, string header, string description)
+        public ProjectData(ProjectData rhs, string name, string header, string description, string htmlDescription)
             : this(rhs)
         {
             Name = name;
             Header = header;
             Description = description;
+            HtmlDescription = htmlDescription;
         }
 
         public Guid CreatorGuid { get; set; }
@@ -48,19 +51,8 @@ namespace Coching.Model.Data
         public string Header { get; set; }
         [Column(TypeName = "text")]
         public string Description { get; set; }
+        [Column(TypeName = "text")]
+        public string HtmlDescription { get; set; }
         public DateTime CreatedTime { get; set; }
-
-        public string HtmlDescription
-        {
-            get
-            {
-                if (Description == null)
-                {
-                    return Description;
-                }
-                var regex = new Regex("[\\r\\n]+");
-                return regex.Replace(Description, "<br>");
-            }
-        }
     }
 }
