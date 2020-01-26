@@ -1,4 +1,5 @@
-﻿using Coching.Dal;
+﻿using App.Utils;
+using Coching.Dal;
 using Coching.Model.Data;
 using Coching.Model.Front;
 using Public.Containers;
@@ -6,6 +7,7 @@ using Public.Model.Data;
 using Public.Model.Front;
 using Public.Utils;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -64,6 +66,12 @@ namespace Coching.Bll
             var tran = _models.Database.BeginTransaction();
             var id = await _models.insertProject(data);
             await _models.insertPartner(new PartnerData(id, data.CreatorGuid, PartnerRole.管理员));
+
+            var link = new ActionLogLink("Index", "Coching", new {
+                projectGuid = id
+            }.toKeyValueArray(), data.Name);
+            await _models.addActionLog(new ActionLogData(id, token.ID, ActionLogKind.创建项目, $"创建了项目 {link.toString()}"), true);
+
             await tran.CommitAsync();
 
             return new Result<FProject>(await _models.getProject(id));
@@ -86,7 +94,13 @@ namespace Coching.Bll
                 return new Result<FProject>(false, null, "没有权限");
             }
 
+            var link = new ActionLogLink("Index", "Coching", new
+            {
+                projectGuid = id
+            }.toKeyValueArray(), newData.Name);
+            await _models.addActionLog(new ActionLogData(id, token.ID, ActionLogKind.修改项目, $"修改了项目 {link.toString()}"), false);
             await _models.modifyProject(id, oldData, newData);
+
             return new Result<FProject>(await _models.getProject(id));
         }
 
@@ -102,7 +116,10 @@ namespace Coching.Bll
                 return new Result<bool>(false, false, "没有权限");
             }
 
+            var project = await _models.getProject(id);
+            await _models.addActionLog(new ActionLogData(id, token.ID, ActionLogKind.删除项目, $"删除了项目 {project.Name} "), false);
             await _models.deleteProject(id);
+
             return new Result<bool>(true);
         }
 
@@ -258,7 +275,15 @@ namespace Coching.Bll
             if (data.isRoot())
             {
                 await _models.modifyNode(id, new NodeData() { RootGuid = Guid.Empty }, new NodeData() { RootGuid = id });
+                data.RootGuid = id;
             }
+
+            var link = new ActionLogLink("Index", "Coching", new
+            {
+                projectGuid = data.ProjectGuid,
+                rootGuid = data.RootGuid
+            }.toKeyValueArray(), data.Name);
+            await _models.addActionLog(new ActionLogData(data.ProjectGuid, token.ID, ActionLogKind.添加分支, $"添加了{(data.isRoot() ? "任务" : "分支")} {link.toString()}"), true);
 
             await tran.CommitAsync();
 
@@ -431,6 +456,46 @@ namespace Coching.Bll
                 }
             }
 
+            var link = new ActionLogLink("Index", "Coching", new
+            {
+                projectGuid = (await dbData()).ProjectGuid,
+                rootGuid = (await dbData()).RootGuid
+            }.toKeyValueArray(), (await dbData()).Name);
+            await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.修改分支, $"修改了{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()}"), true);
+            if (oldData.WorkerGuid != newData.WorkerGuid)
+            {
+                var user = await _models.getUser(newData.WorkerGuid);
+                await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.改变分支执行人, $"修改{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 执行人为 {(user == null ? "无" : user.Name)}"), true);
+            }
+            if (oldData.Status != newData.Status)
+            {
+                await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.修改分支状态, $"修改{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 状态到 {newData.StatusTitle}"), true);
+            }
+            if (oldData.EstimatedManHour != newData.EstimatedManHour)
+            {
+                if (newData.EstimatedManHour == 0)
+                {
+                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.确定预估工时, $"把{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 预估工时改为未确定"), true);
+                }
+                else
+                {
+                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.确定预估工时, $"确定{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 预估工时为 {newData.EstimatedTime}"), true);
+                }
+            }
+            if (oldData.ActualManHour != newData.ActualManHour)
+            {
+                if (newData.ActualManHour == 0)
+                {
+                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.修改实际工时, $"把{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 实际工时改为未确定"), true);
+                }
+                else
+                {
+                    var db = await dbData();
+                    db.ActualManHour = newData.ActualManHour;
+                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.修改实际工时, $"修改{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 实际工时为 {newData.ActualTime} 任务执行结果：{db.TimeInfo}"), true);
+                }
+            }
+
             await tran.CommitAsync();
 
             var node = await _models.getNode(id);
@@ -451,6 +516,8 @@ namespace Coching.Bll
                 return new Result<bool>(false, false, "没有权限");
             }
 
+            var node = await _models.getNode(id);
+            await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.修改分支, $"删除了{(node.isRoot() ? "任务" : "分支")} {node.Name}"), false);
             await _models.deleteNode(id);
             return new Result<bool>(true);
         }
@@ -496,6 +563,14 @@ namespace Coching.Bll
                 await _models.addDocumentRefs(documentIds.Select(d => new DocumentRefData(d, id)).ToArray());
             }
 
+            var node = await _models.getNode(data.NodeGuid);
+            var link = new ActionLogLink("Index", "Coching", new
+            {
+                projectGuid = node.ProjectGuid,
+                rootGuid = node.RootGuid
+            }.toKeyValueArray(), node.Name);
+            await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.添加批注, $"为{(node.isRoot() ? "任务" : "分支")} {link.toString()} 添加了批注"), true);
+
             await tran.CommitAsync();
 
             return new Result<FNote>(await _models.getNote(id));
@@ -518,6 +593,13 @@ namespace Coching.Bll
                 return new Result<FNote>(false, null, "没有权限");
             }
 
+            var node = await _models.getNode(newData.NodeGuid);
+            var link = new ActionLogLink("Index", "Coching", new
+            {
+                projectGuid = node.ProjectGuid,
+                rootGuid = node.RootGuid
+            }.toKeyValueArray(), node.Name);
+
             if (oldDocuments != null && newDocuments != null && !__equals(oldDocuments, newDocuments))
             {
                 var tran = _models.Database.BeginTransaction();
@@ -537,10 +619,12 @@ namespace Coching.Bll
                         await _models.addDocumentRef(new DocumentRefData(documentId, id));
                     }
                 }
+                await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.修改批注, $"修改了{(node.isRoot() ? "任务" : "分支")} {link.toString()} 的批注"), true);
                 await tran.CommitAsync();
             }
             else
             {
+                await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.修改批注, $"修改了{(node.isRoot() ? "任务" : "分支")} {link.toString()} 的批注"), false);
                 await _models.modifyNote(id, oldData, newData);
             }
 
@@ -558,6 +642,16 @@ namespace Coching.Bll
             {
                 return new Result<bool>(false, false, "没有权限");
             }
+
+            var note = await _models.getNote(id);
+            var node = await _models.getNode(note.NodeGuid);
+            var link = new ActionLogLink("Index", "Coching", new
+            {
+                projectGuid = node.ProjectGuid,
+                rootGuid = node.RootGuid
+            }.toKeyValueArray(), node.Name);
+            await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.删除批注, $"删除了{(node.isRoot() ? "任务" : "分支")} {link.toString()} 的批注"), false);
+
             await _models.deleteNote(id);
             return new Result<bool>(true);
         }
@@ -638,6 +732,21 @@ namespace Coching.Bll
 
             var id = await _models.offerToNode(nodeGuid, userGuid, estimatedManHour);
             return new Result<FOffer>(await _models.getOffer(id));
+        }
+
+        public async Task<Result<FActionLog[]>> getActionLogsOfUser(FUserToken token, Guid userGuid, int pageSize, int pageIndex)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FActionLog[]>(false, null, "请重新登录");
+            }
+
+            if (token.ID != userGuid)
+            {
+                return new Result<FActionLog[]>(false, null, "没有权限");
+            }
+
+            return new Result<FActionLog[]>(await _models.getActionLogsOfUser(userGuid, pageSize, pageIndex));
         }
     }
 }

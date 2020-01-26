@@ -26,6 +26,7 @@ namespace Coching.Dal
         public virtual DbSet<Notes> NotesTable { get; set; }
         public virtual DbSet<Partners> PartnersTable { get; set; }
         public virtual DbSet<Offers> OffersTable { get; set; }
+        public virtual DbSet<ActionLogs> ActionLogsTable { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -480,6 +481,29 @@ namespace Coching.Dal
             }
 
             return db.KeyGuid;
+        }
+
+        public async Task<Guid> addActionLog(ActionLogData data, bool save)
+        {
+            var db = new ActionLogs(data);
+            ActionLogsTable.Add(db);
+            if (save)
+            {
+                await _safeSaveChanges();
+            }
+            return db.KeyGuid;
+        }
+
+        public async Task<FActionLog[]> getActionLogsOfUser(Guid userGuid, int pageSize, int pageIndex)
+        {
+            var dbs = await (from p in PartnersTable
+                             join l in ActionLogsTable on p.ProjectGuid equals l.ProjectGuid
+                             join c in UsersTable on l.UserGuid equals c.KeyGuid
+                             orderby l.CreatedTime descending
+                             where l.Deleted == false && p.Deleted == false && p.UserGuid == userGuid
+                             select new { l, c }).pageOnlyAsync(pageSize, pageIndex);
+
+            return dbs.Select(db => new FActionLog(db.l.KeyGuid, db.l, new FUser(db.c.KeyGuid, db.c))).ToArray();
         }
     }
 }

@@ -8,6 +8,7 @@
 <style>
     .container {
         padding: 5px;
+        height: calc(100vh - 70px);
     }
     .item-container {
         width: 300px;
@@ -73,34 +74,48 @@
         .title img:hover {
             opacity: 1;
         }
+    .time-line {
+        width: 400px;
+        border-left: 1px solid #eee;
+        overflow-y: auto;
+        height: 100%;
+    }
+    .projects {
+        overflow-y: auto;
+        height: 100%;
+    }
 </style>
 
-<div class="container">
-    @foreach (var project in Model.Projects)
-    {
-        <div id="@project.ID" class="item-container" onclick="go_coching(this)">
-            <div class="layout-row title">
-                <div class="ellipsis-1 text-color-important text-size-common-mid flex">@(project.Name ?? ".")</div>
-                <img src="~/res/workers.png" title="成员管理" onclick="workers(this)" />
-                <img src="~/res/edit.png" title="编辑" onclick="edit(this)" />
+<div class="container layout-row">
+    <div class="projects flex">
+        @foreach (var project in Model.Projects)
+        {
+            <div id="@project.ID" class="item-container" onclick="go_coching(this)">
+                <div class="layout-row title">
+                    <div class="ellipsis-1 text-color-important text-size-common-mid flex">@Html.Raw(project.Name ?? "&nbsp;")</div>
+                    <img src="~/res/workers.png" title="成员管理" onclick="workers(this)" />
+                    <img src="~/res/edit.png" title="编辑" onclick="edit(this)" />
+                </div>
+                <div class="layout-row descrip">
+                    <div class="ellipsis-4 flex text-color-descrip text-size-descrip">@Html.Raw(project.Description ?? "&nbsp;")</div>
+                    <img class="logo" src="@Url.projectHeader(project.Header)" />
+                </div>
+                <div class="layout-row layout-center-h partners">
+                    @foreach (var p in project.Partners)
+                    {
+                        <img id="@p.ID" class="partner-image" src="@Url.header(p.User.Header)" title="@($"{p.User.Name}[{p.RoleTitle}]")" />
+                    }
+                </div>
             </div>
-            <div class="layout-row descrip">
-                <div class="ellipsis-4 flex text-color-descrip text-size-descrip">@(project.Description ?? ".")</div>
-                <img class="logo" src="@Url.projectHeader(project.Header)" />
-            </div>
-            <div class="layout-row layout-center-h partners">
-                @foreach (var p in project.Partners)
-                {
-                    <img id="@p.ID" class="partner-image" src="@Url.header(p.User.Header)" title="@($"{p.User.Name}[{p.RoleTitle}]")" />
-                }
+        }
+        <div class="item-container" onclick="add_project()">
+            <div class="add-item">
+                <img src="~/res/add.png" />
+                <div>创建新项目</div>
             </div>
         </div>
-    }
-    <div class="item-container" onclick="add_project()">
-        <div class="add-item">
-            <img src="~/res/add.png" />
-            <div>创建新项目</div>
-        </div>
+    </div>
+    <div class="time-line">
     </div>
 </div>
 
@@ -111,12 +126,12 @@
         },
         projectInnerHtml: function (project) {
             var html = '<div class="layout-row title">'
-                + '<div class="ellipsis-1 text-color-important text-size-common-mid flex">' + (project.Name || '.') + '</div>'
+                + '<div class="ellipsis-1 text-color-important text-size-common-mid flex">' + (project.Name || '&nbsp;') + '</div>'
                 + '<img src="@Url.Content("~/res/workers.png")" title="成员管理" onclick="workers(this)" />'
                 + '<img src="@Url.Content("~/res/edit.png")" title="编辑" onclick="edit(this)" />'
                 + '</div>'
                 + '<div class="layout-row descrip">'
-                + '<div class="ellipsis-4 flex text-color-descrip text-size-descrip">' + (project.Description || '.') + '</div>'
+                + '<div class="ellipsis-4 flex text-color-descrip text-size-descrip">' + (project.Description || '&nbsp;') + '</div>'
                 + '<img class="logo" src="' + projectHeader(project.Header) + '" />'
                 + '</div>'
                 + '<div class="layout-row layout-center-h partners">';
@@ -156,7 +171,8 @@
     }
 
     function add_project_success(result) {
-        $('.container').prepend(tool.projectHtml(result));
+        $('.projects').prepend(tool.projectHtml(result));
+        $('.time-line').load('@Html.Raw(Url.Action("ActionLogs"))')
     }
 
     function edit(e) {
@@ -181,6 +197,7 @@
 
     function edit_project_success(result) {
         $('#' + result.ID).html(tool.projectInnerHtml(result));
+        $('.time-line').load('@Html.Raw(Url.Action("ActionLogs"))')
     }
 
     function workers(e) {
@@ -216,4 +233,6 @@
             }
         }
     }
+
+    $('.time-line').load('@Html.Raw(Url.Action("ActionLogs"))')
 </script>

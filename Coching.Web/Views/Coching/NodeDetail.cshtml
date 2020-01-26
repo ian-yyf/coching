@@ -325,7 +325,7 @@
                 <img src="@Url.header(note.User.Header)" />
                 <span class="ellipsis-1 flex name" style="display: none;">@note.User.Name</span>
                 <span class="ellipsis-1 flex content">@note.Content</span>
-                <span>@note.CreatedTime.ToString("yy-MM-dd HH:mm:ss")</span>
+                <span>@note.DisplayCreatedTime</span>
             </h2>
             <div class="layui-colla-content">
                 <div class="layout-row layout-top-h">
@@ -530,7 +530,7 @@
             + '<img src="' + header(note.User.Header) + '" />'
             + '<span class="ellipsis-1 flex name">' + note.User.Name + '</span>'
             + '<span class="ellipsis-1 flex content" style="display: none;">' + note.Content + '</span>'
-            + '<span>' + note.CreatedTime + '</span>'
+            + '<span>' + note.DisplayCreatedTime + '</span>'
             + '<i class="layui-icon layui-colla-icon"></i>'
             + '</h2>'
             + '<div class="layui-colla-content layui-show">'

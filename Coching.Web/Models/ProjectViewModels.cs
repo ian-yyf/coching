@@ -76,4 +76,19 @@ namespace Coching.Web.Models
             }
         }
     }
+
+    public class ActionLogsViewModel
+    {
+        public ActionLogsViewModel()
+        {
+
+        }
+
+        public ActionLogsViewModel(FActionLog[] logs)
+        {
+            Logs = logs;
+        }
+
+        public FActionLog[] Logs { get; set; }
+    }
 }

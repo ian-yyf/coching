@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Public.Utils;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -48,5 +49,13 @@ namespace Coching.Model.Data
         [Column(TypeName = "text")]
         public string HtmlContent { get; set; }
         public DateTime CreatedTime { get; set; }
+
+        public string DisplayCreatedTime
+        {
+            get
+            {
+                return CreatedTime.formatDisplayTime();
+            }
+        }
     }
 }

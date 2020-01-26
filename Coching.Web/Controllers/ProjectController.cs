@@ -28,6 +28,7 @@ namespace Coching.Web.Controllers
             {
                 return Error(result.Message);
             }
+
             return AutoView("Index", new ProjectViewModel(result.Body));
         }
 
@@ -131,6 +132,18 @@ namespace Coching.Web.Controllers
                 var result = await _work.deletePartner(this.getUserToken(), id);
                 return Json(result);
             });
+        }
+
+        public async Task<IActionResult> ActionLogs()
+        {
+            var token = this.getUserToken();
+            var logs = await _work.getActionLogsOfUser(token, token.ID, PageSize, 1);
+            if (!logs.Success)
+            {
+                return Error(logs.Message);
+            }
+
+            return AutoView("ActionLogs", new ActionLogsViewModel(logs.Body));
         }
     }
 }

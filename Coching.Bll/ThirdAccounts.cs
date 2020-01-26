@@ -26,7 +26,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Login";
+                return "https://api.darkast.com/Login";
             }
         }
 
@@ -50,7 +50,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Login";
+                return "https://api.darkast.com/Login";
             }
         }
 
@@ -74,7 +74,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Captcha";
+                return "https://api.darkast.com/Captcha";
             }
         }
 
@@ -98,7 +98,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/ShortMessage";
+                return "https://api.darkast.com/ShortMessage";
             }
         }
 
@@ -122,7 +122,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Pay/Pay";
+                return "https://api.darkast.com/Pay/Pay";
             }
         }
 
@@ -130,7 +130,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Pay/EnterprisePay";
+                return "https://api.darkast.com/Pay/EnterprisePay";
             }
         }
 
@@ -154,7 +154,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/QrCode/Create";
+                return "https://api.darkast.com/QrCode/Create";
             }
         }
 
@@ -178,7 +178,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/QrCode/Create";
+                return "https://api.darkast.com/QrCode/Create";
             }
         }
 
@@ -202,7 +202,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Wechat";
+                return "https://api.darkast.com/Wechat";
             }
         }
 
@@ -226,7 +226,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Wechat";
+                return "https://api.darkast.com/Wechat";
             }
         }
 
@@ -282,7 +282,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/File";
+                return "https://api.darkast.com/File";
             }
         }
 
@@ -306,7 +306,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Map/ReverseGeocoding";
+                return "https://api.darkast.com/Map/ReverseGeocoding";
             }
         }
 
@@ -346,7 +346,7 @@ namespace Coching.Bll
         {
             get
             {
-                return "http://api.darkast.com/Platform/Authorize";
+                return "https://api.darkast.com/Platform/Authorize";
             }
         }
     }
