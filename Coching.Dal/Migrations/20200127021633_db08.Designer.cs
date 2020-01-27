@@ -4,14 +4,16 @@ using Coching.Dal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Coching.Dal.Migrations
 {
     [DbContext(typeof(CochingModels))]
-    partial class CochingModelsModelSnapshot : ModelSnapshot
+    [Migration("20200127021633_db08")]
+    partial class db08
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,10 +47,6 @@ namespace Coching.Dal.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("KeyGuid");
-
-                    b.HasIndex("ProjectGuid");
-
-                    b.HasIndex("UserGuid");
 
                     b.ToTable("ActionLogs");
                 });
@@ -108,14 +106,6 @@ namespace Coching.Dal.Migrations
 
                     b.HasKey("KeyGuid");
 
-                    b.HasIndex("ParentGuid");
-
-                    b.HasIndex("ProjectGuid");
-
-                    b.HasIndex("RootGuid");
-
-                    b.HasIndex("WorkerGuid");
-
                     b.ToTable("Nodes");
                 });
 
@@ -147,10 +137,6 @@ namespace Coching.Dal.Migrations
 
                     b.HasKey("KeyGuid");
 
-                    b.HasIndex("CreatorGuid");
-
-                    b.HasIndex("NodeGuid");
-
                     b.ToTable("Notes");
                 });
 
@@ -173,10 +159,6 @@ namespace Coching.Dal.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("KeyGuid");
-
-                    b.HasIndex("NodeGuid");
-
-                    b.HasIndex("UserGuid");
 
                     b.ToTable("Offers");
                 });
@@ -203,10 +185,6 @@ namespace Coching.Dal.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("KeyGuid");
-
-                    b.HasIndex("ProjectGuid");
-
-                    b.HasIndex("UserGuid");
 
                     b.ToTable("Partners");
                 });

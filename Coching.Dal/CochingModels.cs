@@ -32,7 +32,26 @@ namespace Coching.Dal
         {
             //options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         }
-        
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Projects>().HasIndex(e => e.CreatorGuid);
+            modelBuilder.Entity<Projects>().HasIndex(e => e.Name);
+            modelBuilder.Entity<Nodes>().HasIndex(e => e.ProjectGuid);
+            modelBuilder.Entity<Nodes>().HasIndex(e => e.RootGuid);
+            modelBuilder.Entity<Nodes>().HasIndex(e => e.ParentGuid);
+            modelBuilder.Entity<Nodes>().HasIndex(e => e.WorkerGuid);
+            modelBuilder.Entity<Notes>().HasIndex(e => e.NodeGuid);
+            modelBuilder.Entity<Notes>().HasIndex(e => e.CreatorGuid);
+            modelBuilder.Entity<Partners>().HasIndex(e => e.ProjectGuid);
+            modelBuilder.Entity<Partners>().HasIndex(e => e.UserGuid);
+            modelBuilder.Entity<Offers>().HasIndex(e => e.NodeGuid);
+            modelBuilder.Entity<Offers>().HasIndex(e => e.UserGuid);
+            modelBuilder.Entity<ActionLogs>().HasIndex(e => e.ProjectGuid);
+            modelBuilder.Entity<ActionLogs>().HasIndex(e => e.UserGuid);
+        }
+
         public async Task<bool> checkRoot(Guid nodeGuid, Guid rootGuid)
         {
             return await (from n in NodesTable
