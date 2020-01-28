@@ -50,12 +50,12 @@ namespace Coching.Bll
 
         public override string getShortMessageSign()
         {
-            return "与你客服";
+            return ThirdAccounts.ShortMessageSign;
         }
 
         public override string getShortMessageTemplate()
         {
-            return "SMS_152175081";
+            return ThirdAccounts.ShortMessageTemplate;
         }
 
         public override AppAccount getWechatAccount(string authorizerAppid)

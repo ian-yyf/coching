@@ -118,6 +118,22 @@ namespace Coching.Bll
             }
         }
 
+        public static String ShortMessageSign
+        {
+            get
+            {
+                return "考成法";
+            }
+        }
+
+        public static String ShortMessageTemplate
+        {
+            get
+            {
+                return "SMS_152175081";
+            }
+        }
+
         public static String PayUrl
         {
             get
