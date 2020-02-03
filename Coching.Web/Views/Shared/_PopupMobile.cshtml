@@ -4,44 +4,33 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - 考成法</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    @*    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />*@
     <link rel="stylesheet" href="~/css/site.css" />
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
     <link rel="stylesheet" href="~/lib/toastr.js/toastr.min.css">
     <script src="~/lib/toastr.js/toastr.min.js"></script>
 
-    <link rel="stylesheet" href="~/css/utils.css">
+    <link rel="stylesheet" href="~/css/utils.css?v=1.0">
     <script src="~/js/utils.js"></script>
+    <link rel="stylesheet" href="~/lib/layui/css/layui.css" media="all">
+    <script src="~/lib/layui/layui.js"></script>
+    <link rel="stylesheet" href="~/lib/weui/style/weui.min.css">
+
     <style>
-        body {
-            background-image: url("/res/background.png");
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            background-size: cover;
+        .layui-form {
+            padding: 20px 10px 10px 10px;
         }
+
         .toast-bottom-center {
             bottom: 50px !important;
         }
     </style>
 </head>
 <body>
-    <div class="container ">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    @RenderBody()
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2019 - 考成簿 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         $(function () {
             @if (!String.IsNullOrEmpty(ViewBag.Error))
@@ -53,8 +42,19 @@
                 </text>
             }
         })
+        function header(src) {
+            if (src) {
+                return src;
+            }
+            return '@Url.Content("~/res/userHead.png")';
+        }
+        function projectHeader(src) {
+            if (src) {
+                return src;
+            }
+            return '@Url.Content("~/res/project.png")';
+        }
     </script>
-
     @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,228 @@
+﻿@using Public.Mvc;
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - 考成法</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <link rel="stylesheet" href="~/lib/toastr.js/toastr.min.css">
+    <script src="~/lib/toastr.js/toastr.min.js"></script>
+
+    <link rel="stylesheet" href="~/css/utils.css?v=1.0">
+    <script src="~/js/utils.js"></script>
+    <link rel="stylesheet" href="~/lib/layui/css/layui.css" media="all">
+    <script src="~/lib/layui/layui.js"></script>
+    <link rel="stylesheet" href="~/lib/sidenav/sidenav.min.css" type="text/css">
+    <link rel='stylesheet' href='http://fonts.googleapis.com/icon?family=Material+Icons' type='text/css'>
+    <link rel="stylesheet" href="~/lib/weui/style/weui.min.css">
+
+    <style>
+        * {
+            box-sizing:border-box;
+            -moz-box-sizing:border-box; /* Firefox */
+            -webkit-box-sizing:border-box; /* Safari */
+        }
+
+        .back-icon {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            border-radius: 50%;
+            background-color: black;
+            opacity: 0.5;
+            z-index: 2;
+            display: block;
+            line-height: 0px;
+        }
+
+            .back-icon img {
+                width: 15px;
+                height: 15px;
+                margin: 8px;
+            }
+
+        .toggle {
+            position: fixed;
+            width: 31px;
+            height: 31px;
+            top: 15px;
+            right: 15px;
+            display: block;
+            border-radius: 50%;
+            background-color: black;
+            opacity: 0.5;
+            z-index: 2;
+            color: white;
+        }
+
+            .toggle i {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+        .header-image {
+            width: 80px;
+            border-radius: 50%;
+        }
+
+        .layui-layout-right {
+            margin-right: 30px;
+        }
+
+        .toast-bottom-center {
+            bottom: 50px !important;
+        }
+
+        .user-info {
+            text-align: center;
+        }
+
+        .user-info img {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+@{
+    Func<String, String, String> active = (String controller, String action) =>
+    {
+        return (String)ViewContext.RouteData.Values["controller"] == controller && (String)ViewContext.RouteData.Values["action"] == action ? "active" : null;
+    };
+}
+
+<body>
+    <nav class="sidenav" data-sidenav data-sidenav-toggle="#sidenav-toggle">
+        <div class="sidenav-brand">
+            <a href="@Url.Action("Index", "Home")"><img style="height: 26px;" src="~/res/logo.png" /></a>
+            考成法
+        </div>
+
+        <div class="sidenav-header">
+            <div class="user-info">
+                <img class="header-image" src="~/res/userHead.png" />
+                <p id="name">未登录</p>
+            </div>
+        </div>
+
+        <ul class="sidenav-menu">
+            <li>
+                <a href="@Url.Action("Index", "Project")" class="@active("Project", "Index")">
+                    <span class="sidenav-link-icon">
+                        <i class="material-icons">brightness_auto</i>
+                    </span>
+                    <span class="sidenav-link-title">项目管理</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidenav-header">
+        </div>
+
+        <ul class="sidenav-menu">
+            <li id="logout">
+                <a href="@Url.Action("Logout", "Auth")">
+                    <span class="sidenav-link-icon">
+                        <i class="material-icons">cancel_presentation</i>
+                    </span>
+                    <span class="sidenav-link-title">退出登录</span>
+                </a>
+            </li>
+            <li id="register">
+                <a href="@Url.Action("Register", "Auth", new { returnUrl = ViewContext.HttpContext.Request.getUrl() })" class="@active("Auth", "Register")">
+                    <span class="sidenav-link-icon">
+                        <i class="material-icons">person_add</i>
+                    </span>
+                    <span class="sidenav-link-title">注册</span>
+                </a>
+            </li>
+            <li id="login">
+                <a href="@Url.Action("Login", "Auth", new { returnUrl = ViewContext.HttpContext.Request.getUrl() })" class="@active("Auth", "Login")">
+                    <span class="sidenav-link-icon">
+                        <i class="material-icons">person</i>
+                    </span>
+                    <span class="sidenav-link-title">登录</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="main-body">
+        <a href="javascript:;" class="toggle" id="sidenav-toggle">
+            <i class="material-icons">menu</i>
+        </a>
+
+        @RenderBody()
+    </div>
+
+    @if (ViewBag.Backable != null && (bool)ViewBag.Backable)
+    {
+        <div class="back-icon" onclick="view_back()">
+            <img src="~/res/back.png" />
+        </div>
+    }
+
+    <script src="~/lib/sidenav/sidenav.min.js"></script>
+    <script>$('[data-sidenav]').sidenav();</script>
+
+    <script>
+        $(function () {
+            $.ajax({
+                type: "POST",
+                dataType: "JSON",
+                url: '@Url.Action("GetCurrentUser", "User")',
+                data: null,
+                success: function (json) {
+                    if (!json.Success) {
+                        YFUtils.showErrorToastr(json.Message);
+                        return;
+                    }
+
+                    if (!json.Body) {
+                        $('#logout').hide();
+                    }
+                    else {
+                        $('#login').hide();
+                        $('#register').hide();
+                        if (json.Body.Header) {
+                            $('.header-image').attr("src", json.Body.Header);
+                        }
+                        $('#name').html(json.Body.Name || json.Body.Tel);
+                    }
+                }
+            });
+
+            @if (!String.IsNullOrEmpty(ViewBag.Error))
+            {
+                <text>
+                setTimeout(function () {
+                    YFUtils.showErrorToastr('@ViewBag.Error')
+                }, 500)
+                </text>
+            }
+        })
+
+        function view_back() {
+            window.history.go(-1);
+        }
+        function header(src) {
+            if (src) {
+                return src;
+            }
+            return '@Url.Content("~/res/userHead.png")';
+        }
+        function projectHeader(src) {
+            if (src) {
+                return src;
+            }
+            return '@Url.Content("~/res/project.png")';
+        }
+    </script>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

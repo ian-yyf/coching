@@ -16,18 +16,19 @@
 
     <link rel="stylesheet" href="~/css/utils.css">
     <script src="~/js/utils.js"></script>
+    <link rel="stylesheet" href="~/lib/weui/style/weui.min.css">
+    <link rel='stylesheet' href='http://fonts.googleapis.com/icon?family=Material+Icons' type='text/css'>
+    <link rel="stylesheet" href="~/lib/sidenav/sidenav.min.css" type="text/css">
+    <script src="~/lib/sidenav/sidenav.min.js"></script>
+    <script src="~/lib/layui/layui.js"></script>
     <style>
-        body {
-            background-image: url("/res/background.png");
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            background-size: cover;
+        .toast-bottom-center {
+            bottom: 50px !important;
         }
     </style>
 </head>
 <body>
-    <div class="container ">
+    <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -35,7 +36,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2019 - 考成簿 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2019 - 考成法 - <a asp-area="" asp-controller="Home" asp-action="Index">Privacy</a>
         </div>
     </footer>
 
@@ -50,6 +51,11 @@
                 </text>
             }
         })
+    </script>
+    <script>
+        //JavaScript代码区域
+        layui.use('layer', function () {
+        });
     </script>
 
     @RenderSection("Scripts", required: false)

@@ -1,0 +1,84 @@
+﻿@using Coching.Model;
+@model ProjectItemViewModel
+
+@{
+    ViewData["Title"] = Model?.ActionName;
+    Layout = "~/Views/Shared/_PopupMobile.cshtml";
+}
+
+@if (Model == null)
+{
+    return;
+}
+
+@if (Model.Success)
+{
+    <script>
+        parent.@(Model.Callback)(eval(@Html.Raw(Model.getResult())));
+        parent.pane.close(window.name);
+    </script>
+    return;
+}
+
+<style>
+    #editor {
+        height: calc(100vh - 300px);
+        width: calc(100vw - 130px);
+    }
+    .w-e-toolbar {
+        overflow: hidden;
+    }
+</style>
+
+@using (Html.BeginForm(Model.ActionName, "Project", FormMethod.Post, new { @class = "weui-cells weui-cells_form" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
+
+    <div class="weui-cell weui-cell_active">
+        <div class="weui-cell__hd">@Html.LabelFor(m => m.Name, new { @class = "weui-label" })</div>
+        <div class="weui-cell__bd">
+            @Html.TextBoxFor(m => m.Name, new { @class = "weui-input", @placeholder = "请输入名称", @autocomplete = "off" })
+        </div>
+        @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="weui-cell weui-cell_active">
+        <div class="weui-cell__hd">@Html.LabelFor(m => m.Header, new { @class = "weui-label" })</div>
+        <div class="weui-cell__bd">
+            @Html.HiddenFor(m => m.Header)
+            @await Component.InvokeAsync("Upload", new { imageMaxCount = 1, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "HeaderUploader" })
+        </div>
+        @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="weui-cell weui-cell_active">
+        <div class="weui-cell__hd">@Html.LabelFor(m => m.Description, new { @class = "weui-label" })</div>
+        <div class="weui-cell__bd">
+            @Html.HiddenFor(m => m.Description)
+            @Html.HiddenFor(m => m.HtmlDescription)
+            @await Html.PartialAsync("_Widgets/HtmlEditor", new HtmlEditorWidgetModel("editor", Model.HtmlDescription, "#Description", "#HtmlDescription"))
+        </div>
+        @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+    </div>
+
+    <div>
+        @Html.HiddenFor(m => m.KeyGuid)
+        @Html.HiddenFor(m => m.ActionName)
+        @Html.HiddenFor(m => m.ActionTitle)
+        @Html.HiddenFor(m => m.OldJson)
+        @Html.HiddenFor(m => m.Callback)
+    </div>
+
+    <div class="weui-btn-area">
+        <button class="weui-btn weui-btn_primary" type="submit">提交</button>
+    </div>
+}
+
+<script>
+    HeaderUploader.init(function (url) {
+        $("#Header").val(url);
+    }, function (url) {
+        $("#Header").val("");
+    }, $("#Header").val() ? [$("#Header").val()] : null);
+</script>

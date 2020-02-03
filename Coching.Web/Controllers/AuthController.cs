@@ -63,6 +63,10 @@ namespace Coching.Web.Controllers
             }
         }
 
+        public override string ServiceAgreementName => "考成法服务协议";
+
+        public override string ServiceAgreementUrl => "/";
+
         public AuthController(CochingWork work)
         {
             _work = work;

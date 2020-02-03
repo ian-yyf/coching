@@ -11,12 +11,12 @@
       "destination": "wwwroot/lib/toastr.js/"
     },
     {
-      "library": "weui@2.1.3",
-      "destination": "wwwroot/lib/weui/"
-    },
-    {
       "library": "lightgallery@1.6.12",
       "destination": "wwwroot/lib/lightgallery/"
+    },
+    {
+      "library": "weui@2.1.4",
+      "destination": "wwwroot/lib/weui/"
     }
   ]
 }

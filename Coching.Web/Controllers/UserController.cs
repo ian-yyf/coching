@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Coching.Bll;
 using Coching.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using Public.Containers;
 using Public.Model.Data;
 using Public.Mvc;
 
@@ -24,7 +25,14 @@ namespace Coching.Web.Controllers
             return await JsonActionAsync(async () =>
             {
                 var token = this.getUserToken();
-                return Json(await _work.getUser(token, token.ID));
+                if (token == null)
+                {
+                    return Json(new Result<object>(null));
+                }
+                else
+                {
+                    return Json(await _work.getUser(token, token.ID));
+                }
             });
         }
 

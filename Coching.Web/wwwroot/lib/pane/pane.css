@@ -1,0 +1,47 @@
+﻿.yui-pane-container {
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.yui-pane {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    -webkit-transform: translate(0, 100%);
+    transform: translate(0, 100%);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    z-index: 5000;
+    width: 100%;
+    background-color: white;
+    -webkit-transition: -webkit-transform .3s;
+    transition: -webkit-transform .3s;
+    transition: transform .3s;
+    transition: transform .3s, -webkit-transform .3s;
+    overflow: hidden;
+}
+
+.yui-pane.yui-pane_toggle {
+    -webkit-transform: translate(0, 0);
+    transform: translate(0, 0);
+}
+
+.yui-pane-title {
+    background-color: #393D49;
+    line-height: 50px;
+    color: white;
+    font-size: 18px;
+}
+
+.yui-pane-title i {
+    padding: 0px 15px;
+}
+
+.yui-pane-container iframe {
+    width: 100%;
+}

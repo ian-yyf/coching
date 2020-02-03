@@ -1,0 +1,68 @@
+﻿@using Coching.Model;
+@model ActionLogsViewModel
+
+@{
+    ViewData["Title"] = "动态";
+    Layout = "~/Views/Shared/_PopupMobile.cshtml";
+}
+
+<style>
+    .layui-timeline-axis img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid #5FB878;
+    }
+
+    .layui-timeline-axis.image {
+        top: -6px;
+        left: -10px;
+    }
+
+    .layui-timeline {
+        padding-left: 25px;
+        padding-right: 5px;
+    }
+
+    .layui-timeline-content {
+        padding-left: 32px;
+    }
+
+        .layui-timeline-content .time {
+            min-width: 80px;
+            text-align: right;
+        }
+</style>
+
+<ul class="layui-timeline">
+    @{
+        DateTime? lastTime = null;
+        foreach (var log in Model.Logs)
+        {
+            if (lastTime == null || (lastTime.Value - log.CreatedTime).TotalDays > 1 || lastTime.Value.Day != log.CreatedTime.Day)
+            {
+                lastTime = log.CreatedTime;
+                <li class="layui-timeline-item">
+                    <i class="layui-icon layui-timeline-axis"></i>
+                    <div class="layui-timeline-content layui-text">
+                        <h3 class="layui-timeline-title">@log.CreatedTime.ToString("yyyy-MM-dd")</h3>
+                    </div>
+                </li>
+            }
+            <li class="layui-timeline-item">
+                <i class="layui-timeline-axis image"><img src="@Url.header(log.User.Header)" /></i>
+                <div class="layui-timeline-content layui-text">
+                    <h3 class="layui-timeline-title">@log.User.Name</h3>
+                    <div class="layout-row">
+                        <p class="flex">
+                            @Html.Raw(log.getHtmlContent((a, c) => Url.Action(a, c)))
+                        </p>
+                        <p class="time">
+                            @log.DisplayCreatedTime
+                        </p>
+                    </div>
+                </div>
+            </li>
+        }
+    }
+</ul>

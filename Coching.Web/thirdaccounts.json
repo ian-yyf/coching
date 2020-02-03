@@ -1,4 +1,4 @@
-{
+ï»¿{
   "AsApiAppId": "",
   "AsApiAppSecret": "",
   "AuthorizerThirdLoginUrl": "https://api.darkast.com/Login",
@@ -13,7 +13,7 @@
   "ShortMessageUrl": "https://api.darkast.com/ShortMessage",
   "ShortMessageAppId": "",
   "ShortMessageAppSecret": "",
-  "ShortMessageSign": "¿¼³É·¨",
+  "ShortMessageSign": "è€ƒæˆæ³•",
   "ShortMessageTemplate": "",
   "PayUrl": "https://api.darkast.com/Pay/Pay",
   "EnterprisePayUrl": "https://api.darkast.com/Pay/EnterprisePay",

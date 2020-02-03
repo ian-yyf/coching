@@ -48,7 +48,7 @@ namespace Coching.Model.Data
                 {
                     i += "?" + link.Params.toQueryString();
                 }
-                content = content.Replace(match.Value, $"<a href=\"{i}\">{link.Content}</a>") ;
+                content = content.Replace(match.Value, $"<a target=\"_blank\" href=\"{i}\">{link.Content}</a>") ;
             }
             return content;
         }
