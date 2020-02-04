@@ -1,0 +1,194 @@
+﻿@using Coching.Model;
+@model CochingViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutMobile.cshtml";
+    ViewData["Title"] = "考成树";
+}
+
+<style>
+    .item-menu-title {
+        font-size: 16px;
+    }
+
+    .item-menu-description {
+        font-size: 12px;
+    }
+
+    .catalogue-item {
+        margin-top: 10px;
+    }
+</style>
+
+<script src="~/lib/echarts/echarts.min.js"></script>
+<link rel="stylesheet" href="~/css/layui_menu.css">
+<script src="~/js/layui_menu.js"></script>
+<link rel="stylesheet" href="~/lib/pane/pane.css">
+<script src="~/lib/pane/pane.js"></script>
+<link rel="stylesheet" href="~/views/shared/tools.css">
+<link rel="stylesheet" href="~/views/coching/index.css">
+<script src="~/views/coching/index.js"></script>
+
+@foreach (var root in Model.Roots)
+{
+    <div id="@root.Node.ID" class="catalogue-item" onclick="root(this)">
+        <div class="ellipsis-1 text-size-descrip text-color-common">@root.Node.Name</div>
+        <div class="ellipsis-2 text-size-min text-color-descrip">@root.Node.Description</div>
+        <div class="layout-row layout-center-h root-status">
+            <div class="workers layout-row layout-center-h flex">
+                @foreach (var partner in Model.Partners.Where(p => root.Workers.Contains(p.UserGuid)))
+                {
+                    <img worker="@partner.User.ID" src="@Url.header(partner.User.Header)" title="@partner.User.Name" />
+                }
+            </div>
+            <div class="status-value text-size-descrip text-color-descrip status-color@(root.Node.Status)">@root.Node.StatusTitle</div>
+        </div>
+    </div>
+}
+
+<div id="tree-pane" class="yui-pane-container layout-column" style="display: none">
+    <div class="flex" onclick="close_tree_pane()"></div>
+    <div class="yui-pane layout-column" style="height: 100%;">
+        <div class="yui-pane-title">
+            <i class="layui-icon layui-icon-close" onclick="close_tree_pane()"></i>
+            <span>考成树</span>
+        </div>
+        <div class="tree-container flex">
+            <div class="tree"></div>
+            <div class="right-click-menu-pos"></div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="weui-mask" id="item-menu-mask" style="display: none"></div>
+    <div class="weui-actionsheet" id="item-menu-container">
+        <div class="weui-actionsheet__action">
+            <div class="weui-actionsheet__cell" id="iosActionsheetCancel">取消</div>
+        </div>
+    </div>
+</div>
+
+<div class="tools">
+    <div class="tool" onclick="add_root()">
+        <img src="~/res/add.png" />
+        <p>新建</p>
+    </div>
+</div>
+
+<script>
+    var init_data = {
+        partners: function () {
+            return eval(@Html.Raw(Model.getPartners()));
+        },
+        tree: function () {
+            return '@Url.Action("Tree")';
+        },
+        root: function () {
+            return '@Url.Action("Root")';
+        },
+        del: function () {
+            return '@Html.Raw(Url.Action("DeleteNode"))';
+        },
+        root_id: function (data) {
+            $('#tree-pane .yui-pane-title span').html(data.Name);
+            $('#tree-pane').show();
+            $('#tree-pane' + ' .yui-pane').addClass('yui-pane_toggle');
+        },
+        click: function (params) {
+            var commands = menu.commands(params);
+            var datas = YFUtils.select(commands, cmd => {
+                if (cmd.line) {
+                    return '';
+                }
+                var class_name = 'weui-actionsheet__cell';
+                if (cmd.warn) {
+                    class_name += ' weui-actionsheet__cell_warn';
+                }
+                return '<div event-id="' + cmd.command + '" class="' + class_name + '">' + cmd.name + '</div>'
+            }).join('');
+
+            var html = '<div class="weui-actionsheet__title">'
+                + '<p class="item-menu-title text-color-common">' + params.data.name + '</p>';
+            if (params.data.description) {
+                html += '<p class="item-menu-description ellipsis-1">' + params.data.description + '</p>';
+            }
+            html += '</div>'
+                + '<div class="weui-actionsheet__menu">' + datas + '</div>';
+
+            $('#item-menu-container').html(html);
+
+            var hideActionSheet = function () {
+                $('#item-menu-container').removeClass('weui-actionsheet_toggle');
+                $('#item-menu-mask').fadeOut(200);
+            }
+
+            $('#item-menu-mask').on('click', hideActionSheet);
+
+            $('.weui-actionsheet__cell').on('click', function (e) {
+                menu.execute(e.target.attributes['event-id'].value, params);
+                hideActionSheet();
+            });
+
+            setTimeout(function () {
+                $('#item-menu-container').addClass('weui-actionsheet_toggle');
+                $('#item-menu-mask').fadeIn(200);
+            }, 10);
+        },
+        detail: function (params) {
+            pane.open({
+                title: '详情',
+                src: '@Html.Raw(Url.Action("NodeDetail"))' + '?id=' + params.data.id + '&notify=changed_notify',
+            })
+        }
+    }
+</script>
+
+<script>
+    function close_tree_pane() {
+        $('#tree-pane' + ' .yui-pane').removeClass('yui-pane_toggle');
+        setTimeout(function () {
+            $('#tree-pane').hide();
+        }, 300);
+    }
+
+    function add_root() {
+        pane.open({
+            title: '添加任务',
+            src: '@Html.Raw(Url.Action("AddNode", new { projectGuid = Model.ProjectGuid, rootGuid = Guid.Empty, parentGuid = Guid.Empty, callback = "add_root_success" }))',
+        })
+    }
+
+    function add_root_success(result) {
+        $('.main-body').prepend(tool.itemHtml(result));
+        top.layer.msg("提交成功!");
+    }
+
+    function add_child(parentId, rootId) {
+        pane.open({
+            title: '添加节点',
+            src: '@Html.Raw(Url.Action("AddNode", new { projectGuid = Model.ProjectGuid, callback = "add_child_success" }))' + '&parentGuid=' + parentId + '&rootGuid=' + rootId,
+        })
+    }
+
+    function add_child_success(result) {
+        var array = tree.getOption().series[0].data;
+        var node = tool.findNode(result.ParentGuid, array);
+
+        node.children = node.children || [];
+        node.children.push(tool.toTreeData([result])[0]);
+
+        tree.refresh(array);
+    }
+</script>
+
+<script>
+    $(function () {
+        @if (Model.RootGuid != null && Model.Roots.FirstOrDefault(r => r.Node.ID == Model.RootGuid.Value) != null)
+        {
+            <text>
+            root_id('@Model.RootGuid.Value');
+            </text>
+        }
+    })
+</script>

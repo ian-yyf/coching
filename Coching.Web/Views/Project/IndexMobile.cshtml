@@ -8,72 +8,20 @@
 
 <style>
     .item-container {
-        height: 150px;
         -webkit-box-shadow: 0 0 2px rgba(0,0,0,0.2);
         box-shadow: 0 0 2px rgba(0,0,0,0.2);
-        border-radius: 5px;
-        margin: 5px;
-        padding: 15px;
-        position: relative;
-    }
-
-    .logo, .partner-image {
-        border-radius: 50%;
-    }
-
-    .logo {
-        width: 50px;
-        height: 50px;
-        margin-left: 10px;
-    }
-
-    .partner-image {
-        width: 20px;
-        height: 20px;
-        margin-right: 5px;
-    }
-
-    .partners {
-        position: absolute;
-        bottom: 15px;
-        left: 15px;
-        right: 15px;
-    }
-
-    .descrip {
-        margin-top: 15px;
     }
 
     .title img {
-        height: 18px;
         margin-left: 15px;
-    }
-
-    .tools {
-        box-shadow: 0 2px 4px rgba(0,0,0,.3);
-        border-radius: 5px;
-        position: fixed;
-        right: 10px;
-        bottom: 20%;
-        text-align: center;
-        background-color: white;
-        padding: 3px 5px;
-        color: #aaa;
-        font-size: 12px;
-    }
-    .tools img {
-        width: 24px;
-    }
-    .tool:not(:first-child) {
-        border-top: 1px solid #ccc;
-    }
-    .tool {
-        padding: 5px;
     }
 </style>
 
 <link rel="stylesheet" href="~/lib/pane/pane.css">
 <script src="~/lib/pane/pane.js"></script>
+<link rel="stylesheet" href="~/views/project/index.css">
+<script src="~/views/project/index.js"></script>
+<link rel="stylesheet" href="~/views/shared/tools.css">
 
 @foreach (var project in Model.Projects)
 {
@@ -108,41 +56,6 @@
 </div>
 
 <script>
-    var tool = {
-        partnerHtml: function (p) {
-            return '<img id="' + p.ID + '" class="partner-image" src="' + header(p.User.Header) + '" title="' + p.User.Name + '[' + p.RoleTitle + ']" />';
-        },
-        projectInnerHtml: function (project) {
-            var html = '<div class="layout-row title">'
-                + '<div class="ellipsis-1 text-color-important text-size-common-mid flex">' + (project.Name || '&nbsp;') + '</div>'
-                + '<img src="@Url.Content("~/res/workers.png")" title="成员管理" onclick="workers(this)" />'
-                + '<img src="@Url.Content("~/res/edit.png")" title="编辑" onclick="edit(this)" />'
-                + '</div>'
-                + '<div class="layout-row descrip">'
-                + '<div class="ellipsis-2 flex text-color-descrip text-size-descrip">' + (project.Description || '&nbsp;') + '</div>'
-                + '<img class="logo" src="' + projectHeader(project.Header) + '" />'
-                + '</div>'
-                + '<div class="layout-row layout-center-h partners">';
-
-            for (var i = 0; i < project.Partners.length; i++) {
-                html += this.partnerHtml(project.Partners[i]);
-            }
-            return html + '</div>';
-        },
-        projectHtml: function (project) {
-            return '<div id="' + project.ID + '" class="item-container" onclick="go_coching(this)">'
-                + this.projectInnerHtml(project)
-                + '</div>';
-        }
-    }
-</script>
-
-<script>
-    layui.define(["layer"],
-        function (i) {
-        }
-    );
-
     function go_coching(e) {
         location.href = '@Url.Action("Index", "Coching")' + '?projectGuid=' + $(e).attr('id');
     }
@@ -205,19 +118,5 @@
             shadeClose: true,
             content: '@Html.Raw(Url.Action("Partners", new { notify = "partners_notify" }))' + '&projectGuid=' + $(e).parents('*[id]').attr('id'),
         });
-    }
-
-    function partners_notify(project, del, add) {
-        if (del) {
-            $('#' + project + ' #' + del).remove();
-        }
-        if (add) {
-            if ($('#' + project + ' #' + add.ID).length == 0) {
-                $('#' + project + ' .partners').append(tool.partnerHtml(add));
-            }
-            else {
-                $('#' + project + ' #' + add.ID).replaceWith(tool.partnerHtml(add));
-            }
-        }
     }
 </script>

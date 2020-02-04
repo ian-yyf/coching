@@ -1,0 +1,24 @@
+﻿.tools {
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
+    border-radius: 5px;
+    position: fixed;
+    right: 10px;
+    bottom: 20%;
+    text-align: center;
+    background-color: white;
+    padding: 3px 5px;
+    color: #aaa;
+    font-size: 12px;
+}
+
+    .tools img {
+        width: 24px;
+    }
+
+.tool:not(:first-child) {
+    border-top: 1px solid #ccc;
+}
+
+.tool {
+    padding: 5px;
+}

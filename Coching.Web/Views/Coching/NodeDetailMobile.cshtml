@@ -4,7 +4,7 @@
 
 @{
     ViewData["Title"] = "节点详情";
-    Layout = "~/Views/Shared/_Popup.cshtml";
+    Layout = "~/Views/Shared/_PopupMobile.cshtml";
 }
 
 @if (Model == null)
@@ -13,11 +13,22 @@
 }
 
 <style>
-    .layout-row.card-container {
-        align-items: stretch;
+    .layui-form-label {
+        width: 56px;
+        padding-left: 3px;
+    }
+
+    .layui-input-block {
+        margin-left: 80px;
+    }
+
+    .layui-input-inline, .layui-form-mid {
+        margin-left: 82px !important;
     }
 </style>
 
+<link rel="stylesheet" href="~/lib/pane/pane.css">
+<script src="~/lib/pane/pane.js"></script>
 <link type="text/css" rel="stylesheet" href="~/lib/lightgallery/css/lightgallery.min.css" />
 <script src="~/lib/lightgallery/js/lightgallery.min.js"></script>
 <script src="~/lib/lightgallery/js/lightgallery-all.min.js"></script>
@@ -29,164 +40,164 @@
 </fieldset>
 
 <div class="pane">
-    <div class="layui-row layout-row card-container">
-        <div class="layui-card flex layout-column">
-            <div class="layui-card-header layout-row layout-center-h">
-                <div id="NodeName" class="flex ellipsis-1">
-                    @Model.Data.Node.Name
+    <div class="layui-card layout-column">
+        <div class="layui-card-header layout-row layout-center-h">
+            <div id="NodeName" class="flex ellipsis-1">
+                @Model.Data.Node.Name
+            </div>
+            <img class="modify-icon" src="~/res/edit.png" title="修改任务" onclick="modify()" />
+        </div>
+        <div id="NodeDescription" class="layui-card-body text-color-descrip flex">
+            @Html.Raw(Model.Data.Node.HtmlDescription)
+        </div>
+        <div class="node-documents-container">
+            @if (Model.Data.Node.Documents.Length > 0)
+            {
+                <div class="documents">
+                    @foreach (var doc in Model.Data.Node.Documents)
+                    {
+                        <a href="@doc.Document.Src"><img src="@doc.Document.Src" /></a>
+                    }
                 </div>
-                <img class="modify-icon" src="~/res/edit.png" title="修改任务" onclick="modify()" />
-            </div>
-            <div id="NodeDescription" class="layui-card-body text-color-descrip flex">
-                @Html.Raw(Model.Data.Node.HtmlDescription)
-            </div>
-            <div class="node-documents-container">
-                @if (Model.Data.Node.Documents.Length > 0)
-                {
-                    <div class="documents">
-                        @foreach (var doc in Model.Data.Node.Documents)
+            }
+        </div>
+    </div>
+    <form class="layui-card info-list layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">状态</label>
+            <div class="layui-input-block">
+                <select name="interest" lay-filter="status">
+                    @foreach (var item in Model.StatusList)
+                    {
+                        if (Model.Data.Node.Status == item.Key)
                         {
-                            <a href="@doc.Document.Src"><img src="@doc.Document.Src" /></a>
+                            <option value="@item.Key" selected>@item.Value</option>
                         }
-                    </div>
-                }
+                        else
+                        {
+                            <option value="@item.Key">@item.Value</option>
+                        }
+                    }
+                </select>
             </div>
         </div>
-        <form class="layui-card flex info-list layui-form">
-            <div class="layui-form-item">
-                <label class="layui-form-label">状态</label>
-                <div class="layui-input-block">
-                    <select name="interest" lay-filter="status">
-                        @foreach (var item in Model.StatusList)
-                        {
-                            if (Model.Data.Node.Status == item.Key)
+        <div class="layui-form-item offer">
+            <label class="layui-form-label">预报工时</label>
+            <div class="layui-input-block">
+                @{
+                    FOffer me = null;
+                    foreach (var offer in Model.Data.Offers)
+                    {
+                        <div class="inline-item">
+                            @if (offer.User.ID == Model.Me.ID)
                             {
-                                <option value="@item.Key" selected>@item.Value</option>
+                                me = offer;
+                                <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{offer.User.Name} {offer.EstimatedTime}")">
+                                    <img src="@Url.header(offer.User.Header)" />
+                                    <div class="offer_info">@offer.EstimatedTime</div>
+                                </div>
                             }
                             else
                             {
-                                <option value="@item.Key">@item.Value</option>
-                            }
-                        }
-                    </select>
-                </div>
-            </div>
-            <div class="layui-form-item offer">
-                <label class="layui-form-label">预报工时</label>
-                <div class="layui-input-block">
-                    @{
-                        FOffer me = null;
-                        foreach (var offer in Model.Data.Offers)
-                        {
-                            <div class="inline-item">
-                                @if (offer.User.ID == Model.Me.ID)
-                                {
-                                    me = offer;
-                                    <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{offer.User.Name} {offer.EstimatedTime}")">
-                                        <img src="@Url.header(offer.User.Header)" />
-                                        <div class="offer_info">@offer.EstimatedTime</div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="layout-row layout-center-h" title="@($"{offer.User.Name} {offer.EstimatedTime}")">
-                                        <img src="@Url.header(offer.User.Header)" />
-                                        <div>@offer.EstimatedTime</div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        if (me == null)
-                        {
-                            <div class="inline-item">
-                                <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{Model.Me.Name} 尚未预估工时")">
-                                    <img src="@Url.header(Model.Me.Header)" />
-                                    <div class="offer_info">我尚未预估</div>
+                                <div class="layout-row layout-center-h" title="@($"{offer.User.Name} {offer.EstimatedTime}")">
+                                    <img src="@Url.header(offer.User.Header)" />
+                                    <div>@offer.EstimatedTime</div>
                                 </div>
-                            </div>
-                        }
+                            }
+                        </div>
                     }
+                    if (me == null)
+                    {
+                        <div class="inline-item">
+                            <div class="layout-row layout-center-h clickable" onclick="show_hide(['.offer_edit'], ['.offer'])" title="@($"{Model.Me.Name} 尚未预估工时")">
+                                <img src="@Url.header(Model.Me.Header)" />
+                                <div class="offer_info">我尚未预估</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+        <div class="layui-form-item offer_edit" style="display: none;">
+            <label class="layui-form-label">预报工时</label>
+            <div class="layui-input-inline">
+                <input type="text" autocomplete="off" placeholder="请填写你的预估工时" class="layui-input" value="@(me == null ? "" : me.EstimatedManHour.ToString())">
+            </div>
+            <div class="layui-form-mid layui-word-aux">你的预估工时</div>
+        </div>
+        <div class="layui-form-item offer_edit" style="display: none;">
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn" onclick="offer()">确定</button>
+                <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.offer'], ['.offer_edit'])">取消</button>
+            </div>
+        </div>
+        <div class="layui-form-item node_time">
+            <label class="layui-form-label">预估工时</label>
+            <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
+                <div class="node_time_info">@Model.Data.Node.EstimatedTime</div>
+            </div>
+        </div>
+        <div class="layui-form-item node_time_edit" style="display: none;">
+            <label class="layui-form-label">预估工时</label>
+            <div class="layui-input-inline">
+                <input type="text" autocomplete="off" placeholder="请确定预估工时" class="layui-input" value="@(Model.Data.Node.EstimatedManHour == 0 ? "" : Model.Data.Node.EstimatedManHour.ToString())">
+            </div>
+            <div class="layui-form-mid layui-word-aux">最终确定的预估工时（管理员）</div>
+        </div>
+        <div class="layui-form-item node_time_edit" style="display: none;">
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn" onclick="modify_estimated_manhour()">确定</button>
+                <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_time'], ['.node_time_edit'])">取消</button>
+            </div>
+        </div>
+        <div class="layui-form-item node_actual_time">
+            <label class="layui-form-label">实际工时</label>
+            <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_actual_time_edit'], ['.node_actual_time'])">
+                <div class="node_actual_time_info">@Model.Data.Node.ActualTime</div>
+            </div>
+        </div>
+        <div class="layui-form-item node_actual_time_edit" style="display: none;">
+            <label class="layui-form-label">实际工时</label>
+            <div class="layui-input-inline">
+                <input id="ActualManHour" type="text" autocomplete="off" placeholder="可指定实际工时" class="layui-input" value="@(Model.Data.Node.ActualManHour == 0 ? "" : Model.Data.Node.ActualManHour.ToString())">
+            </div>
+            <div class="layui-form-mid layui-word-aux">实际工时会自动计算，也可以修改</div>
+        </div>
+        <div class="layui-form-item node_actual_time_edit" style="display: none;">
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn" onclick="modify_actual_manhour()">确定</button>
+                <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_actual_time'], ['.node_actual_time_edit'])">取消</button>
+            </div>
+        </div>
+        <div class="layui-form-item layout-row">
+            <div class="flex">
+                <label class="layui-form-label">创建者</label>
+                <div class="layout-row layout-center-h layui-input-block">
+                    <img src="@Url.header(Model.Data.Node.Creator.Header)" />
+                    <div>@Model.Data.Node.Creator.Name</div>
                 </div>
             </div>
-            <div class="layui-form-item offer_edit" style="display: none;">
-                <label class="layui-form-label">预报工时</label>
-                <div class="layui-input-inline">
-                    <input type="text" autocomplete="off" placeholder="请填写你的预估工时" class="layui-input" value="@(me == null ? "" : me.EstimatedManHour.ToString())">
-                </div>
-                <div class="layui-form-mid layui-word-aux">你的预估工时</div>
-            </div>
-            <div class="layui-form-item offer_edit" style="display: none;">
-                <div class="layui-input-block">
-                    <button type="button" class="layui-btn" onclick="offer()">确定</button>
-                    <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.offer'], ['.offer_edit'])">取消</button>
+            <div class="flex">
+                <label class="layui-form-label">执行者</label>
+                <div class="layout-row layout-center-h layui-input-block clickable" onclick="select_worker(this)">
+                    <img id="worker_header" src="@Url.header(Model.Data.Node.Worker?.Header)" />
+                    <div id="worker_name">@(Model.Data.Node.Worker == null ? "暂无" : Model.Data.Node.Worker.Name)</div>
                 </div>
             </div>
-            <div class="layui-form-item node_time node_actual_time layout-row">
-                <div class="flex">
-                    <label class="layui-form-label">预估工时</label>
-                    <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
-                        <div class="node_time_info">@Model.Data.Node.EstimatedTime</div>
-                    </div>
-                </div>
-                <div class="flex">
-                    <label class="layui-form-label">实际工时</label>
-                    <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_actual_time_edit'], ['.node_actual_time'])">
-                        <div class="node_actual_time_info">@Model.Data.Node.ActualTime</div>
-                    </div>
-                </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">开始时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="StartTime" id="StartTime" lay-verify="StartTime" placeholder="尚未开始" autocomplete="off" class="layui-input flex" value="@(Model.Data.Node.StartTime == null ? "" : Model.Data.Node.StartTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
             </div>
-            <div class="layui-form-item node_time_edit" style="display: none;">
-                <label class="layui-form-label">预估工时</label>
-                <div class="layui-input-inline">
-                    <input type="text" autocomplete="off" placeholder="请确定预估工时" class="layui-input" value="@(Model.Data.Node.EstimatedManHour == 0 ? "" : Model.Data.Node.EstimatedManHour.ToString())">
-                </div>
-                <div class="layui-form-mid layui-word-aux">最终确定的预估工时（管理员）</div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">完成时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="EndTime" id="EndTime" lay-verify="EndTime" placeholder="尚未完成" autocomplete="off" class="layui-input flex" value="@(Model.Data.Node.EndTime == null ? "" : Model.Data.Node.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
             </div>
-            <div class="layui-form-item node_time_edit" style="display: none;">
-                <div class="layui-input-block">
-                    <button type="button" class="layui-btn" onclick="modify_estimated_manhour()">确定</button>
-                    <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_time'], ['.node_time_edit'])">取消</button>
-                </div>
-            </div>
-            <div class="layui-form-item node_actual_time_edit" style="display: none;">
-                <label class="layui-form-label">实际工时</label>
-                <div class="layui-input-inline">
-                    <input id="ActualManHour" type="text" autocomplete="off" placeholder="可指定实际工时" class="layui-input" value="@(Model.Data.Node.ActualManHour == 0 ? "" : Model.Data.Node.ActualManHour.ToString())">
-                </div>
-                <div class="layui-form-mid layui-word-aux">实际工时会自动计算，也可以修改</div>
-            </div>
-            <div class="layui-form-item node_actual_time_edit" style="display: none;">
-                <div class="layui-input-block">
-                    <button type="button" class="layui-btn" onclick="modify_actual_manhour()">确定</button>
-                    <button type="button" class="layui-btn layui-btn-primary" onclick="show_hide(['.node_actual_time'], ['.node_actual_time_edit'])">取消</button>
-                </div>
-            </div>
-            <div class="layui-form-item layout-row">
-                <div class="flex">
-                    <label class="layui-form-label">创建者</label>
-                    <div class="layout-row layout-center-h layui-input-block">
-                        <img src="@Url.header(Model.Data.Node.Creator.Header)" />
-                        <div>@Model.Data.Node.Creator.Name</div>
-                    </div>
-                </div>
-                <div class="flex">
-                    <label class="layui-form-label">执行者</label>
-                    <div class="layout-row layout-center-h layui-input-block clickable" onclick="select_worker(this)">
-                        <img id="worker_header" src="@Url.header(Model.Data.Node.Worker?.Header)" />
-                        <div id="worker_name">@(Model.Data.Node.Worker == null ? "暂无" : Model.Data.Node.Worker.Name)</div>
-                    </div>
-                </div>
-            </div>
-            <div class="layui-form-item">
-                <label class="layui-form-label">起止时间</label>
-                <div class="layui-input-block layout-row">
-                    <input type="text" name="StartTime" id="StartTime" lay-verify="StartTime" placeholder="尚未开始" autocomplete="off" class="layui-input flex" value="@(Model.Data.Node.StartTime == null ? "" : Model.Data.Node.StartTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
-                    <div style="width: 10px"></div>
-                    <input type="text" name="EndTime" id="EndTime" lay-verify="EndTime" placeholder="尚未完成" autocomplete="off" class="layui-input flex" value="@(Model.Data.Node.EndTime == null ? "" : Model.Data.Node.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss"))">
-                </div>
-            </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 <fieldset class="layui-elem-field layui-field-title">
@@ -229,14 +240,10 @@
 
 <script>
     function modify() {
-        layer.open({
-            type: 2,
+        pane.open({
             title: '修改',
-            maxmin: true,
-            area: ['80%', '80%'],
-            shadeClose: true,
-            content: '@Html.Raw(Url.Action("ModifyNode", new { id = Model.Data.Node.ID, callback = "modify_success" }))',
-        });
+            src: '@Html.Raw(Url.Action("ModifyNode", new { id = Model.Data.Node.ID, callback = "modify_success" }))',
+        })
     }
 
     function modify_success(result) {
@@ -364,13 +371,9 @@
     }
 
     function add_note() {
-        layer.open({
-            type: 2,
+        pane.open({
             title: '添加批注',
-            maxmin: true,
-            area: ['80%', '80%'],
-            shadeClose: true,
-            content: '@Html.Raw(Url.Action("AddNote", new { nodeGuid = Model.Data.Node.ID, callback = "add_note_success" }))',
+            src: '@Html.Raw(Url.Action("AddNote", new { nodeGuid = Model.Data.Node.ID, callback = "add_note_success" }))',
         });
     }
 
@@ -402,14 +405,10 @@
 
     function modify_note(e) {
         var id = $(e).parents('*[id]').attr('id');
-        layer.open({
-            type: 2,
+        pane.open({
             title: '修改批注',
-            maxmin: true,
-            area: ['80%', '80%'],
-            shadeClose: true,
-            content: '@Html.Raw(Url.Action("ModifyNote", new { callback = "modify_note_success" }))' + '&id=' + id,
-        });
+            src: '@Html.Raw(Url.Action("ModifyNote", new { callback = "modify_note_success" }))' + '&id=' + id,
+        })
     }
 
     function modify_note_success(note, id) {

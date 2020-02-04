@@ -1,0 +1,38 @@
+﻿.item-container {
+    height: 150px;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 15px;
+    position: relative;
+}
+
+.logo, .partner-image {
+    border-radius: 50%;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+}
+
+.partner-image {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
+
+.partners {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+}
+
+.descrip {
+    margin-top: 15px;
+}
+
+.title img {
+    height: 18px;
+}

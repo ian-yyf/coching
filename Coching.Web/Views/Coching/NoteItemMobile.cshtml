@@ -1,0 +1,128 @@
+﻿@using Coching.Model;
+@model NoteItemViewModel
+
+@{
+    ViewData["Title"] = Model?.ActionName;
+    Layout = "~/Views/Shared/_PopupMobile.cshtml";
+}
+
+@if (Model == null)
+{
+    return;
+}
+
+@if (Model.Success)
+{
+    <script>
+        parent.@(Model.Callback)(eval(@Html.Raw(Model.getResult())));
+        parent.pane.close(window.name);
+    </script>
+    return;
+}
+
+@if (Model.OldJson != null)
+{
+    <style>
+        #editor {
+            height: calc(100vh - 300px);
+            width: calc(100vw - 130px);
+        }
+    </style>
+}
+else
+{
+    <style>
+        #editor {
+            height: calc(100vh - 242px);
+            width: calc(100vw - 130px);
+        }
+    </style>
+}
+
+@using (Html.BeginForm(Model.ActionName, "Coching", FormMethod.Post, new { @class = "weui-cells weui-cells_form" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
+
+    <div class="weui-cell weui-cell_active">
+        <div class="weui-cell__hd">@Html.LabelFor(m => m.Content, new { @class = "weui-label" })</div>
+        <div class="weui-cell__bd">
+            @Html.HiddenFor(m => m.Content)
+            @Html.HiddenFor(m => m.HtmlContent)
+            @await Html.PartialAsync("_Widgets/HtmlEditor", new HtmlEditorWidgetModel("editor", Model.HtmlContent, "#Content", "#HtmlContent"))
+        </div>
+        @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger" })
+    </div>
+
+    <div>
+        @Html.HiddenFor(m => m.KeyGuid)
+        @Html.HiddenFor(m => m.ActionName)
+        @Html.HiddenFor(m => m.ActionTitle)
+        @Html.HiddenFor(m => m.OldJson)
+        @Html.HiddenFor(m => m.NodeGuid)
+        @Html.HiddenFor(m => m.Callback)
+    </div>
+
+    <div class="weui-cell weui-cell_active">
+        <div class="weui-cell__hd"><label class="weui-label">附件</label></div>
+        <div class="weui-cell__bd">
+            @Html.HiddenFor(m => m.Documents)
+            @await Component.InvokeAsync("Upload", new { imageMaxCount = 10, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "DocumentUploader" })
+        </div>
+    </div>
+
+    <div class="weui-btn-area">
+        <button class="weui-btn weui-btn_primary" type="submit">提交</button>
+        @if (Model.OldJson != null)
+        {
+            <button class="weui-btn weui-btn_warn" type="button" onclick="delete_this()">删除本条</button>
+        }
+    </div>
+}
+
+<script>
+    layui.define(["layer"],
+        function (i) {
+        }
+    );
+
+    @if (Model.Documents == null)
+    {
+        <text>
+        var documents = [];
+        </text>
+    }
+    else
+    {
+        <text>
+        var documents = eval(@Html.Raw(Model.Documents));
+        </text>
+    }
+
+    DocumentUploader.init(function (url) {
+        documents.push(url);
+        $('#Documents').val(JSON.stringify(documents));
+    }, function (url) {
+        documents = documents.filter(d => d != url);
+        $('#Documents').val(JSON.stringify(documents));
+    }, documents);
+
+    function delete_this() {
+        layer.confirm('确定要删除本条批注', function (index) {
+            $.post('@Html.Raw(Url.Action("DeleteNote"))', {
+                id: '@Model.KeyGuid'
+            }, function (result) {
+                if (!result.Success) {
+                    top.layer.msg(result.Message);
+                }
+                else {
+                    parent.@(Model.Callback)(null, '@Model.KeyGuid');
+                    var open = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(open);
+                }
+            });
+
+            layer.close(index);
+        });
+    }
+</script>

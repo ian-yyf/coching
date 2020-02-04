@@ -1,5 +1,6 @@
 ﻿@using Coching.Model;
-@model ProjectItemViewModel
+@using Public.Utils;
+@model NodeItemViewModel
 
 @{
     ViewData["Title"] = Model?.ActionName;
@@ -22,12 +23,12 @@
 
 <style>
     #editor {
-        height: calc(100vh - 300px);
+        height: calc(100vh - 298px);
         width: calc(100vw - 130px);
     }
 </style>
 
-@using (Html.BeginForm(Model.ActionName, "Project", FormMethod.Post, new { @class = "weui-cells weui-cells_form" }))
+@using (Html.BeginForm(Model.ActionName, "Coching", FormMethod.Post, new { @class = "weui-cells weui-cells_form" }))
 {
     @Html.AntiForgeryToken()
     @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
@@ -37,16 +38,7 @@
         <div class="weui-cell__bd">
             @Html.TextBoxFor(m => m.Name, new { @class = "weui-input", @placeholder = "请输入名称", @autocomplete = "off" })
         </div>
-        @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
-    </div>
-
-    <div class="weui-cell weui-cell_active">
-        <div class="weui-cell__hd">@Html.LabelFor(m => m.Header, new { @class = "weui-label" })</div>
-        <div class="weui-cell__bd">
-            @Html.HiddenFor(m => m.Header)
-            @await Component.InvokeAsync("Upload", new { imageMaxCount = 1, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "HeaderUploader" })
-        </div>
-        @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
+        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
     </div>
 
     <div class="weui-cell weui-cell_active">
@@ -59,11 +51,22 @@
         @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
     </div>
 
+    <div class="weui-cell weui-cell_active">
+        <div class="weui-cell__hd"><label class="weui-label">附件</label></div>
+        <div class="weui-cell__bd">
+            @Html.HiddenFor(m => m.Documents)
+            @await Component.InvokeAsync("Upload", new { imageMaxCount = 10, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "DocumentUploader" })
+        </div>
+    </div>
+
     <div>
         @Html.HiddenFor(m => m.KeyGuid)
         @Html.HiddenFor(m => m.ActionName)
         @Html.HiddenFor(m => m.ActionTitle)
         @Html.HiddenFor(m => m.OldJson)
+        @Html.HiddenFor(m => m.ProjectGuid)
+        @Html.HiddenFor(m => m.RootGuid)
+        @Html.HiddenFor(m => m.ParentGuid)
         @Html.HiddenFor(m => m.Callback)
     </div>
 
@@ -73,9 +76,24 @@
 }
 
 <script>
-    HeaderUploader.init(function (url) {
-        $("#Header").val(url);
+    @if (Model.Documents == null)
+    {
+        <text>
+        var documents = [];
+        </text>
+    }
+    else
+    {
+        <text>
+        var documents = eval(@Html.Raw(Model.Documents));
+        </text>
+    }
+
+    DocumentUploader.init(function (url) {
+        documents.push(url);
+        $('#Documents').val(JSON.stringify(documents));
     }, function (url) {
-        $("#Header").val("");
-    }, $("#Header").val() ? [$("#Header").val()] : null);
+        documents = documents.filter(d => d != url);
+        $('#Documents').val(JSON.stringify(documents));
+    }, documents);
 </script>
