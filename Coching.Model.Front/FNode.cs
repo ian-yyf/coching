@@ -33,5 +33,17 @@ namespace Coching.Model.Front
         public FUser Creator { get; set; }
         public FUser Worker { get; set; }
         public FNode[] Children { get; set; }
+
+        public override string Label
+        {
+            get
+            {
+                if (Worker == null || Worker.Name == null || Worker.Name.Length < 1)
+                {
+                    return base.Label;
+                }
+                return $"{Worker.Name.Substring(Worker.Name.Length - 1, 1)} - {base.Label}";
+            }
+        }
     }
 }

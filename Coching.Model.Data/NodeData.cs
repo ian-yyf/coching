@@ -95,7 +95,7 @@ namespace Coching.Model.Data
             return ParentGuid == Guid.Empty;
         }
 
-        public string Label
+        public virtual string Label
         {
             get
             {
