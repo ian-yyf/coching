@@ -398,6 +398,33 @@ namespace Coching.Bll
                 return (await dbData()).getStatus();
             };
 
+            Func<Task<decimal>> finalEstimatedManHour = async () =>
+            {
+                if (oldData.EstimatedManHour != newData.EstimatedManHour)
+                {
+                    return newData.EstimatedManHour;
+                }
+                return (await dbData()).EstimatedManHour;
+            };
+
+            Func<Task<bool>> finalCoching = async () =>
+            {
+                if (oldData.Coching != newData.Coching)
+                {
+                    return newData.Coching;
+                }
+                return (await dbData()).Coching;
+            };
+
+            Func<Task<Guid>> finalWorker = async () =>
+            {
+                if (oldData.WorkerGuid != newData.WorkerGuid)
+                {
+                    return newData.WorkerGuid;
+                }
+                return (await dbData()).WorkerGuid;
+            };
+
             if (oldData.Status != newData.Status)
             {
                 if (newData.getStatus() == NodeStatus.进行中 && oldData.StartTime == newData.StartTime && await finalStartTime() == null)
@@ -433,6 +460,11 @@ namespace Coching.Bll
             if (oldData.ActualManHour != newData.ActualManHour)
             {
                 await _models.addActualManHour((await dbData()).ParentGuid, newData.ActualManHour - oldData.ActualManHour);
+            }
+
+            if (oldData.Coching != newData.Coching && await finalStatus() == NodeStatus.完成 && await finalWorker() != Guid.Empty)
+            {
+
             }
 
             await _models.modifyNode(id, oldData, newData);

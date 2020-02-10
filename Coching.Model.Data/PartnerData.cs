@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace Coching.Model.Data
@@ -16,6 +17,7 @@ namespace Coching.Model.Data
             ProjectGuid = projectGuid;
             UserGuid = userGuid;
             Role = (int)role;
+            Coching = 0;
             JoinTime = DateTime.Now;
         }
 
@@ -24,12 +26,15 @@ namespace Coching.Model.Data
             ProjectGuid = rhs.ProjectGuid;
             UserGuid = rhs.UserGuid;
             Role = rhs.Role;
+            Coching = rhs.Coching;
             JoinTime = rhs.JoinTime;
         }
 
         public Guid ProjectGuid { get; set; }
         public Guid UserGuid { get; set; }
         public int Role { get; set; }
+        [Column(TypeName = "decimal(10, 1)")]
+        public decimal Coching { get; set; }
         public DateTime JoinTime { get; set; }
         
         public PartnerRole getRole()

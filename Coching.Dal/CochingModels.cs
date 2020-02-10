@@ -286,6 +286,23 @@ namespace Coching.Dal
             await _safeSaveChanges();
         }
 
+        public async Task addCoching(Guid projectGuid, Guid userGuid, Decimal coching)
+        {
+            if (coching == 0)
+            {
+                return;
+            }
+
+            var db = await (from p in PartnersTable
+                            where p.ProjectGuid == projectGuid && p.UserGuid == userGuid && p.Deleted == false
+                            select p).FirstOrDefaultAsync();
+            if (db != null)
+            {
+                db.Coching += coching;
+                await _safeSaveChanges();
+            }
+        }
+
         public async Task<FNode> getNode(Guid id)
         {
             var db = await (from n in NodesTable

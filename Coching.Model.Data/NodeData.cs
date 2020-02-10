@@ -12,7 +12,7 @@ namespace Coching.Model.Data
 
         }
 
-        public NodeData(Guid projectGuid, Guid rootGuid, Guid parentGuid, Guid creatorGuid, string name, string description, string htmlDescription)
+        public NodeData(Guid projectGuid, Guid rootGuid, Guid parentGuid, Guid creatorGuid, string name, string description, string htmlDescription, bool coching)
         {
             ProjectGuid = projectGuid;
             RootGuid = rootGuid;
@@ -27,6 +27,7 @@ namespace Coching.Model.Data
             EndTime = null;
             WorkerGuid = Guid.Empty;
             Status = (int)NodeStatus.未进行;
+            Coching = coching;
             CreatedTime = DateTime.Now;
         }
 
@@ -45,6 +46,7 @@ namespace Coching.Model.Data
             EndTime = rhs.EndTime;
             WorkerGuid = rhs.WorkerGuid;
             Status = rhs.Status;
+            Coching = rhs.Coching;
             CreatedTime = rhs.CreatedTime;
         }
 
@@ -75,6 +77,7 @@ namespace Coching.Model.Data
         public DateTime? EndTime { get; set; }
         public Guid WorkerGuid { get; set; }
         public int Status { get; set; }
+        public bool Coching { get; set; }
         public DateTime CreatedTime { get; set; }
 
         public NodeStatus getStatus()
