@@ -92,7 +92,7 @@
 <link rel="stylesheet" href="~/css/layui_menu.css">
 <script src="~/js/layui_menu.js"></script>
 <link rel="stylesheet" href="~/views/coching/index.css">
-<script src="~/views/coching/index.js"></script>
+<script src="~/views/coching/index.js?v=1.0"></script>
 
 <div class="layout-row out-container">
     <div class="catalogue">
@@ -147,7 +147,10 @@
                 content: '@Html.Raw(Url.Action("NodeDetail"))' + '?id=' + params.data.id + '&notify=changed_notify',
             });
         },
-        tooltip: true
+        tooltip: true,
+        me_id: function () {
+            return '@Model.MyId';
+        }
     }
 </script>
 

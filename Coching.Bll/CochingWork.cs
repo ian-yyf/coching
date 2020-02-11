@@ -245,12 +245,9 @@ namespace Coching.Bll
                 return new Result<FNodeModify>(false, null, "没有权限");
             }
 
-            if (data.WorkerGuid != Guid.Empty)
+            if (data.WorkerGuid != Guid.Empty && !await _models.checkProjectModifyPartner(data.ProjectGuid, data.WorkerGuid))
             {
-                if (!await _models.checkProjectModifyPartner(data.ProjectGuid, data.WorkerGuid))
-                {
-                    return new Result<FNodeModify>(false, null, "没有权限");
-                }
+                return new Result<FNodeModify>(false, null, "没有权限");
             }
 
             if (data.isRoot() && data.RootGuid != Guid.Empty)
@@ -261,6 +258,16 @@ namespace Coching.Bll
             if (data.ParentGuid != Guid.Empty && !await _models.checkRoot(data.ParentGuid, data.RootGuid))
             {
                 return new Result<FNodeModify>(false, null, "没有权限");
+            }
+
+            if ((data.EstimatedManHour > 0 || data.Coching) && !await _models.checkProjectAdminPartner(data.ProjectGuid, token.ID))
+            {
+                return new Result<FNodeModify>(false, null, "没有权限");
+            }
+
+            if (data.Coching && await _models.checkCochingUp(data.ParentGuid))
+            {
+                return new Result<FNodeModify>(false, null, "一条支线上只能有一个考成项");
             }
 
             var tran = _models.Database.BeginTransaction();
@@ -314,11 +321,6 @@ namespace Coching.Bll
             }
 
             if (oldData.CreatorGuid != newData.CreatorGuid || oldData.ProjectGuid != newData.ProjectGuid)
-            {
-                return new Result<FNodeModify>(false, null, "没有权限");
-            }
-
-            if (oldData.EstimatedManHour != newData.EstimatedManHour && !await _models.checkNodeAdminPartner(id, token.ID))
             {
                 return new Result<FNodeModify>(false, null, "没有权限");
             }
@@ -425,6 +427,30 @@ namespace Coching.Bll
                 return (await dbData()).WorkerGuid;
             };
 
+            if (oldData.EstimatedManHour != newData.EstimatedManHour)
+            {
+                if (await finalWorker() != token.ID && !await _models.checkNodeAdminPartner(id, token.ID))
+                {
+                    return new Result<FNodeModify>(false, null, "没有权限");
+                }
+            }
+
+            if (oldData.Coching != newData.Coching)
+            {
+                if (!await _models.checkNodeAdminPartner(id, token.ID))
+                {
+                    return new Result<FNodeModify>(false, null, "没有权限");
+                }
+
+                if (newData.Coching)
+                {
+                    if (await _models.checkCochingUp((await dbData()).ParentGuid) || await _models.checkCochingChildren(new Guid[] { id }))
+                    {
+                        return new Result<FNodeModify>(false, null, "一条支线上只能有一个考成项");
+                    }
+                }
+            }
+
             if (oldData.Status != newData.Status)
             {
                 if (newData.getStatus() == NodeStatus.进行中 && oldData.StartTime == newData.StartTime && await finalStartTime() == null)
@@ -462,9 +488,30 @@ namespace Coching.Bll
                 await _models.addActualManHour((await dbData()).ParentGuid, newData.ActualManHour - oldData.ActualManHour);
             }
 
-            if (oldData.Coching != newData.Coching && await finalStatus() == NodeStatus.完成 && await finalWorker() != Guid.Empty)
+            if (oldData.Coching != newData.Coching 
+                || oldData.Status != newData.Status && (oldData.getStatus() == NodeStatus.完成 || newData.getStatus() == NodeStatus.完成)
+                || oldData.WorkerGuid != newData.WorkerGuid 
+                || oldData.EstimatedManHour != newData.EstimatedManHour)
             {
+                var db = await dbData();
+                var oriCoching = db.Coching && db.getStatus() == NodeStatus.完成 && db.WorkerGuid != Guid.Empty ? db.EstimatedManHour : 0;
+                var newCoching = await finalCoching() && await finalStatus() == NodeStatus.完成 && await finalWorker() != Guid.Empty ? await finalEstimatedManHour() : 0;
 
+                if (oldData.WorkerGuid != newData.WorkerGuid)
+                {
+                    if (oldData.WorkerGuid != Guid.Empty)
+                    {
+                        await _models.addCoching(db.ProjectGuid, oldData.WorkerGuid, -oriCoching);
+                    }
+                    if (newData.WorkerGuid != Guid.Empty)
+                    {
+                        await _models.addCoching(db.ProjectGuid, newData.WorkerGuid, newCoching);
+                    }
+                }
+                else if (await finalWorker() != Guid.Empty)
+                {
+                    await _models.addCoching(db.ProjectGuid, await finalWorker(), newCoching - oriCoching);
+                }
             }
 
             await _models.modifyNode(id, oldData, newData);
@@ -549,6 +596,12 @@ namespace Coching.Bll
             }
 
             var node = await _models.getNode(id);
+
+            if (node.Coching && node.WorkerGuid != Guid.Empty && node.EstimatedManHour != 0)
+            {
+                return new Result<bool>(false, false, "本项已经计入考成，不可删除，可以先解除本项【考成项】状态");
+            }
+
             await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.修改分支, $"删除了{(node.isRoot() ? "任务" : "分支")} {node.Name}"), false);
             await _models.deleteNode(id);
             return new Result<bool>(true);
@@ -703,6 +756,21 @@ namespace Coching.Bll
             return new Result<FUser[]>(await _models.getUsers(userGuid, condition));
         }
 
+        public async Task<Result<FPartner>> getPartnerOfProject(FUserToken token, Guid projectGuid, Guid userGuid)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FPartner>(false, null, "请重新登录");
+            }
+
+            if (token.ID != userGuid)
+            {
+                return new Result<FPartner>(false, null, "没有权限");
+            }
+
+            return new Result<FPartner>(await _models.getPartnerOfProject(projectGuid, userGuid));
+        }
+
         public async Task<Result<FPartner[]>> getPartnersOfProject(FUserToken token, Guid projectGuid, PartnerCondition condition)
         {
             if (!await _models.checkToken(token.ID, token.Token))
@@ -779,6 +847,21 @@ namespace Coching.Bll
             }
 
             return new Result<FActionLog[]>(await _models.getActionLogsOfUser(userGuid, pageSize, pageIndex));
+        }
+
+        public async Task<Result<FPartner[]>> charts(FUserToken token, Guid[] projectGuids)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FPartner[]>(false, null, "请重新登录");
+            }
+
+            if (!await _models.checkProjectsPartner(projectGuids, token.ID))
+            {
+                return new Result<FPartner[]>(false, null, "没有权限");
+            }
+
+            return new Result<FPartner[]>(await _models.charts(projectGuids));
         }
     }
 }

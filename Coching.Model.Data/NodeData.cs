@@ -50,12 +50,13 @@ namespace Coching.Model.Data
             CreatedTime = rhs.CreatedTime;
         }
 
-        public NodeData(NodeData rhs, string name, string description, string htmlDescription)
+        public NodeData(NodeData rhs, string name, string description, string htmlDescription, bool coching)
             : this(rhs)
         {
             Name = name;
             Description = description;
             HtmlDescription = htmlDescription;
+            Coching = coching;
         }
 
         public Guid ProjectGuid { get; set; }
@@ -117,7 +118,7 @@ namespace Coching.Model.Data
             {
                 if (EstimatedManHour == 0)
                 {
-                    return "请根据预报工时确定";
+                    return Coching ? "请根据预报工时确定" : "请预估";
                 }
                 return $"{EstimatedManHour.ToString("0.#")}工时";
             }

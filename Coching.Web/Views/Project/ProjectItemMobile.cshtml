@@ -24,6 +24,7 @@
     #editor {
         height: calc(100vh - 300px);
         width: calc(100vw - 130px);
+        min-height: 200px;
     }
 </style>
 
@@ -37,8 +38,8 @@
         <div class="weui-cell__bd">
             @Html.TextBoxFor(m => m.Name, new { @class = "weui-input", @placeholder = "请输入名称", @autocomplete = "off" })
         </div>
-        @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
     </div>
+    @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
 
     <div class="weui-cell weui-cell_active">
         <div class="weui-cell__hd">@Html.LabelFor(m => m.Header, new { @class = "weui-label" })</div>
@@ -46,8 +47,8 @@
             @Html.HiddenFor(m => m.Header)
             @await Component.InvokeAsync("Upload", new { imageMaxCount = 1, imageWidth = 0, imageHeight = 0, imagePreviewWidth = 60, imagePreviewHeight = 60, uploaderName = "HeaderUploader" })
         </div>
-        @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
     </div>
+    @Html.ValidationMessageFor(m => m.Header, "", new { @class = "text-danger" })
 
     <div class="weui-cell weui-cell_active">
         <div class="weui-cell__hd">@Html.LabelFor(m => m.Description, new { @class = "weui-label" })</div>
@@ -56,8 +57,8 @@
             @Html.HiddenFor(m => m.HtmlDescription)
             @await Html.PartialAsync("_Widgets/HtmlEditor", new HtmlEditorWidgetModel("editor", Model.HtmlDescription, "#Description", "#HtmlDescription"))
         </div>
-        @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
     </div>
+    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
 
     <div>
         @Html.HiddenFor(m => m.KeyGuid)

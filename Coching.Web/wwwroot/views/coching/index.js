@@ -73,6 +73,7 @@ var tool = {
                 name: i.Name,
                 label: i.Label,
                 description: i.Description,
+                coching: i.Coching,
                 creator: {
                     id: i.Creator.ID,
                     name: i.Creator.Name,
@@ -93,7 +94,9 @@ var tool = {
                 itemStyle: {
                     color: NodeColors[i.Status],
                     borderWidth: 0,
-                    borderColor: '#000000'
+                    borderColor: '#000000',
+                    shadowColor: '#000000',
+                    shadowBlur: 0
                 },
             }
         });
@@ -212,12 +215,12 @@ var menu = {
     },
     expand: function (node) {
         node.data.collapsed = false;
-        node.data.itemStyle.borderWidth = 0;
+        node.data.itemStyle.shadowBlur = 0;
         tree.refresh(null, true);
     },
     collapse: function (node) {
         node.data.collapsed = true;
-        node.data.itemStyle.borderWidth = 2;
+        node.data.itemStyle.shadowBlur = 10;
         tree.refresh(null, true);
     }
 }
@@ -375,8 +378,10 @@ function init_tree(data) {
                 top: '20%',
                 bottom: '20%',
                 roam: true,
-                symbol: 'rect',
-                symbolSize: [150, 30],
+                symbol: function (node, data) {
+                    return data.data.coching ? 'roundRect' : 'rect';
+                },
+                symbolSize: [160, 30],
                 initialTreeDepth: -1,
 
                 expandAndCollapse: false,
@@ -387,11 +392,19 @@ function init_tree(data) {
                     align: 'center',
                     fontSize: 9,
                     formatter: function (node) {
-                        return ['{name|' + node.data.label + '}'].join('\n');
+                        if (node.data.worker && node.data.worker.id == init_data.me_id()) {
+                            return ['{mine|' + node.data.label + '}'].join('\n');
+                        }
+                        else {
+                            return ['{name|' + node.data.label + '}'].join('\n');
+                        }
                     },
                     rich: {
                         name: {
                             color: 'white'
+                        },
+                        mine: {
+                            color: 'yellow'
                         }
                     }
                 },

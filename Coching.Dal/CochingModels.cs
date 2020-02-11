@@ -67,6 +67,13 @@ namespace Coching.Dal
                           select p.KeyGuid).FirstOrDefaultAsync() != Guid.Empty;
         }
 
+        public async Task<bool> checkProjectsPartner(Guid[] projectGuids, Guid userGuid)
+        {
+            return await (from p in PartnersTable
+                          where projectGuids.Contains(p.ProjectGuid) && p.UserGuid == userGuid && p.Deleted == false
+                          select p.KeyGuid).CountAsync() == projectGuids.Length;
+        }
+
         public async Task<bool> checkProjectAdminPartner(Guid projectGuid, Guid userGuid)
         {
             var roles = new int[]
@@ -151,6 +158,39 @@ namespace Coching.Dal
         public async Task<bool> checkLeaf(Guid nodeGuid)
         {
             return await (from n in NodesTable where n.ParentGuid == nodeGuid && n.Deleted == false select n.KeyGuid).FirstOrDefaultAsync() == Guid.Empty;
+        }
+
+        public async Task<bool> checkCochingUp(Guid nodeGuid)
+        {
+            if (nodeGuid == Guid.Empty)
+            {
+                return false;
+            }
+
+            var db = (from n in NodesTable where n.KeyGuid == nodeGuid select n).Single();
+            if (db.Coching)
+            {
+                return true;
+            }
+            if (db.isRoot())
+            {
+                return false;
+            }
+            return await checkCochingUp(db.ParentGuid);
+        }
+
+        public async Task<bool> checkCochingChildren(Guid[] parentGuids)
+        {
+            var dbs = await (from n in NodesTable where parentGuids.Contains(n.ParentGuid) select new { n.KeyGuid, n.Coching }).ToArrayAsync();
+            if (dbs.Length == 0)
+            {
+                return false;
+            }
+            if (dbs.FirstOrDefault(db => db.Coching) != null)
+            {
+                return true;
+            }
+            return await checkCochingChildren(dbs.Select(db => db.KeyGuid).ToArray());
         }
 
         public async Task<FProject[]> getProjectsOfUser(Guid userGuid, ProjectCondition condition)
@@ -420,6 +460,15 @@ namespace Coching.Dal
             }
         }
 
+        public async Task<FPartner> getPartnerOfProject(Guid projectGuid, Guid userGuid)
+        {
+            var db = await (from p in PartnersTable
+                            join u in UsersTable on p.UserGuid equals u.KeyGuid
+                            where p.ProjectGuid == projectGuid && p.UserGuid == userGuid && p.Deleted == false
+                            select new { p, u }).SingleAsync();
+            return new FPartner(db.p.KeyGuid, db.p, new FUser(db.u.KeyGuid, db.u));
+        }
+
         public async Task<FPartner[]> getPartnersOfProject(Guid projectGuid, PartnerCondition condition)
         {
             var roles = condition.Roles == null ? null : condition.Roles.Select(r => (int)r);
@@ -540,6 +589,18 @@ namespace Coching.Dal
                              select new { l, c }).pageOnlyAsync(pageSize, pageIndex);
 
             return dbs.Select(db => new FActionLog(db.l.KeyGuid, db.l, new FUser(db.c.KeyGuid, db.c))).ToArray();
+        }
+
+        public async Task<FPartner[]> charts(Guid[] projectGuids)
+        {
+            var dbs = await (from t in PartnersTable
+                             where projectGuids.Contains(t.ProjectGuid) && t.Deleted == false
+                             group t by t.KeyGuid into ts
+                             join tt in PartnersTable on ts.Key equals tt.KeyGuid
+                             join u in UsersTable on tt.UserGuid equals u.KeyGuid
+                             select new { c = ts.Sum(tt => tt.Coching), tt, u }).ToArrayAsync();
+
+            return (from db in dbs select new FPartner(db.tt.KeyGuid, db.tt, new FUser(db.u.KeyGuid, db.u))).ToArray();
         }
     }
 }

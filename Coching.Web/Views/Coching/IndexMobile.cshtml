@@ -27,7 +27,7 @@
 <script src="~/lib/pane/pane.js"></script>
 <link rel="stylesheet" href="~/views/shared/tools.css">
 <link rel="stylesheet" href="~/views/coching/index.css">
-<script src="~/views/coching/index.js"></script>
+<script src="~/views/coching/index.js?v=1.0"></script>
 
 @foreach (var root in Model.Roots)
 {
@@ -140,6 +140,9 @@
                 title: '详情',
                 src: '@Html.Raw(Url.Action("NodeDetail"))' + '?id=' + params.data.id + '&notify=changed_notify',
             })
+        },
+        me_id: function () {
+            return '@Model.MyId';
         }
     }
 </script>

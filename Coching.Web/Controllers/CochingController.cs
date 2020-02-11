@@ -36,7 +36,7 @@ namespace Coching.Web.Controllers
                 return Error(partners.Message);
             }
 
-            return AutoView("Index", new CochingViewModel(projectGuid, rootGuid, roots.Body.Items, partners.Body));
+            return AutoView("Index", new CochingViewModel(token.ID, projectGuid, rootGuid, roots.Body.Items, partners.Body));
         }
 
         [HttpPost]
@@ -59,9 +59,15 @@ namespace Coching.Web.Controllers
             });
         }
 
-        public IActionResult AddNode(Guid projectGuid, Guid rootGuid, Guid parentGuid, string callback)
+        public async Task<IActionResult> AddNode(Guid projectGuid, Guid rootGuid, Guid parentGuid, string callback)
         {
-            return AutoView("NodeItem", new NodeItemViewModel("AddNode", "添加节点", projectGuid, rootGuid, parentGuid, callback));
+            var token = this.getUserToken();
+            var partner = await _work.getPartnerOfProject(token, projectGuid, token.ID);
+            if (!partner.Success)
+            {
+                return Error(partner.Message);
+            }
+            return AutoView("NodeItem", new NodeItemViewModel("AddNode", "添加节点", projectGuid, rootGuid, parentGuid, partner.Body.IsAdmin, callback));
         }
 
         [HttpPost]
@@ -74,7 +80,7 @@ namespace Coching.Web.Controllers
             }
 
             var token = this.getUserToken();
-            var data = new NodeData(model.ProjectGuid, model.RootGuid, model.ParentGuid, token.ID, model.Name, model.Description, model.HtmlDescription);
+            var data = new NodeData(model.ProjectGuid, model.RootGuid, model.ParentGuid, token.ID, model.Name, model.Description, model.HtmlDescription, model.Coching);
             var result = await _work.insertNode(token, data, model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
@@ -94,7 +100,13 @@ namespace Coching.Web.Controllers
                 return Error(item.Message);
             }
 
-            return AutoView("NodeItem", new NodeItemViewModel(id, "ModifyNode", "修改节点", item.Body, callback));
+            var partner = await _work.getPartnerOfProject(token, item.Body.ProjectGuid, token.ID);
+            if (!partner.Success)
+            {
+                return Error(partner.Message);
+            }
+
+            return AutoView("NodeItem", new NodeItemViewModel(id, "ModifyNode", "修改节点", item.Body, partner.Body.IsAdmin, callback));
         }
 
         [HttpPost]
@@ -107,7 +119,7 @@ namespace Coching.Web.Controllers
             }
 
             var oldData = model.OldData;
-            var newData = new NodeData(oldData, model.Name, model.Description, model.HtmlDescription);
+            var newData = new NodeData(oldData, model.Name, model.Description, model.HtmlDescription, model.Coching);
             var result = await _work.modifyNode(this.getUserToken(), model.KeyGuid, new NodeData(oldData), newData, oldData.Documents, model.Documents?.jsonDecode<string[]>());
             if (!result.Success)
             {
@@ -326,6 +338,11 @@ namespace Coching.Web.Controllers
                 var result = await _work.deleteNote(token, id);
                 return Json(result);
             });
+        }
+
+        public async Task<IActionResult> Charts(Guid[] projectGuids)
+        {
+            var charts = _work.charts(this.getUserToken(), projectGuids);
         }
     }
 }

@@ -49,5 +49,13 @@ namespace Coching.Model.Data
                 return getRole().ToString();
             }
         }
+
+        public bool IsAdmin
+        {
+            get
+            {
+                return getRole() == PartnerRole.管理员;
+            }
+        }
     }
 }

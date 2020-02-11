@@ -26,6 +26,7 @@
         #editor {
             height: calc(100vh - 300px);
             width: calc(100vw - 130px);
+            min-height: 200px;
         }
     </style>
 }
@@ -35,6 +36,7 @@ else
         #editor {
             height: calc(100vh - 242px);
             width: calc(100vw - 130px);
+            min-height: 200px;
         }
     </style>
 }
@@ -51,8 +53,8 @@ else
             @Html.HiddenFor(m => m.HtmlContent)
             @await Html.PartialAsync("_Widgets/HtmlEditor", new HtmlEditorWidgetModel("editor", Model.HtmlContent, "#Content", "#HtmlContent"))
         </div>
-        @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger" })
     </div>
+    @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger" })
 
     <div>
         @Html.HiddenFor(m => m.KeyGuid)

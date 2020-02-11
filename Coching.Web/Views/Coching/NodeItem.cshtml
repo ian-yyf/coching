@@ -25,7 +25,8 @@
 
 <style>
     #editor {
-        height: calc(100vh - 240px);
+        height: calc(100vh - @(Model.IsAdmin ? 296 : 240)px);
+        min-height: 200px;
     }
 </style>
 
@@ -36,6 +37,14 @@
             {
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
+
+                <div class="layui-form-item @(Model.IsAdmin ? "" : "hidden")">
+                    @Html.LabelFor(m => m.Coching, new { @class = "layui-form-label" })
+                    <div class="layui-input-block">
+                        <input type="checkbox" id="Coching" name="Coching" lay-skin="primary" title="计入业绩的项" data-val="true" value="true" @(Model.Coching ? "checked=\"checked\"" : "")>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Coching, "", new { @class = "text-danger" })
+                </div>
 
                 <div class="layui-form-item">
                     @Html.LabelFor(m => m.Name, new { @class = "layui-form-label" })
@@ -71,6 +80,7 @@
                     @Html.HiddenFor(m => m.ProjectGuid)
                     @Html.HiddenFor(m => m.RootGuid)
                     @Html.HiddenFor(m => m.ParentGuid)
+                    @Html.HiddenFor(m => m.IsAdmin)
                     @Html.HiddenFor(m => m.Callback)
                 </div>
 
@@ -83,6 +93,10 @@
 </div>
 
 <script>
+    layui.use(['form', 'layedit'], function () {
+
+    })
+
     @if (Model.Documents == null)
     {
         <text>

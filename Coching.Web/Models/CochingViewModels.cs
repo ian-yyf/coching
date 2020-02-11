@@ -18,14 +18,16 @@ namespace Coching.Web.Models
 
         }
 
-        public CochingViewModel(Guid projectGuid, Guid? rootGuid, FRoot[] roots, FPartner[] partners)
+        public CochingViewModel(Guid myId, Guid projectGuid, Guid? rootGuid, FRoot[] roots, FPartner[] partners)
         {
+            MyId = myId;
             ProjectGuid = projectGuid;
             RootGuid = rootGuid;
             Roots = roots;
             Partners = partners;
         }
 
+        public Guid MyId { get; set; }
         public Guid ProjectGuid { get; set; }
         public Guid? RootGuid { get; set; }
         public FRoot[] Roots { get; set; }
@@ -44,29 +46,34 @@ namespace Coching.Web.Models
 
         }
 
-        public NodeItemViewModel(Guid keyGuid, string actionName, string actionTitle, FNodeModify oldData, string callback)
+        public NodeItemViewModel(Guid keyGuid, string actionName, string actionTitle, FNodeModify oldData, bool isAdmin, string callback)
            : base(keyGuid, actionName, actionTitle, oldData, callback)
         {
             ProjectGuid = oldData.ProjectGuid;
             ParentGuid = oldData.ParentGuid;
             RootGuid = oldData.RootGuid;
+            Coching = oldData.Coching;
             Name = oldData.Name;
             Description = oldData.Description;
             HtmlDescription = oldData.HtmlDescription;
             Documents = oldData.Documents.Select(d => d.Document.Src).jsonEncode();
+            IsAdmin = isAdmin;
         }
 
-        public NodeItemViewModel(string actionName, string actionTitle, Guid projectGuid, Guid rootGuid, Guid parentGuid, string callback)
+        public NodeItemViewModel(string actionName, string actionTitle, Guid projectGuid, Guid rootGuid, Guid parentGuid, bool isAdmin, string callback)
             : base(actionName, actionTitle, callback)
         {
             ProjectGuid = projectGuid;
             ParentGuid = parentGuid;
             RootGuid = rootGuid;
+            IsAdmin = isAdmin;
         }
 
         public Guid ProjectGuid { get; set; }
         public Guid RootGuid { get; set; }
         public Guid ParentGuid { get; set; }
+        [Display(Name = "考成项")]
+        public bool Coching { get; set; }
         [Required]
         [Display(Name = "名称")]
         [StringLength(16)]
@@ -75,6 +82,7 @@ namespace Coching.Web.Models
         public string Description { get; set; }
         public string HtmlDescription { get; set; }
         public string Documents { get; set; }
+        public bool IsAdmin { get; set; }
     }
 
     public class NodeDetailViewModel
@@ -96,6 +104,14 @@ namespace Coching.Web.Models
         public FNodeDetail Data { get; set; }
         public FUser Me { get; set; }
         public string Notify { get; set; }
+
+        public FPartner PartnerMe
+        {
+            get
+            {
+                return Partners.First(p => p.UserGuid == Me.ID);
+            }
+        }
 
         public List<KeyValuePair<int, string>> StatusList
         {

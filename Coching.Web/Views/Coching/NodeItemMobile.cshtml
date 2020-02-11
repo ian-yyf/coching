@@ -23,8 +23,9 @@
 
 <style>
     #editor {
-        height: calc(100vh - 298px);
+        height: calc(100vh - @(Model.IsAdmin ? 350 : 298)px);
         width: calc(100vw - 130px);
+        min-height: 200px;
     }
 </style>
 
@@ -33,13 +34,24 @@
     @Html.AntiForgeryToken()
     @Html.ValidationSummary(true, "请检查输入错误", new { @class = "text-danger" })
 
+    <label class="weui-cell weui-cell_active weui-check__label weui-cells_checkbox @(Model.IsAdmin ? "" : "hidden")" for="Coching">
+        <div class="weui-cell__hd">
+            @Html.CheckBoxFor(m => m.Coching, new { @class="weui-check hidden" })
+            <i class="weui-icon-checked"></i>
+        </div>
+        <div class="weui-cell__bd">
+            <p>考成项 - 计入业绩的项</p>
+        </div>
+    </label>
+    @Html.ValidationMessageFor(m => m.Coching, "", new { @class = "text-danger" })
+
     <div class="weui-cell weui-cell_active">
         <div class="weui-cell__hd">@Html.LabelFor(m => m.Name, new { @class = "weui-label" })</div>
         <div class="weui-cell__bd">
             @Html.TextBoxFor(m => m.Name, new { @class = "weui-input", @placeholder = "请输入名称", @autocomplete = "off" })
         </div>
-        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
     </div>
+    @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
 
     <div class="weui-cell weui-cell_active">
         <div class="weui-cell__hd">@Html.LabelFor(m => m.Description, new { @class = "weui-label" })</div>
@@ -48,8 +60,8 @@
             @Html.HiddenFor(m => m.HtmlDescription)
             @await Html.PartialAsync("_Widgets/HtmlEditor", new HtmlEditorWidgetModel("editor", Model.HtmlDescription, "#Description", "#HtmlDescription"))
         </div>
-        @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
     </div>
+    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
 
     <div class="weui-cell weui-cell_active">
         <div class="weui-cell__hd"><label class="weui-label">附件</label></div>
@@ -67,6 +79,7 @@
         @Html.HiddenFor(m => m.ProjectGuid)
         @Html.HiddenFor(m => m.RootGuid)
         @Html.HiddenFor(m => m.ParentGuid)
+        @Html.HiddenFor(m => m.IsAdmin)
         @Html.HiddenFor(m => m.Callback)
     </div>
 

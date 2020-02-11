@@ -20,6 +20,12 @@ namespace Coching.Model.Front
             User = user;
         }
 
+        public FPartner(Guid id, PartnerData data, FUser user, decimal coching)
+            : this(id, data, user)
+        {
+            Coching = coching;
+        }
+
         public Guid ID { get; set; }
         public FUser User { get; set; }
     }
