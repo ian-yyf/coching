@@ -25,8 +25,8 @@ function show_hide(show, hide) {
 }
 
 function modify_worker_success(result) {
-    $('#worker_header').attr('src', header(result.Body.Worker.Header));
-    $('#worker_name').html(result.Body.Worker.Name);
+    $('#worker_header').attr('src', header(result.Worker.Header));
+    $('#worker_name').html(result.Worker.Name);
 
     if (init_data.is_admin() || !result.Coching && init_data.me_id() == result.WorkerGuid) {
         $('.node_time .layui-input-block').addClass('clickable');
