@@ -429,7 +429,7 @@ namespace Coching.Bll
 
             if (oldData.EstimatedManHour != newData.EstimatedManHour)
             {
-                if (await finalWorker() != token.ID && !await _models.checkNodeAdminPartner(id, token.ID))
+                if ((await finalCoching() || await finalWorker() != token.ID) && !await _models.checkNodeAdminPartner(id, token.ID))
                 {
                     return new Result<FNodeModify>(false, null, "没有权限");
                 }

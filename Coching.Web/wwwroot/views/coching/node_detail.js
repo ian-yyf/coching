@@ -24,6 +24,22 @@ function show_hide(show, hide) {
     }
 }
 
+function modify_worker_success(result) {
+    $('#worker_header').attr('src', header(result.Body.Worker.Header));
+    $('#worker_name').html(result.Body.Worker.Name);
+
+    if (init_data.is_admin() || !result.Coching && init_data.me_id() == result.WorkerGuid) {
+        $('.node_time .layui-input-block').addClass('clickable');
+        $('.node_time .layui-input-block').attr('onclick', "show_hide(['.node_time_edit'], ['.node_time'])");
+    }
+    else {
+        $('.node_time .layui-input-block').removeClass('clickable');
+        $('.node_time .layui-input-block').attr('onclick', "");
+    }
+
+    parent[init_data.notify()](result, true);
+}
+
 function modify_success(result) {
     $('#NodeName').html(result.Name);
     $('#NodeDescription').html(result.HtmlDescription);
@@ -47,7 +63,7 @@ function modify_success(result) {
         $('.node_time_edit .help-info').html('请预估工时（执行者）');
     }
 
-    if (init_data.is_admin() || init_data.me_id() == result.WorkerGuid) {
+    if (init_data.is_admin() || !result.Coching && init_data.me_id() == result.WorkerGuid) {
         $('.node_time .layui-input-block').addClass('clickable');
         $('.node_time .layui-input-block').attr('onclick', "show_hide(['.node_time_edit'], ['.node_time'])");
     }
