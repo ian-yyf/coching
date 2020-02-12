@@ -591,16 +591,16 @@ namespace Coching.Dal
             return dbs.Select(db => new FActionLog(db.l.KeyGuid, db.l, new FUser(db.c.KeyGuid, db.c))).ToArray();
         }
 
-        public async Task<FPartner[]> charts(Guid[] projectGuids)
+        public async Task<FCoching[]> charts(Guid[] projectGuids)
         {
-            var dbs = await (from t in PartnersTable
-                             where projectGuids.Contains(t.ProjectGuid) && t.Deleted == false
-                             group t by t.KeyGuid into ts
-                             join tt in PartnersTable on ts.Key equals tt.KeyGuid
-                             join u in UsersTable on tt.UserGuid equals u.KeyGuid
-                             select new { c = ts.Sum(tt => tt.Coching), tt, u }).ToArrayAsync();
+            var dbs = await (from p in (from p in PartnersTable
+                             where projectGuids.Contains(p.ProjectGuid) && p.Deleted == false
+                             group p by p.UserGuid into ps
+                             select new { id = ps.Key, c = ps.Sum(p => p.Coching) })
+                             join u in UsersTable on p.id equals u.KeyGuid
+                             select new { u, p.c }).ToArrayAsync();
 
-            return (from db in dbs select new FPartner(db.tt.KeyGuid, db.tt, new FUser(db.u.KeyGuid, db.u))).ToArray();
+            return (from db in dbs select new FCoching(new FUser(db.u.KeyGuid, db.u), db.c)).ToArray();
         }
     }
 }

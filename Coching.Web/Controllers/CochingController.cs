@@ -340,9 +340,28 @@ namespace Coching.Web.Controllers
             });
         }
 
-        public async Task<IActionResult> Charts(Guid[] projectGuids)
+        [HttpPost]
+        public async Task<IActionResult> ChartsData(string ids)
         {
-            var charts = _work.charts(this.getUserToken(), projectGuids);
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var charts = await _work.charts(token, ids.Split(',').Select(id => Guid.Parse(id)).ToArray());
+                return Json(charts);
+            });
+        }
+
+        public async Task<IActionResult> Charts(string ids)
+        {
+            var token = this.getUserToken();
+
+            var projects = await _work.getProjectsOfUser(token, token.ID, new ProjectCondition());
+            if (!projects.Success)
+            {
+                return Error(projects.Message);
+            }
+
+            return AutoView("Charts", new ChartsViewModel(ids, projects.Body));
         }
     }
 }

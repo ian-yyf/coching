@@ -1,0 +1,197 @@
+﻿@using Coching.Model;
+@model ChartsViewModel
+
+@{
+    ViewData["Title"] = "业绩分析";
+}
+
+<style>
+    .out-container {
+        height: calc(100vh - 70px);
+    }
+
+    .catalogue {
+        width: 250px;
+        background-color: #F7F7F7;
+        overflow-y: auto;
+        height: 100%;
+        padding: 5px 0;
+    }
+
+        .catalogue::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .catalogue::-webkit-scrollbar-thumb {
+            border-radius: 6px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: #535353;
+        }
+
+        .catalogue::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: #EDEDED;
+        }
+
+    .catalogue-item {
+        background-color: white;
+        border-radius: 5px;
+        -webkit-box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        padding: 10px;
+        line-height: 20px;
+        margin: 0 5px;
+        cursor: pointer;
+    }
+
+        .catalogue-item:not(:first-child) {
+            margin-top: 10px;
+        }
+
+        .catalogue-item:hover {
+            opacity: 0.8;
+        }
+
+    .chart {
+        width: 100%;
+        height: 100%;
+    }
+    .catalogue-item .layui-form {
+        margin-left: 5px;
+    }
+    .catalogue-item .layout-row {
+        margin-bottom: 5px;
+    }
+    .layui-form-switch {
+        margin-top: 0;
+    }
+</style>
+
+<div class="layout-row out-container">
+    <div class="catalogue">
+        @foreach (var project in Model.Projects)
+        {
+            var ids = Model.getIds();
+
+            <div class="catalogue-item">
+                <div class="layout-row layout-center-h">
+                    <div class="ellipsis-1 text-size-descrip text-color-common flex">@project.Name</div>
+                    <div id="@project.ID" class="layui-form">
+                        <input type="checkbox" @(ids.Contains(project.ID) ? "checked" : "") name="open" lay-skin="switch" lay-filter="join" lay-text="加入|关闭">
+                    </div>
+                </div>
+                <div class="ellipsis-2 text-size-min text-color-descrip">@project.Description</div>
+            </div>
+        }
+    </div>
+    <div class="chart-container flex">
+        <div class="chart">
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/echarts/echarts.min.js"></script>
+
+<script>
+    var chart = echarts.init($('.chart')[0]);
+
+    var option = {
+        color: ['#3398DB'],
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+            }
+        },
+        legend: {
+            data:['完成工时']
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: [
+            {
+                type: 'category',
+                data: [],
+                axisTick: {
+                    alignWithLabel: true
+                }
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value'
+            }
+        ],
+        series: [
+            {
+                name: '完成工时',
+                type: 'bar',
+                barWidth: '60%',
+                data: []
+            }
+        ]
+    };
+
+    function load(data) {
+        option.xAxis[0].data = YFUtils.select(data, d => d.User.Name);
+        option.series[0].data = YFUtils.select(data, d => d.Coching);
+        chart.setOption(option);
+    }
+
+    function load_ids(ids) {
+        chart.showLoading();
+
+        if (ids.length > 0) {
+            $.post('@Url.Action("ChartsData")', {
+                ids: ids.join(',')
+            }, function (result) {
+                if (result.Success) {
+                    load(result.Body);
+                }
+                else {
+                    top.layer.msg(result.Message);
+                    load([]);
+                }
+                chart.hideLoading();
+            })
+        }
+        else {
+            load([]);
+            chart.hideLoading();
+        }
+    }
+
+    var ids = '@Model.Ids';
+    ids = ids ? ids.split(',') : [];
+    load_ids(ids);
+
+    layui.use(['form', 'layedit'], function () {
+        var form = layui.form;
+        form.on('switch(join)', function (data) {
+            var id = data.othis.parent().attr('id');
+            if (this.checked) {
+                ids.push(id);
+            }
+            else {
+                ids.splice(ids.indexOf(id), 1);
+            }
+
+            load_ids(ids);
+
+            var param = ids.length == 0 ? '' : '?ids=' + ids.join(',');
+
+            var regex = /\?ids=[0-9a-zA-Z-,]+/i;
+            var newUrl = null;
+            if (window.location.href.match(regex)) {
+                newUrl = window.location.href.replace(regex, param);
+            }
+            else {
+                newUrl = window.location.href + param;
+            }
+            history.pushState(null, null, newUrl);
+        });
+    })
+</script>

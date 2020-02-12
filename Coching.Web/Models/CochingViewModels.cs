@@ -152,4 +152,30 @@ namespace Coching.Web.Models
         public String HtmlContent { get; set; }
         public string Documents { get; set; }
     }
+
+    public class ChartsViewModel
+    {
+        public ChartsViewModel()
+        {
+
+        }
+
+        public ChartsViewModel(string ids, FProject[] projects)
+        {
+            Ids = ids;
+            Projects = projects;
+        }
+
+        public string Ids { get; set; }
+        public FProject[] Projects { get; set; }
+
+        public IEnumerable<Guid> getIds()
+        {
+            if (string.IsNullOrEmpty(Ids))
+            {
+                return new List<Guid>();
+            }
+            return Ids.Split(',').Select(id => Guid.Parse(id));
+        }
+    }
 }

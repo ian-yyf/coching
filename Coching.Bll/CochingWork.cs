@@ -849,19 +849,19 @@ namespace Coching.Bll
             return new Result<FActionLog[]>(await _models.getActionLogsOfUser(userGuid, pageSize, pageIndex));
         }
 
-        public async Task<Result<FPartner[]>> charts(FUserToken token, Guid[] projectGuids)
+        public async Task<Result<FCoching[]>> charts(FUserToken token, Guid[] projectGuids)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
-                return new Result<FPartner[]>(false, null, "请重新登录");
+                return new Result<FCoching[]>(false, null, "请重新登录");
             }
 
             if (!await _models.checkProjectsPartner(projectGuids, token.ID))
             {
-                return new Result<FPartner[]>(false, null, "没有权限");
+                return new Result<FCoching[]>(false, null, "没有权限");
             }
 
-            return new Result<FPartner[]>(await _models.charts(projectGuids));
+            return new Result<FCoching[]>(await _models.charts(projectGuids));
         }
     }
 }
