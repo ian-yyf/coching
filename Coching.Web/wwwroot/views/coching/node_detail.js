@@ -72,7 +72,27 @@ function modify_success(result) {
         $('.node_time .node_time_clickable').attr('onclick', "");
     }
 
+    if (init_data.is_admin() && result.Coching) {
+        $('.node_time_edit a').removeClass('hidden');
+    }
+    else {
+        $('.node_time_edit a').addClass('hidden');
+    }
+
     $('.node_time .node_time_info').html(result.EstimatedTime);
 
     parent[init_data.notify()](result);
+}
+
+function calc_node_time() {
+    $.post(init_data.node_time_url(), {
+        id: init_data.node_id()
+    }, function (result) {
+        if (!result.Success) {
+            top.layer.msg(result.Message);
+        }
+        else {
+            $('.node_time_edit input').val(result.Body);
+        }
+    });
 }

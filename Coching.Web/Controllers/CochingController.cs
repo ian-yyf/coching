@@ -370,5 +370,16 @@ namespace Coching.Web.Controllers
 
             return AutoView("Charts", new ChartsViewModel(ids, projects.Body));
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CalcNodeTime(Guid id)
+        {
+            return await JsonActionAsync(async () =>
+            {
+                var token = this.getUserToken();
+                var time = await _work.calcNodeTime(token, id);
+                return Json(time);
+            });
+        }
     }
 }

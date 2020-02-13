@@ -881,5 +881,40 @@ namespace Coching.Bll
 
             return new Result<FCoching[]>(await _models.charts(projectGuids));
         }
+
+        public async Task<Result<decimal>> calcNodeTime(FUserToken token, Guid id)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<decimal>(false, 0, "请重新登录");
+            }
+
+            if (!await _models.checkNodeAdminPartner(id, token.ID))
+            {
+                return new Result<decimal>(false, 0, "没有权限");
+            }
+
+            var node = await _models.getNode(id);
+
+            if (node.ActualManHour == 0)
+            {
+                return new Result<decimal>(false, 0, "先确定实际用时");
+            }
+
+            if (node.WorkerGuid == Guid.Empty)
+            {
+                return new Result<decimal>(false, 0, "先确定执行者");
+            }
+
+            var offers = await _models.getOffersOfNode(id);
+            var workerOffer = offers.FirstOrDefault(o => o.UserGuid == node.WorkerGuid);
+
+            if (workerOffer == null)
+            {
+                return new Result<decimal>(false, 0, "请执行者先预估用时");
+            }
+
+            return new Result<decimal>(Math.Round((offers.Sum(o => o.EstimatedManHour) / offers.Count() * 2 - workerOffer.EstimatedManHour) * 0.3M + node.ActualManHour * 0.7M, 1));
+        }
     }
 }

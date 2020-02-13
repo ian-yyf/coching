@@ -152,6 +152,7 @@
                 <input type="text" autocomplete="off" placeholder="@(Model.Data.Node.Coching ? "请确定考成业绩工时" : "请预估工时")" class="layui-input" value="@(Model.Data.Node.EstimatedManHour == 0 ? "" : Model.Data.Node.EstimatedManHour.ToString())">
             </div>
             <div class="layui-form-mid layui-word-aux help-info">@(Model.Data.Node.Coching ? "最终确定的考成业绩工时（管理员）" : "请预估工时（执行者）")</div>
+            <a href="javascript:;" class="layui-form-mid @(Model.PartnerMe.IsAdmin && Model.Data.Node.Coching ? "" : "hidden")" onclick="calc_node_time()">计算</a>
         </div>
         <div class="layui-form-item node_time_edit" style="display: none;">
             <div class="layui-input-block">
@@ -249,6 +250,9 @@
 
 <script>
     var init_data = {
+        node_id: function () {
+            return '@Model.Data.Node.ID';
+        },
         notify: function () {
             return '@Model.Notify';
         },
@@ -257,6 +261,9 @@
         },
         me_id: function () {
             return '@Model.Me.ID';
+        },
+        node_time_url: function () {
+            return '@Url.Action("CalcNodeTime")'
         }
     }
 
