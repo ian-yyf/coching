@@ -5,6 +5,7 @@
     <RestoreSources>../refrences;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="EFCore.BulkExtensions" Version="3.0.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0" />
     <PackageReference Include="Public.Containers" Version="1.0.0" />
     <PackageReference Include="Public.Dal" Version="1.0.0" />

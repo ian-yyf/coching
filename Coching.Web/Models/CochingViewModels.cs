@@ -18,11 +18,12 @@ namespace Coching.Web.Models
 
         }
 
-        public CochingViewModel(Guid myId, Guid projectGuid, Guid? rootGuid, FRoot[] roots, FPartner[] partners)
+        public CochingViewModel(Guid myId, Guid projectGuid, Guid? rootGuid, FProject project, FRoot[] roots, FPartner[] partners)
         {
             MyId = myId;
             ProjectGuid = projectGuid;
             RootGuid = rootGuid;
+            Project = project;
             Roots = roots;
             Partners = partners;
         }
@@ -30,6 +31,7 @@ namespace Coching.Web.Models
         public Guid MyId { get; set; }
         public Guid ProjectGuid { get; set; }
         public Guid? RootGuid { get; set; }
+        public FProject Project { get; set; }
         public FRoot[] Roots { get; set; }
         public FPartner[] Partners { get; set; }
 

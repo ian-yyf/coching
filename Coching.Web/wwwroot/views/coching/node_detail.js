@@ -29,12 +29,12 @@ function modify_worker_success(result) {
     $('#worker_name').html(result.Worker.Name);
 
     if (init_data.is_admin() || !result.Coching && init_data.me_id() == result.WorkerGuid) {
-        $('.node_time .layui-input-block').addClass('clickable');
-        $('.node_time .layui-input-block').attr('onclick', "show_hide(['.node_time_edit'], ['.node_time'])");
+        $('.node_time .node_time_clickable').addClass('clickable');
+        $('.node_time .node_time_clickable').attr('onclick', "show_hide(['.node_time_edit'], ['.node_time'])");
     }
     else {
-        $('.node_time .layui-input-block').removeClass('clickable');
-        $('.node_time .layui-input-block').attr('onclick', "");
+        $('.node_time .node_time_clickable').removeClass('clickable');
+        $('.node_time .node_time_clickable').attr('onclick', "");
     }
 
     parent[init_data.notify()](result, true);
@@ -64,12 +64,12 @@ function modify_success(result) {
     }
 
     if (init_data.is_admin() || !result.Coching && init_data.me_id() == result.WorkerGuid) {
-        $('.node_time .layui-input-block').addClass('clickable');
-        $('.node_time .layui-input-block').attr('onclick', "show_hide(['.node_time_edit'], ['.node_time'])");
+        $('.node_time .node_time_clickable').addClass('clickable');
+        $('.node_time .node_time_clickable').attr('onclick', "show_hide(['.node_time_edit'], ['.node_time'])");
     }
     else {
-        $('.node_time .layui-input-block').removeClass('clickable');
-        $('.node_time .layui-input-block').attr('onclick', "");
+        $('.node_time .node_time_clickable').removeClass('clickable');
+        $('.node_time .node_time_clickable').attr('onclick', "");
     }
 
     $('.node_time .node_time_info').html(result.EstimatedTime);

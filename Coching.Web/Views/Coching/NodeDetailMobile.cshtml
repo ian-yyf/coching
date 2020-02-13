@@ -33,7 +33,7 @@
 <script src="~/lib/lightgallery/js/lightgallery.min.js"></script>
 <script src="~/lib/lightgallery/js/lightgallery-all.min.js"></script>
 <link rel="stylesheet" href="~/views/coching/node_detail.css">
-<script src="~/views/coching/node_detail.js?v=1.3"></script>
+<script src="~/views/coching/node_detail.js?v=1.4"></script>
 
 <fieldset class="layui-elem-field layui-field-title">
     <legend>基本信息</legend>
@@ -135,7 +135,7 @@
             <label class="layui-form-label node_time_label">@(Model.Data.Node.Coching ? "考成工时" : "预估工时")</label>
             @if (Model.PartnerMe.IsAdmin || !Model.Data.Node.Coching && Model.Me.ID == Model.Data.Node.WorkerGuid)
             {
-                <div class="layout-row layout-center-h layui-input-block clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
+                <div class="layout-row layout-center-h layui-input-block clickable node_time_clickable" onclick="show_hide(['.node_time_edit'], ['.node_time'])">
                     <div class="node_time_info">@Model.Data.Node.EstimatedTime</div>
                 </div>
             }

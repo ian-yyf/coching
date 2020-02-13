@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Coching.Model.Front;
 using Public.Containers;
 using Public.Model.Front;
+using System.Collections.Generic;
+using EFCore.BulkExtensions;
 
 // add-migration
 // update-database
@@ -200,14 +202,14 @@ namespace Coching.Dal
                              join c in UsersTable on n.CreatorGuid equals c.KeyGuid
                              orderby n.CreatedTime descending
                              where n.Deleted == false
-                             select new { n, c }).ToArrayAsync();
+                             select new { n, c }).AsNoTracking().ToArrayAsync();
 
             var projects = dbs.Select(db => db.n.KeyGuid);
             var partners = await (from p in PartnersTable
                                   join u in UsersTable on p.UserGuid equals u.KeyGuid
                                   where projects.Contains(p.ProjectGuid) && p.Deleted == false
                                   orderby p.JoinTime
-                                  select new { p, u }).ToArrayAsync();
+                                  select new { p, u }).AsNoTracking().ToArrayAsync();
 
             return (from db in dbs
                     select new FProject(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c)
@@ -220,13 +222,13 @@ namespace Coching.Dal
             var db = await (from n in ProjectsTable
                             join c in UsersTable on n.CreatorGuid equals c.KeyGuid
                             where n.KeyGuid == id
-                            select new { n, c }).SingleAsync();
+                            select new { n, c }).AsNoTracking().SingleAsync();
 
             var partners = await (from p in PartnersTable
                                   join u in UsersTable on p.UserGuid equals u.KeyGuid
                                   where p.ProjectGuid == db.n.KeyGuid && p.Deleted == false
                                   orderby p.JoinTime
-                                  select new { p, u }).ToArrayAsync();
+                                  select new { p, u }).AsNoTracking().ToArrayAsync();
 
             return new FProject(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c)
                 , (from p in partners
@@ -255,7 +257,7 @@ namespace Coching.Dal
                             join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
                             from w in ws.DefaultIfEmpty()
                             where n.KeyGuid == id
-                            select new { n, c, w }).SingleAsync();
+                            select new { n, c, w }).AsNoTracking().SingleAsync();
 
             var workers = await (from n in NodesTable
                                  where n.RootGuid == db.n.KeyGuid && n.Deleted == false && n.WorkerGuid != Guid.Empty
@@ -272,7 +274,7 @@ namespace Coching.Dal
                              from w in ws.DefaultIfEmpty()
                              where n.Deleted == false && n.ParentGuid == Guid.Empty && n.ProjectGuid == projectGuid
                              orderby n.CreatedTime descending
-                             select new { n, c, w }).pageAsync(pageSize, pageIndex);
+                             select new { n, c, w }).AsNoTracking().pageAsync(pageSize, pageIndex);
 
             var roots = dbs.Items.Select(db => db.n.KeyGuid);
             var workers = await (from n in NodesTable
@@ -304,7 +306,7 @@ namespace Coching.Dal
                              from w in ws.DefaultIfEmpty()
                              where n.RootGuid == id && n.Deleted == false
                              orderby n.CreatedTime
-                             select new { n, c, w }).ToArrayAsync();
+                             select new { n, c, w }).AsNoTracking().ToArrayAsync();
             return findNodes(dbs, Guid.Empty).Single();
         }
 
@@ -350,7 +352,7 @@ namespace Coching.Dal
                             join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
                             from w in ws.DefaultIfEmpty()
                             where n.KeyGuid == id
-                            select new { n, c, w }).SingleAsync();
+                            select new { n, c, w }).AsNoTracking().SingleAsync();
             return new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w));
         }
 
@@ -364,14 +366,26 @@ namespace Coching.Dal
             await modify(NodesTable, id, oldData, newData);
         }
 
-        private async Task __deleteChildren(Guid id)
+        private async Task<bool> __deleteChildren(IEnumerable<Guid> ids, Func<Nodes, Task> onDeleted)
         {
-            var dbs = await (from n in NodesTable where n.ParentGuid == id && n.Deleted == false select n).ToArrayAsync();
+            var dbs = await (from n in NodesTable where ids.Contains(n.ParentGuid) && n.Deleted == false select n).ToArrayAsync();
+            var parentIds = new List<Guid>();
+            var modified = false;
             foreach (var db in dbs)
             {
                 db.Deleted = true;
-                await __deleteChildren(db.KeyGuid);
+                parentIds.Add(db.KeyGuid);
+                modified = true;
+
+                await onDeleted?.Invoke(db);
             }
+
+            if (modified)
+            {
+                await __deleteChildren(parentIds, onDeleted);
+            }
+
+            return modified;
         }
 
         private async Task __deleteDocumentRefs(Guid ownerGuid)
@@ -383,10 +397,17 @@ namespace Coching.Dal
             }
         }
 
+        public async Task deleteChildren(Guid id, Func<Nodes, Task> onDeleted)
+        {
+            if (await __deleteChildren(new Guid[] { id }, onDeleted))
+            {
+                await _safeSaveChanges();
+            }
+        }
+
         public async Task deleteNode(Guid id)
         {
             await __deleteDocumentRefs(id);
-            await __deleteChildren(id);
             await delete(NodesTable, id);
         }
 
@@ -396,7 +417,7 @@ namespace Coching.Dal
                              join u in UsersTable on n.CreatorGuid equals u.KeyGuid
                              where n.NodeGuid == nodeGuid && n.Deleted == false
                              orderby n.CreatedTime descending
-                             select new { n, u }).ToArrayAsync();
+                             select new { n, u }).AsNoTracking().ToArrayAsync();
 
             var documents = await getDocumentRefsOfOwners(dbs.Select(db => db.n.KeyGuid).ToArray());
             return dbs.Select(db => new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u), documents.Where(d => d.OwnerGuid == db.n.KeyGuid).ToArray())).ToArray();
@@ -407,7 +428,7 @@ namespace Coching.Dal
             var db = await (from n in NotesTable
                             join u in UsersTable on n.CreatorGuid equals u.KeyGuid
                             where n.KeyGuid == id
-                            select new { n, u }).SingleAsync();
+                            select new { n, u }).AsNoTracking().SingleAsync();
 
             var documents = await getDocumentRefs(db.n.KeyGuid);
             return new FNote(db.n.KeyGuid, db.n, new FUser(db.u.KeyGuid, db.u), documents);
@@ -436,7 +457,7 @@ namespace Coching.Dal
                 var dbs = await (from u in UsersTable
                                  where u.Deleted == false && (u.Tel.Contains(condition.Key) || u.Name.Contains(condition.Key))
                                  orderby u.Tel
-                                 select u).Take(20).ToArrayAsync();
+                                 select u).Take(20).AsNoTracking().ToArrayAsync();
                 return dbs.Select(db => new FUser(db.KeyGuid, db)).ToArray();
             }
             else
@@ -455,7 +476,7 @@ namespace Coching.Dal
                                  join u in UsersTable on p.UserGuid equals u.KeyGuid
                                  where p.ProjectGuid == projectGuid && p.Deleted == false
                                  orderby u.Tel
-                                 select u).ToArrayAsync();
+                                 select u).AsNoTracking().ToArrayAsync();
                 return dbs.Select(db => new FUser(db.KeyGuid, db)).ToArray();
             }
         }
@@ -465,7 +486,7 @@ namespace Coching.Dal
             var db = await (from p in PartnersTable
                             join u in UsersTable on p.UserGuid equals u.KeyGuid
                             where p.ProjectGuid == projectGuid && p.UserGuid == userGuid && p.Deleted == false
-                            select new { p, u }).SingleAsync();
+                            select new { p, u }).AsNoTracking().SingleAsync();
             return new FPartner(db.p.KeyGuid, db.p, new FUser(db.u.KeyGuid, db.u));
         }
 
@@ -477,7 +498,7 @@ namespace Coching.Dal
                              where p.ProjectGuid == projectGuid && p.Deleted == false
                                 && (roles == null || roles.Contains(p.Role))
                              orderby p.JoinTime
-                             select new { p, u }).ToArrayAsync();
+                             select new { p, u }).AsNoTracking().ToArrayAsync();
 
             return dbs.Select(db => new FPartner(db.p.KeyGuid, db.p, new FUser(db.u.KeyGuid, db.u))).ToArray();
         }
@@ -487,7 +508,7 @@ namespace Coching.Dal
             var db = await (from p in PartnersTable
                             join u in UsersTable on p.UserGuid equals u.KeyGuid
                             where p.KeyGuid == id
-                            select new { p, u }).SingleAsync();
+                            select new { p, u }).AsNoTracking().SingleAsync();
             return new FPartner(db.p.KeyGuid, db.p, new FUser(db.u.KeyGuid, db.u));
         }
 
@@ -526,7 +547,7 @@ namespace Coching.Dal
                              join u in UsersTable on o.UserGuid equals u.KeyGuid
                              orderby o.EstimatedManHour
                              where o.Deleted == false && o.NodeGuid == nodeGuid
-                             select new { o, u }).ToArrayAsync();
+                             select new { o, u }).AsNoTracking().ToArrayAsync();
             return dbs.Select(db => new FOffer(db.o.KeyGuid, db.o, new FUser(db.u.KeyGuid, db.u))).ToArray();
         }
 
@@ -535,7 +556,7 @@ namespace Coching.Dal
             var db = await (from o in OffersTable
                             join u in UsersTable on o.UserGuid equals u.KeyGuid
                             where o.NodeGuid == nodeGuid && o.UserGuid == userGuid
-                            select new { o, u }).SingleOrDefaultAsync();
+                            select new { o, u }).AsNoTracking().SingleOrDefaultAsync();
             return db == null ? null : new FOffer(db.o.KeyGuid, db.o, new FUser(db.u.KeyGuid, db.u));
         }
 
@@ -544,7 +565,7 @@ namespace Coching.Dal
             var db = await (from o in OffersTable
                             join u in UsersTable on o.UserGuid equals u.KeyGuid
                             where o.KeyGuid == id
-                            select new { o, u }).SingleAsync();
+                            select new { o, u }).AsNoTracking().SingleAsync();
             return new FOffer(db.o.KeyGuid, db.o, new FUser(db.u.KeyGuid, db.u));
         }
 
@@ -586,7 +607,7 @@ namespace Coching.Dal
                              join c in UsersTable on l.UserGuid equals c.KeyGuid
                              orderby l.CreatedTime descending
                              where l.Deleted == false && p.Deleted == false && p.UserGuid == userGuid
-                             select new { l, c }).pageOnlyAsync(pageSize, pageIndex);
+                             select new { l, c }).AsNoTracking().pageOnlyAsync(pageSize, pageIndex);
 
             return dbs.Select(db => new FActionLog(db.l.KeyGuid, db.l, new FUser(db.c.KeyGuid, db.c))).ToArray();
         }
@@ -598,7 +619,7 @@ namespace Coching.Dal
                              group p by p.UserGuid into ps
                              select new { id = ps.Key, c = ps.Sum(p => p.Coching) })
                              join u in UsersTable on p.id equals u.KeyGuid
-                             select new { u, p.c }).ToArrayAsync();
+                             select new { u, p.c }).AsNoTracking().ToArrayAsync();
 
             return (from db in dbs select new FCoching(new FUser(db.u.KeyGuid, db.u), db.c)).ToArray();
         }

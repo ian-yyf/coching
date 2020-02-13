@@ -494,7 +494,7 @@ namespace Coching.Bll
                 || oldData.EstimatedManHour != newData.EstimatedManHour)
             {
                 var db = await dbData();
-                var oriCoching = db.Coching && db.getStatus() == NodeStatus.完成 && db.WorkerGuid != Guid.Empty ? db.EstimatedManHour : 0;
+                var oriCoching = db.Coched ? db.EstimatedManHour : 0;
                 var newCoching = await finalCoching() && await finalStatus() == NodeStatus.完成 && await finalWorker() != Guid.Empty ? await finalEstimatedManHour() : 0;
 
                 if (oldData.WorkerGuid != newData.WorkerGuid)
@@ -597,13 +597,31 @@ namespace Coching.Bll
 
             var node = await _models.getNode(id);
 
-            if (node.Coching && node.WorkerGuid != Guid.Empty && node.EstimatedManHour != 0)
+            var tran = _models.Database.BeginTransaction();
+
+            if (node.Coched)
             {
-                return new Result<bool>(false, false, "本项已经计入考成，不可删除，可以先解除本项【考成项】状态");
+                await _models.addCoching(node.ProjectGuid, node.WorkerGuid, -node.EstimatedManHour);
             }
 
-            await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.修改分支, $"删除了{(node.isRoot() ? "任务" : "分支")} {node.Name}"), false);
+            if (node.ActualManHour != 0)
+            {
+                await _models.addActualManHour(node.ParentGuid, -node.ActualManHour);
+            }
+
             await _models.deleteNode(id);
+            await _models.deleteChildren(id, async n =>
+            {
+                if (n.Coched)
+                {
+                    await _models.addCoching(n.ProjectGuid, n.WorkerGuid, -n.EstimatedManHour);
+                }
+            });
+
+            await _models.addActionLog(new ActionLogData(node.ProjectGuid, token.ID, ActionLogKind.修改分支, $"删除了{(node.isRoot() ? "任务" : "分支")} {node.Name}"), false);
+
+            await tran.CommitAsync();
+
             return new Result<bool>(true);
         }
 

@@ -179,5 +179,13 @@ namespace Coching.Model.Data
                 return $"{ActualManHour.ToString("0.#")}/{EstimatedManHour.ToString("0.#")}工时 {getResult()}";
             }
         }
+
+        public bool Coched
+        {
+            get
+            {
+                return Coching && WorkerGuid != Guid.Empty && getStatus() == NodeStatus.完成 && EstimatedManHour != 0;
+            }
+        }
     }
 }

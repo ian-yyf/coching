@@ -24,6 +24,13 @@ namespace Coching.Web.Controllers
         public async Task<IActionResult> Index(Guid projectGuid, Guid? rootGuid)
         {
             var token = this.getUserToken();
+
+            var project = await _work.getProject(token, projectGuid);
+            if (!project.Success)
+            {
+                return Error(project.Message);
+            }
+
             var roots = await _work.getRootsOfProject(token, projectGuid, new NodeCondition(), PageSize, 1);
             if (!roots.Success)
             {
@@ -36,7 +43,7 @@ namespace Coching.Web.Controllers
                 return Error(partners.Message);
             }
 
-            return AutoView("Index", new CochingViewModel(token.ID, projectGuid, rootGuid, roots.Body.Items, partners.Body));
+            return AutoView("Index", new CochingViewModel(token.ID, projectGuid, rootGuid, project.Body, roots.Body.Items, partners.Body));
         }
 
         [HttpPost]
