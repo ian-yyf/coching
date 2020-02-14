@@ -464,24 +464,46 @@ namespace Coching.Bll
                 }
             }
 
-            if (oldData.ActualManHour == newData.ActualManHour)
+            if (oldData.ActualManHour == newData.ActualManHour
+                && (oldData.Status != newData.Status || oldData.StartTime != newData.StartTime || oldData.EndTime != newData.EndTime)
+                && await finalStatus() == NodeStatus.完成)
             {
-                if (oldData.Status != newData.Status
-                    || oldData.StartTime != newData.StartTime
-                    || oldData.EndTime != newData.EndTime)
+                var startTime = await finalStartTime();
+                var endTime = startTime == null ? null : await finalEndTime();
+
+                if (startTime != null && endTime != null && await _models.checkLeaf(id))
                 {
-                    if (await finalStatus() == NodeStatus.完成 && await finalStartTime() != null && await finalEndTime() != null)
+                    oldData.ActualManHour = (await dbData()).ActualManHour;
+                    var logs = (await _models.getStatusLogDatas(id))
+                        .Where(l => l.Time > startTime.Value.AddMinutes(1) && l.Time < endTime.Value.AddMinutes(-1))
+                        .Select(l => new { Work = l.ToStatusKey == (int)NodeStatus.进行中, l.Time }).ToList();
+                    logs.Insert(0, new { Work = true, Time = startTime.Value });
+                    logs.Add(new { Work = true, Time = endTime.Value });
+
+                    double actualManHour = 0;
+                    for (var i = 1; i < logs.Count; i++)
                     {
-                        if (await _models.checkLeaf(id))
+                        if (logs[i].Work)
                         {
-                            oldData.ActualManHour = (await dbData()).ActualManHour;
-                            newData.ActualManHour = (decimal)Math.Round(((await finalEndTime()).Value - (await finalStartTime()).Value).TotalHours, 1);
+                            actualManHour += (logs[i].Time - logs[i - 1].Time).TotalHours;
                         }
                     }
+
+                    if (actualManHour > 0 && actualManHour < 0.1)
+                    {
+                        actualManHour = 0.1;
+                    }
+
+                    newData.ActualManHour = (decimal)Math.Round(actualManHour, 1);
                 }
             }
 
             var tran = _models.Database.BeginTransaction();
+
+            if (oldData.Status != newData.Status)
+            {
+                await _models.addStatusLog(new StatusLogData(id, token.ID, oldData.Status, newData.Status, null));
+            }
 
             if (oldData.ActualManHour != newData.ActualManHour)
             {
@@ -552,13 +574,14 @@ namespace Coching.Bll
             }
             if (oldData.EstimatedManHour != newData.EstimatedManHour)
             {
+                var name = await finalCoching() ? "考成工时" : "预估工时";
                 if (newData.EstimatedManHour == 0)
                 {
-                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.确定预估工时, $"把{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 预估工时改为未确定"), true);
+                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.确定预估工时, $"把{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} {name}改为未确定"), true);
                 }
                 else
                 {
-                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.确定预估工时, $"确定{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} 预估工时为 {newData.EstimatedTime}"), true);
+                    await _models.addActionLog(new ActionLogData((await dbData()).ProjectGuid, token.ID, ActionLogKind.确定预估工时, $"确定{((await dbData()).isRoot() ? "任务" : "分支")} {link.toString()} {name}为 {newData.EstimatedTime}"), true);
                 }
             }
             if (oldData.ActualManHour != newData.ActualManHour)

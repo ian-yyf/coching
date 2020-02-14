@@ -93,8 +93,8 @@ var tool = {
                 collapsed: false,
                 itemStyle: {
                     color: NodeColors[i.Status],
-                    borderWidth: 0,
-                    borderColor: '#000000',
+                    borderWidth: i.Coching && i.EstimatedManHour == 0 && i.Status != NodeStatus.未进行 && i.Status != NodeStatus.取消 ? 1 : 0,
+                    borderColor: '#FF0000',
                     shadowColor: '#000000',
                     shadowBlur: 0
                 },
@@ -141,6 +141,32 @@ var tool = {
         if ($('#' + id + '[worker=' + worker.ID + ']').length == 0) {
             $('#' + id + ' .workers').append('<img worker="' + worker.ID + '" src="' + header(worker.Header) + '" />');
         }
+    },
+    expand: function (node) {
+        node.collapsed = false;
+        node.itemStyle.shadowBlur = 0;
+    },
+    collapse: function (node) {
+        node.collapsed = true;
+        node.itemStyle.shadowBlur = 10;
+    },
+    collapseOther: function (nodes, id) {
+        var cancel = false;
+        for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].id != id) {
+                if (nodes[i].children && nodes[i].children.length > 0) {
+                    var c_cancel = this.collapseOther(nodes[i].children, id);
+                    if (!c_cancel) {
+                        this.collapse(nodes[i]);
+                    }
+                    cancel = cancel || c_cancel;
+                }
+            }
+            else {
+                cancel = true;
+            }
+        }
+        return cancel;
     }
 }
 
@@ -170,6 +196,10 @@ var menu = {
                 command: 'collapse'
             })
         }
+        cmds.push({
+            name: '收缩其他',
+            command: 'collapseOther'
+        });
         cmds.push({
             line: true
         });
@@ -214,14 +244,17 @@ var menu = {
         });
     },
     expand: function (node) {
-        node.data.collapsed = false;
-        node.data.itemStyle.shadowBlur = 0;
+        tool.expand(node.data);
         tree.refresh(null, true);
     },
     collapse: function (node) {
-        node.data.collapsed = true;
-        node.data.itemStyle.shadowBlur = 10;
+        tool.collapse(node.data);
         tree.refresh(null, true);
+    },
+    collapseOther: function (node) {
+        var data = tree.getOption().series[0].data;
+        tool.collapseOther(data, node.data.id);
+        tree.refresh(data, true);
     }
 }
 

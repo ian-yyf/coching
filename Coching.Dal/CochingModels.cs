@@ -10,6 +10,7 @@ using Public.Containers;
 using Public.Model.Front;
 using System.Collections.Generic;
 using EFCore.BulkExtensions;
+using Public.Model.Data;
 
 // add-migration
 // update-database
@@ -622,6 +623,12 @@ namespace Coching.Dal
                              select new { u, p.c }).AsNoTracking().ToArrayAsync();
 
             return (from db in dbs select new FCoching(new FUser(db.u.KeyGuid, db.u), db.c)).ToArray();
+        }
+
+        public async Task<StatusLogData[]> getStatusLogDatas(Guid ownerGuid)
+        {
+            var dbs = await getStatusLogDbs(ownerGuid);
+            return dbs.Select(db => (StatusLogData)db).ToArray();
         }
     }
 }
