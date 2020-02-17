@@ -483,7 +483,7 @@ namespace Coching.Bll
                     double actualManHour = 0;
                     for (var i = 1; i < logs.Count; i++)
                     {
-                        if (logs[i].Work)
+                        if (logs[i - 1].Work)
                         {
                             actualManHour += (logs[i].Time - logs[i - 1].Time).TotalHours;
                         }
