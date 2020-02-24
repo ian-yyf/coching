@@ -12,13 +12,22 @@ namespace Coching.Model.Front
 
         }
 
-        public FCoching(FUser user, decimal coching)
+        public FCoching(FUser user, decimal coching, decimal today)
         {
             User = user;
             Coching = coching;
+            Today = today;
         }
 
         public FUser User { get; set; }
         public decimal Coching { get; set; }
+        public decimal Today { get; set; }
+        public decimal History
+        {
+            get
+            {
+                return Coching - Today;
+            }
+        }
     }
 }

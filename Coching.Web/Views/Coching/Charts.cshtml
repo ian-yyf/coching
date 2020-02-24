@@ -95,7 +95,6 @@
     var chart = echarts.init($('.chart')[0]);
 
     var option = {
-        color: ['#3398DB'],
         tooltip: {
             trigger: 'axis',
             axisPointer: {            // 坐标轴指示器，坐标轴触发有效
@@ -103,7 +102,7 @@
             }
         },
         legend: {
-            data:['完成工时']
+            data:['历史工时', '今日工时']
         },
         grid: {
             left: '3%',
@@ -127,9 +126,23 @@
         ],
         series: [
             {
-                name: '完成工时',
+                name: '历史工时',
                 type: 'bar',
-                barWidth: '60%',
+                label: {
+                    show: true,
+                    position: 'insideBottom'
+                },
+                stack: '总量',
+                data: []
+            },
+            {
+                name: '今日工时',
+                type: 'bar',
+                label: {
+                    show: true,
+                    position: 'insideBottom'
+                },
+                stack: '总量',
                 data: []
             }
         ]
@@ -137,7 +150,8 @@
 
     function load(data) {
         option.xAxis[0].data = YFUtils.select(data, d => d.User.Name);
-        option.series[0].data = YFUtils.select(data, d => d.Coching);
+        option.series[0].data = YFUtils.select(data, d => d.History);
+        option.series[1].data = YFUtils.select(data, d => d.Today);
         chart.setOption(option);
     }
 

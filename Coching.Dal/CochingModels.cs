@@ -45,6 +45,7 @@ namespace Coching.Dal
             modelBuilder.Entity<Nodes>().HasIndex(e => e.RootGuid);
             modelBuilder.Entity<Nodes>().HasIndex(e => e.ParentGuid);
             modelBuilder.Entity<Nodes>().HasIndex(e => e.WorkerGuid);
+            modelBuilder.Entity<Nodes>().HasIndex(e => e.EndTime);
             modelBuilder.Entity<Notes>().HasIndex(e => e.NodeGuid);
             modelBuilder.Entity<Notes>().HasIndex(e => e.CreatorGuid);
             modelBuilder.Entity<Partners>().HasIndex(e => e.ProjectGuid);
@@ -622,7 +623,13 @@ namespace Coching.Dal
                              join u in UsersTable on p.id equals u.KeyGuid
                              select new { u, p.c }).AsNoTracking().ToArrayAsync();
 
-            return (from db in dbs select new FCoching(new FUser(db.u.KeyGuid, db.u), db.c)).ToArray();
+            var startTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
+            var todays = await (from n in NodesTable
+                                where projectGuids.Contains(n.ProjectGuid) && n.EndTime >= startTime && n.Coching == true && n.Status == (int)NodeStatus.完成
+                                group n by n.WorkerGuid into ns
+                                select new { uid = ns.Key, coching = ns.Sum(n => n.EstimatedManHour) }).ToArrayAsync();
+
+            return (from db in dbs select new FCoching(new FUser(db.u.KeyGuid, db.u), db.c, todays.FirstOrDefault(t => t.uid == db.u.KeyGuid)?.coching ?? 0)).ToArray();
         }
 
         public async Task<StatusLogData[]> getStatusLogDatas(Guid ownerGuid)
