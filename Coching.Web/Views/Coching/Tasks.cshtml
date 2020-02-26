@@ -1,0 +1,75 @@
+﻿@using Coching.Model;
+@model TasksViewModel
+
+@{
+    Layout = null;
+}
+
+<style>
+    .worker-header {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        margin-bottom: 2px;
+    }
+    .project-info img {
+        height: 16px;
+    }
+    .task-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .task-item:hover {
+        cursor: pointer;
+        background-color: #eee;
+    }
+    .task-label {
+        margin-left: 10px;
+        color: white;
+        background-color: #1296db;
+        border-radius: 2px;
+        padding: 1px 4px;
+        font-size: 12px;
+    }
+    .warn-task-label {
+        background-color: red;
+    }
+    .project-info .flex {
+        text-align: right;
+    }
+</style>
+
+<div class="nodes">
+    @foreach (var n in Model.Tasks)
+    {
+        <a href="@Url.Action("Index", "Coching", new { projectGuid = n.Node.ProjectGuid, rootGuid = n.Node.RootGuid })">
+            <div class="task-item">
+                <div class="layout-row">
+                    <div class="text-color-important text-size-common-mini ellipsis-1 flex">@n.Node.Name</div>
+                    <img class="worker-header" src="@Url.header(n.Node.Worker?.Header ?? n.Node.Creator.Header)" />
+                </div>
+                <div class="layout-row layout-center-h project-info">
+                    <img src="~/res/projects.png" />
+                    <div class="text-color-descrip">@(n.Project.Name + " - " + n.Root.Name)</div>
+                    <div class="task-label">@(n.Node.Coching ? "考成项" : "普通项")</div>
+                    @if (n.Node.Coching)
+                    {
+                        if (n.Node.Coched)
+                        {
+                            <div class="task-label">已计算业绩</div>
+                        }
+                        else
+                        {
+                            <div class="task-label warn-task-label">未计算业绩</div>
+                        }
+                    }
+                    @if (!string.IsNullOrEmpty(n.Node.TimeInfo))
+                    {
+                        <div class="task-label">@n.Node.TimeInfo</div>
+                    }
+                    <div class="text-color-common text-size-min ellipsis-1 flex">@n.Node.getStatusInfo()</div>
+                </div>
+            </div>
+        </a>
+    }
+</div>

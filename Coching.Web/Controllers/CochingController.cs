@@ -382,15 +382,20 @@ namespace Coching.Web.Controllers
             });
         }
 
-        public async Task<IActionResult> Nodes(NodeCondition model)
+        public async Task<IActionResult> Tasks(NodeCondition model)
         {
             var token = this.getUserToken();
-            var nodes = await _work.getNodes(token, token.ID, model, PageSize, 1);
+            if (model.WorkerGuid == Guid.Empty)
+            {
+                model.WorkerGuid = token.ID;
+            }
+
+            var nodes = await _work.getTasks(token, token.ID, model, PageSize, 1);
             if (!nodes.Success)
             {
                 return Error(nodes.Message);
             }
-            return AutoView("Nodes", new NodesViewModel(nodes.Body));
+            return AutoView("Tasks", new TasksViewModel(nodes.Body));
         }
     }
 }

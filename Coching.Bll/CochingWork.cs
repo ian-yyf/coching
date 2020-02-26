@@ -168,19 +168,19 @@ namespace Coching.Bll
             return new Result<FNode>(await _models.getTree(id));
         }
 
-        public async Task<Result<FNode[]>> getNodes(FUserToken token, Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
+        public async Task<Result<FTask[]>> getTasks(FUserToken token, Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
-                return new Result<FNode[]>(false, null, "请重新登录");
+                return new Result<FTask[]>(false, null, "请重新登录");
             }
 
             if (token.ID != userGuid)
             {
-                return new Result<FNode[]>(false, null, "没有权限");
+                return new Result<FTask[]>(false, null, "没有权限");
             }
 
-            return new Result<FNode[]>(await _models.getNodes(userGuid, condition, pageSize, pageIndex));
+            return new Result<FTask[]>(await _models.getTasks(userGuid, condition, pageSize, pageIndex));
         }
 
         public async Task<Result<FNode>> getNode(FUserToken token, Guid id)

@@ -26,7 +26,14 @@ namespace Coching.Web.Controllers
 
         public IActionResult Index()
         {
-            return RedirectToAction("Index", "Project");
+            if (IsMobileDevice)
+            {
+                return RedirectToAction("Index", "Project");
+            }
+            else
+            {
+                return RedirectToAction("Index", "Organization");
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

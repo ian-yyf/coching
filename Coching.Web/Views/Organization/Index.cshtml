@@ -1,4 +1,5 @@
 ﻿@using Coching.Model;
+@using Coching.Model.Data;
 @model OrganizationIndexViewModel
 
 @{
@@ -16,6 +17,10 @@
     .time-line {
         width: 400px;
         border-left: 1px solid #eee;
+        overflow-y: auto;
+        height: 100%;
+    }
+    .main-area {
         overflow-y: auto;
         height: 100%;
     }
@@ -65,15 +70,15 @@
                 <img src="~/res/tasks.png" />
                 <div>任务</div>
             </div>
-            <div class="layout-row layout-center-h catalogue-item">
+            <div class="layout-row layout-center-h catalogue-item default" onclick="myTasks(this)">
                 <img src="~/res/mine.png" />
                 <div class="ellipsis-1 flex">我的</div>
             </div>
-            <div class="layout-row layout-center-h catalogue-item">
+            <div class="layout-row layout-center-h catalogue-item" onclick="doingTasks(this)">
                 <img src="~/res/jxz.png" />
                 <div class="ellipsis-1 flex">进行中</div>
             </div>
-            <div class="layout-row layout-center-h catalogue-item">
+            <div class="layout-row layout-center-h catalogue-item" onclick="cochingTasks(this)">
                 <img src="~/res/dcl.png" />
                 <div class="ellipsis-1 flex">考成项</div>
             </div>
@@ -102,7 +107,7 @@
             </div>
             @foreach (var u in Model.Users)
             {
-                <div class="layout-row layout-center-h catalogue-item circle">
+                <div class="layout-row layout-center-h catalogue-item circle" onclick="userTasks(this, '@u.ID')">
                     <img src="@Url.header(u.Header)" />
                     <div class="ellipsis-1 flex">@u.Name</div>
                 </div>
@@ -117,11 +122,36 @@
 </div>
 
 <script>
-    $('.time-line').load('@Html.Raw(Url.Action("ActionLogs"))')
-
-    function projects(e) {
-        $('.main-area').load('@Html.Raw(Url.Action("Index", "Project", new { inner = true }))')
+    function active(e) {
         $('.catalogue-item').removeClass('active');
         $(e).addClass('active');
     }
+
+    function userTasks(e, id) {
+        $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching"))' + '?WorkerGuid=' + id);
+        active(e);
+    }
+
+    function myTasks(e) {
+        $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching", new { WorkerGuid = Guid.Empty }))');
+        active(e);
+    }
+
+    function doingTasks(e) {
+        $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching", new { Status = NodeStatus.进行中 }))');
+        active(e);
+    }
+
+    function cochingTasks(e) {
+        $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching", new { Coching = true }))');
+        active(e);
+    }
+
+    function projects(e) {
+        $('.main-area').load('@Html.Raw(Url.Action("Index", "Project", new { inner = true }))');
+        active(e);
+    }
+
+    $('.time-line').load('@Html.Raw(Url.Action("ActionLogs"))');
+    myTasks($('.default')[0]);
 </script>

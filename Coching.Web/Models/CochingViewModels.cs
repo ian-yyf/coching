@@ -181,18 +181,18 @@ namespace Coching.Web.Models
         }
     }
 
-    public class NodesViewModel
+    public class TasksViewModel
     {
-        public NodesViewModel()
+        public TasksViewModel()
         {
 
         }
 
-        public NodesViewModel(FNode[] nodes)
+        public TasksViewModel(FTask[] tasks)
         {
-            Nodes = nodes;
+            Tasks = tasks;
         }
 
-        public FNode[] Nodes { get; set; }
+        public FTask[] Tasks { get; set; }
     }
 }

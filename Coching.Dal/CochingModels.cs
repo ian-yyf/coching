@@ -347,22 +347,26 @@ namespace Coching.Dal
             }
         }
 
-        public async Task<FNode[]> getNodes(Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
+        public async Task<FTask[]> getTasks(Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
         {
             var dbs = await (from pr in ProjectsTable
                              join pa in PartnersTable on new { id = pr.KeyGuid, d = false, uid = userGuid } equals new { id = pa.ProjectGuid, d = pa.Deleted, uid = pa.UserGuid }
                              join n in NodesTable on pr.KeyGuid equals n.ProjectGuid
+                             join r in NodesTable on n.RootGuid equals r.KeyGuid
                              join c in UsersTable on n.CreatorGuid equals c.KeyGuid
                              join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
                              from w in ws.DefaultIfEmpty()
-                             where n.Deleted == false
+                             where pr.Deleted == false && n.Deleted == false
                              && (condition.WorkerGuid == null || condition.WorkerGuid == n.WorkerGuid)
                              && (condition.Status == null || (int)condition.Status.Value == n.Status)
                              && (condition.Coching == null || condition.Coching == n.Coching)
                              orderby n.EndTime descending, n.StartTime descending, n.CreatedTime descending
-                             select new { n, c, w }).AsNoTracking().pageOnlyAsync(pageSize, pageIndex);
+                             select new { pr, n, r, c, w }).AsNoTracking().pageOnlyAsync(pageSize, pageIndex);
 
-            return (from db in dbs select new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w))).ToArray();
+            return (from db in dbs 
+                    select new FTask(new FProject(db.pr.KeyGuid, db.pr, null, null)
+                    , new FNode(db.r.KeyGuid, db.r, null, null)
+                    , new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w)))).ToArray();
         }
 
         public async Task<FNode> getNode(Guid id)
