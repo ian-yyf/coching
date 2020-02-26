@@ -16,11 +16,13 @@ namespace Coching.Web.Models
 
         }
 
-        public ProjectViewModel(FProject[] projects)
+        public ProjectViewModel(bool inner, FProject[] projects)
         {
+            Inner = inner;
             Projects = projects;
         }
 
+        public bool Inner { get; set; }
         public FProject[] Projects { get; set; }
     }
 
@@ -75,20 +77,5 @@ namespace Coching.Web.Models
                 return Public.Mvc.ExtendUtils.toKeyValues<PartnerRole>();
             }
         }
-    }
-
-    public class ActionLogsViewModel
-    {
-        public ActionLogsViewModel()
-        {
-
-        }
-
-        public ActionLogsViewModel(FActionLog[] logs)
-        {
-            Logs = logs;
-        }
-
-        public FActionLog[] Logs { get; set; }
     }
 }

@@ -180,4 +180,19 @@ namespace Coching.Web.Models
             return Ids.Split(',').Select(id => Guid.Parse(id));
         }
     }
+
+    public class NodesViewModel
+    {
+        public NodesViewModel()
+        {
+
+        }
+
+        public NodesViewModel(FNode[] nodes)
+        {
+            Nodes = nodes;
+        }
+
+        public FNode[] Nodes { get; set; }
+    }
 }

@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - 考成法</title>
+    <title>@ViewData["Title"] ▪ 我是谁在哪要干啥</title>
     <link rel="stylesheet" href="~/css/site.css" />
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <link rel="stylesheet" href="~/lib/toastr.js/toastr.min.css">
@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="~/lib/layui/css/layui.css" media="all">
     <script src="~/lib/layui/layui.js"></script>
     <link rel="stylesheet" href="~/lib/sidenav/sidenav.min.css" type="text/css">
-    <link rel='stylesheet' href='http://fonts.googleapis.com/icon?family=Material+Icons' type='text/css'>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons' type='text/css'>
     <link rel="stylesheet" href="~/lib/weui/style/weui.min.css">
 
     <style>
@@ -111,11 +111,27 @@
 
         <ul class="sidenav-menu">
             <li>
+                <a href="@Url.Action("Index", "Organization")" class="@active("Organization", "Index")">
+                    <span class="sidenav-link-icon">
+                        <i class="material-icons">brightness_auto</i>
+                    </span>
+                    <span class="sidenav-link-title">首页</span>
+                </a>
+            </li>
+            <li>
                 <a href="@Url.Action("Index", "Project")" class="@active("Project", "Index")">
                     <span class="sidenav-link-icon">
                         <i class="material-icons">brightness_auto</i>
                     </span>
                     <span class="sidenav-link-title">项目管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Charts", "Coching")" class="@active("Project", "Charts")">
+                    <span class="sidenav-link-icon">
+                        <i class="material-icons">brightness_auto</i>
+                    </span>
+                    <span class="sidenav-link-title">业绩分析</span>
                 </a>
             </li>
         </ul>

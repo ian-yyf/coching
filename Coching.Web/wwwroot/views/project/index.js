@@ -10,8 +10,8 @@ var tool = {
     projectInnerHtml: function (project) {
         var html = '<div class="layout-row title">'
             + '<div class="ellipsis-1 text-color-important text-size-common-mid flex">' + (project.Name || '&nbsp;') + '</div>'
-            + '<img src="@Url.Content("~/res/workers.png")" title="成员管理" onclick="workers(this)" />'
-            + '<img src="@Url.Content("~/res/edit.png")" title="编辑" onclick="edit(this)" />'
+            + '<img src="/res/workers.png" title="成员管理" onclick="workers(this)" />'
+            + '<img src="/res/edit.png" title="编辑" onclick="edit(this)" />'
             + '</div>'
             + '<div class="layout-row descrip">'
             + '<div class="ellipsis-2 flex text-color-descrip text-size-descrip">' + (project.Description || '&nbsp;') + '</div>'

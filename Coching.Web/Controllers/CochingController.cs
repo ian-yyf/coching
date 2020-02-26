@@ -31,7 +31,7 @@ namespace Coching.Web.Controllers
                 return Error(project.Message);
             }
 
-            var roots = await _work.getRootsOfProject(token, projectGuid, new NodeCondition(), PageSize, 1);
+            var roots = await _work.getRootsOfProject(token, projectGuid, PageSize, 1);
             if (!roots.Success)
             {
                 return Error(roots.Message);
@@ -362,7 +362,7 @@ namespace Coching.Web.Controllers
         {
             var token = this.getUserToken();
 
-            var projects = await _work.getProjectsOfUser(token, token.ID, new ProjectCondition());
+            var projects = await _work.getProjectsOfUser(token, token.ID, new ProjectCondition(), PageSize, 1);
             if (!projects.Success)
             {
                 return Error(projects.Message);
@@ -380,6 +380,17 @@ namespace Coching.Web.Controllers
                 var time = await _work.calcNodeTime(token, id);
                 return Json(time);
             });
+        }
+
+        public async Task<IActionResult> Nodes(NodeCondition model)
+        {
+            var token = this.getUserToken();
+            var nodes = await _work.getNodes(token, token.ID, model, PageSize, 1);
+            if (!nodes.Success)
+            {
+                return Error(nodes.Message);
+            }
+            return AutoView("Nodes", new NodesViewModel(nodes.Body));
         }
     }
 }

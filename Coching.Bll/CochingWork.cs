@@ -21,7 +21,7 @@ namespace Coching.Bll
 
         }
 
-        public async Task<Result<FProject[]>> getProjectsOfUser(FUserToken token, Guid userGuid, ProjectCondition condition)
+        public async Task<Result<FProject[]>> getProjectsOfUser(FUserToken token, Guid userGuid, ProjectCondition condition, int pageSize, int pageIndex)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
@@ -33,7 +33,7 @@ namespace Coching.Bll
                 return new Result<FProject[]>(false, null, "没有权限");
             }
 
-            return new Result<FProject[]>(await _models.getProjectsOfUser(userGuid, condition));
+            return new Result<FProject[]>(await _models.getProjectsOfUser(userGuid, condition, pageSize, pageIndex));
         }
 
         public async Task<Result<FProject>> getProject(FUserToken token, Guid id)
@@ -138,7 +138,7 @@ namespace Coching.Bll
             return new Result<FRoot>(await _models.getRoot(id));
         }
 
-        public async Task<Result<Page<FRoot>>> getRootsOfProject(FUserToken token, Guid projectGuid, NodeCondition condition, int pageSize, int pageIndex)
+        public async Task<Result<Page<FRoot>>> getRootsOfProject(FUserToken token, Guid projectGuid, int pageSize, int pageIndex)
         {
             if (!await _models.checkToken(token.ID, token.Token))
             {
@@ -150,7 +150,7 @@ namespace Coching.Bll
                 return new Result<Page<FRoot>>(false, null, "没有权限");
             }
 
-            return new Result<Page<FRoot>>(await _models.getRootsOfProject(projectGuid, condition, pageSize, pageIndex));
+            return new Result<Page<FRoot>>(await _models.getRootsOfProject(projectGuid, pageSize, pageIndex));
         }
 
         public async Task<Result<FNode>> getTree(FUserToken token, Guid id)
@@ -166,6 +166,21 @@ namespace Coching.Bll
             }
 
             return new Result<FNode>(await _models.getTree(id));
+        }
+
+        public async Task<Result<FNode[]>> getNodes(FUserToken token, Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FNode[]>(false, null, "请重新登录");
+            }
+
+            if (token.ID != userGuid)
+            {
+                return new Result<FNode[]>(false, null, "没有权限");
+            }
+
+            return new Result<FNode[]>(await _models.getNodes(userGuid, condition, pageSize, pageIndex));
         }
 
         public async Task<Result<FNode>> getNode(FUserToken token, Guid id)
@@ -795,6 +810,21 @@ namespace Coching.Bll
             }
 
             return new Result<FUser[]>(await _models.getUsers(userGuid, condition));
+        }
+
+        public async Task<Result<FUser[]>> getRelatedUsers(FUserToken token, Guid userGuid)
+        {
+            if (!await _models.checkToken(token.ID, token.Token))
+            {
+                return new Result<FUser[]>(false, null, "请重新登录");
+            }
+
+            if (userGuid != token.ID)
+            {
+                return new Result<FUser[]>(false, null, "没有权限");
+            }
+
+            return new Result<FUser[]>(await _models.getRelatedUsers(userGuid));
         }
 
         public async Task<Result<FPartner>> getPartnerOfProject(FUserToken token, Guid projectGuid, Guid userGuid)

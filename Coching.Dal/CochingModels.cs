@@ -197,14 +197,14 @@ namespace Coching.Dal
             return await checkCochingChildren(dbs.Select(db => db.KeyGuid).ToArray());
         }
 
-        public async Task<FProject[]> getProjectsOfUser(Guid userGuid, ProjectCondition condition)
+        public async Task<FProject[]> getProjectsOfUser(Guid userGuid, ProjectCondition condition, int pageSize, int pageIndex)
         {
             var dbs = await (from n in ProjectsTable
                              join p in PartnersTable on new { k = n.KeyGuid, d = false, u = userGuid } equals new { k = p.ProjectGuid, d = p.Deleted, u = p.UserGuid }
                              join c in UsersTable on n.CreatorGuid equals c.KeyGuid
                              orderby n.CreatedTime descending
                              where n.Deleted == false
-                             select new { n, c }).AsNoTracking().ToArrayAsync();
+                             select new { n, c }).AsNoTracking().pageOnlyAsync(pageSize, pageIndex);
 
             var projects = dbs.Select(db => db.n.KeyGuid);
             var partners = await (from p in PartnersTable
@@ -268,7 +268,7 @@ namespace Coching.Dal
             return new FRoot(new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w)), workers);
         }
 
-        public async Task<Page<FRoot>> getRootsOfProject(Guid projectGuid, NodeCondition condition, int pageSize, int pageIndex)
+        public async Task<Page<FRoot>> getRootsOfProject(Guid projectGuid, int pageSize, int pageIndex)
         {
             var dbs = await (from n in NodesTable
                              join c in UsersTable on n.CreatorGuid equals c.KeyGuid
@@ -345,6 +345,24 @@ namespace Coching.Dal
                 db.Coching += coching;
                 await _safeSaveChanges();
             }
+        }
+
+        public async Task<FNode[]> getNodes(Guid userGuid, NodeCondition condition, int pageSize, int pageIndex)
+        {
+            var dbs = await (from pr in ProjectsTable
+                             join pa in PartnersTable on new { id = pr.KeyGuid, d = false, uid = userGuid } equals new { id = pa.ProjectGuid, d = pa.Deleted, uid = pa.UserGuid }
+                             join n in NodesTable on pr.KeyGuid equals n.ProjectGuid
+                             join c in UsersTable on n.CreatorGuid equals c.KeyGuid
+                             join w in UsersTable on n.WorkerGuid equals w.KeyGuid into ws
+                             from w in ws.DefaultIfEmpty()
+                             where n.Deleted == false
+                             && (condition.WorkerGuid == null || condition.WorkerGuid == n.WorkerGuid)
+                             && (condition.Status == null || (int)condition.Status.Value == n.Status)
+                             && (condition.Coching == null || condition.Coching == n.Coching)
+                             orderby n.EndTime descending, n.StartTime descending, n.CreatedTime descending
+                             select new { n, c, w }).AsNoTracking().pageOnlyAsync(pageSize, pageIndex);
+
+            return (from db in dbs select new FNode(db.n.KeyGuid, db.n, new FUser(db.c.KeyGuid, db.c), db.w == null ? null : new FUser(db.w.KeyGuid, db.w))).ToArray();
         }
 
         public async Task<FNode> getNode(Guid id)
@@ -481,6 +499,17 @@ namespace Coching.Dal
                                  select u).AsNoTracking().ToArrayAsync();
                 return dbs.Select(db => new FUser(db.KeyGuid, db)).ToArray();
             }
+        }
+
+        public async Task<FUser[]> getRelatedUsers(Guid userGuid)
+        {
+            var dbs = await (from pr in ProjectsTable
+                             join pa in PartnersTable on new { id = pr.KeyGuid, d = false, uid = userGuid } equals new { id = pa.ProjectGuid, d = pa.Deleted, uid = pa.UserGuid }
+                             join pa1 in PartnersTable on new { id = pr.KeyGuid, d = false } equals new { id = pa1.ProjectGuid, d = pa1.Deleted }
+                             join u in UsersTable on pa1.UserGuid equals u.KeyGuid
+                             select u).AsNoTracking().Distinct().ToArrayAsync();
+
+            return (from db in dbs select new FUser(db.KeyGuid, db)).ToArray();
         }
 
         public async Task<FPartner> getPartnerOfProject(Guid projectGuid, Guid userGuid)

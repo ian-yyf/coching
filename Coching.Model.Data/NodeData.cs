@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Public.Utils;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
@@ -144,6 +145,24 @@ namespace Coching.Model.Data
             {
                 return "未超时";
             }
+        }
+
+        public string getStatusInfo()
+        {
+            var status = getStatus();
+            if (status == NodeStatus.完成)
+            {
+                return $"{EndTime?.formatDisplayTime()}已完成";
+            }
+            else if (status == NodeStatus.进行中)
+            {
+                return $"{StartTime?.formatDisplayTime()}已开始";
+            }
+            else if (status == NodeStatus.未进行)
+            {
+                return status.ToString();
+            }
+            return $"已{status.ToString()}";
         }
 
         public string ActualTime

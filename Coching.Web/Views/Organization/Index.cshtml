@@ -1,0 +1,127 @@
+﻿@using Coching.Model;
+@model OrganizationIndexViewModel
+
+@{
+    ViewData["Title"] = "考成法";
+}
+
+<style>
+    .container {
+        opacity: 1 !important;
+    }
+    .main {
+        height: calc(100vh - 70px);
+        padding: 5px;
+    }
+    .time-line {
+        width: 400px;
+        border-left: 1px solid #eee;
+        overflow-y: auto;
+        height: 100%;
+    }
+    .catalogue {
+        width: 300px;
+        height: 100%;
+        overflow-y: auto;
+    }
+    .catalogue-item {
+        padding: 10px;
+        cursor: pointer;
+    }
+    .catalogue-item:hover {
+        background-color: #eee;
+    }
+        .catalogue-item img {
+            height: 20px;
+            margin-right: 10px;
+        }
+        .catalogue-item.circle img {
+            width: 20px;
+            border-radius: 50%;
+        }
+        .catalogue-item.active {
+            background-color: rgba(27,154,238,0.1);
+        }
+    .catalogue-group:not(:first-child) {
+        margin-top: 20px;
+    }
+
+    .catalogue-group-name {
+        padding: 5px;
+    }
+    .catalogue-group-name img {
+        height: 16px;
+        margin-right: 8px;
+    }
+    .comnmand {
+        color: #1296db;
+    }
+</style>
+
+<div class="layout-row main">
+    <div class="catalogue">
+        <div class="catalogue-group">
+            <div class="layout-row layout-center-h catalogue-group-name text-color-descrip">
+                <img src="~/res/tasks.png" />
+                <div>任务</div>
+            </div>
+            <div class="layout-row layout-center-h catalogue-item">
+                <img src="~/res/mine.png" />
+                <div class="ellipsis-1 flex">我的</div>
+            </div>
+            <div class="layout-row layout-center-h catalogue-item">
+                <img src="~/res/jxz.png" />
+                <div class="ellipsis-1 flex">进行中</div>
+            </div>
+            <div class="layout-row layout-center-h catalogue-item">
+                <img src="~/res/dcl.png" />
+                <div class="ellipsis-1 flex">考成项</div>
+            </div>
+        </div>
+        <div class="catalogue-group">
+            <div class="layout-row layout-center-h catalogue-group-name text-color-descrip">
+                <img src="~/res/projects.png" />
+                <div>项目</div>
+            </div>
+            @foreach (var p in Model.Projects)
+            {
+                <a class="layout-row layout-center-h catalogue-item circle" href="@Url.Action("Index", "Coching", new { projectGuid = p.ID })">
+                    <img src="@Url.projectHeader(p.Header)" />
+                    <div class="ellipsis-1 flex">@p.Name</div>
+                </a>
+            }
+            <div class="layout-row layout-center-h catalogue-item comnmand" onclick="projects(this)">
+                <img src="~/res/projects-this.png" />
+                <div class="ellipsis-1 flex">全部项目</div>
+            </div>
+        </div>
+        <div class="catalogue-group">
+            <div class="layout-row layout-center-h catalogue-group-name text-color-descrip">
+                <img src="~/res/membres.png" />
+                <div>相关成员</div>
+            </div>
+            @foreach (var u in Model.Users)
+            {
+                <div class="layout-row layout-center-h catalogue-item circle">
+                    <img src="@Url.header(u.Header)" />
+                    <div class="ellipsis-1 flex">@u.Name</div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="flex main-area">
+
+    </div>
+    <div class="time-line">
+    </div>
+</div>
+
+<script>
+    $('.time-line').load('@Html.Raw(Url.Action("ActionLogs"))')
+
+    function projects(e) {
+        $('.main-area').load('@Html.Raw(Url.Action("Index", "Project", new { inner = true }))')
+        $('.catalogue-item').removeClass('active');
+        $(e).addClass('active');
+    }
+</script>
