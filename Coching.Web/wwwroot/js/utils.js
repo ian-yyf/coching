@@ -259,12 +259,12 @@ var YFUtils = {
 
         var newUrl = null;
         if (old && old.length > 0) {
-            if (old[0].toLowerCase() == param.toLowerCase()) {
-                return;
-            }
             var sign = old[0].substring(0, 1);
             if (param) {
                 param = sign + param;
+            }
+            if (old[0].toLowerCase() == param.toLowerCase()) {
+                return;
             }
             newUrl = window.location.href.replace(old[0], param);
         }

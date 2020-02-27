@@ -258,7 +258,7 @@ var menu = {
     }
 }
 
-function root_id(id) {
+function root_id(id, nourl) {
     $.post(init_data.tree(), {
         id: id
     }, function (result) {
@@ -266,7 +266,9 @@ function root_id(id) {
             top.layer.msg(result.Message);
         }
         else {
-            YFUtils.addToUrl('rootGuid', id);
+            if (!nourl) {
+                YFUtils.addToUrl('rootGuid', id);
+            }
             $('.catalogue-item').removeClass('layui-this');
             $('#' + id).addClass('layui-this');
 

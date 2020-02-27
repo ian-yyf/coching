@@ -134,10 +134,12 @@
 </div>
 
 <script>
-    function active(e) {
+    function active(e, nourl) {
         $('.catalogue-item').removeClass('active');
         $(e).addClass('active');
-        YFUtils.addToUrl('kind', $(e).attr('id'));
+        if (!nourl) {
+            YFUtils.addToUrl('kind', $(e).attr('id'));
+        }
     }
 
     function userTasks(e) {
@@ -146,9 +148,9 @@
         active(e);
     }
 
-    function myTasks(e) {
+    function myTasks(e, nourl) {
         $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching", new { WorkerGuid = Guid.Empty }))');
-        active(e);
+        active(e, nourl);
     }
 
     function doingTasks(e) {
@@ -172,7 +174,7 @@
 @if (string.IsNullOrEmpty(Model.Kind))
 {
     <script>
-        myTasks($('.default')[0]);
+        myTasks($('.default')[0], true);
     </script>
 }
 else
@@ -182,7 +184,7 @@ else
             $('#@Model.Kind').click();
         }
         else {
-            myTasks($('.default')[0]);
+            myTasks($('.default')[0], true);
         }
     </script>
 }

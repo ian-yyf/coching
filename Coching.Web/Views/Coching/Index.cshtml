@@ -93,7 +93,7 @@
 <script src="~/js/layui_menu.js"></script>
 <link rel="stylesheet" href="~/css/shared.css">
 <link rel="stylesheet" href="~/views/coching/index.css">
-<script src="~/views/coching/index.js?v=1.1"></script>
+<script src="~/views/coching/index.js?v=1.2"></script>
 
 <div class="layout-row out-container">
     <div class="catalogue">
@@ -199,13 +199,13 @@
         @if (Model.RootGuid != null && Model.Roots.FirstOrDefault(r => r.Node.ID == Model.RootGuid.Value) != null)
         {
             <text>
-            root_id('@Model.RootGuid.Value');
+            root_id('@Model.RootGuid.Value', true);
             </text>
         }
         else if (Model.Roots.Length > 0)
         {
             <text>
-            root_id('@Model.Roots[0].Node.ID');
+            root_id('@Model.Roots[0].Node.ID', true);
             </text>
         }
     })
