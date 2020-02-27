@@ -18,7 +18,7 @@ namespace Coching.Web.Controllers
 
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string kind = null)
         {
             var token = this.getUserToken();
             var projects = await _work.getProjectsOfUser(token, token.ID, new ProjectCondition(), 4, 1);
@@ -33,7 +33,7 @@ namespace Coching.Web.Controllers
                 return Error(users.Message);
             }
 
-            return AutoView("Index", new OrganizationIndexViewModel(projects.Body, users.Body));
+            return AutoView("Index", new OrganizationIndexViewModel(kind, projects.Body, users.Body));
         }
 
         public async Task<IActionResult> ActionLogs()

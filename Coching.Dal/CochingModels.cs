@@ -360,7 +360,7 @@ namespace Coching.Dal
                              && (condition.WorkerGuid == null || condition.WorkerGuid == n.WorkerGuid)
                              && (condition.Status == null || (int)condition.Status.Value == n.Status)
                              && (condition.Coching == null || condition.Coching == n.Coching)
-                             orderby n.EndTime descending, n.StartTime descending, n.CreatedTime descending
+                             orderby n.LastModifyTime descending
                              select new { pr, n, r, c, w }).AsNoTracking().pageOnlyAsync(pageSize, pageIndex);
 
             return (from db in dbs 

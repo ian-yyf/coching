@@ -12,17 +12,21 @@
         border-radius: 50%;
         margin-bottom: 2px;
     }
+
     .project-info img {
         height: 16px;
     }
+
     .task-item {
         padding: 15px;
         border-bottom: 1px solid #eee;
     }
-    .task-item:hover {
-        cursor: pointer;
-        background-color: #eee;
-    }
+
+        .task-item:hover {
+            cursor: pointer;
+            background-color: #eee;
+        }
+
     .task-label {
         margin-left: 10px;
         color: white;
@@ -31,13 +35,17 @@
         padding: 1px 4px;
         font-size: 12px;
     }
+
     .warn-task-label {
         background-color: red;
     }
+
     .project-info .flex {
         text-align: right;
     }
 </style>
+
+<link rel="stylesheet" href="~/css/shared.css">
 
 <div class="nodes">
     @foreach (var n in Model.Tasks)
@@ -46,7 +54,14 @@
             <div class="task-item">
                 <div class="layout-row">
                     <div class="text-color-important text-size-common-mini ellipsis-1 flex">@n.Node.Name</div>
-                    <img class="worker-header" src="@Url.header(n.Node.Worker?.Header ?? n.Node.Creator.Header)" />
+                    @if (n.Node.Worker == null)
+                    {
+                        <img class="worker-header" src="@Url.header(n.Node.Creator.Header)" title="创建者：@n.Node.Creator.Name" />
+                    }
+                    else
+                    {
+                        <img class="worker-header" src="@Url.header(n.Node.Worker.Header)" title="执行者：@n.Node.Worker.Name" />
+                    }
                 </div>
                 <div class="layout-row layout-center-h project-info">
                     <img src="~/res/projects.png" />
@@ -67,7 +82,7 @@
                     {
                         <div class="task-label">@n.Node.TimeInfo</div>
                     }
-                    <div class="text-color-common text-size-min ellipsis-1 flex">@n.Node.getStatusInfo()</div>
+                    <div class="text-size-min ellipsis-1 flex status-color@(n.Node.Status)">@n.Node.getStatusInfo()</div>
                 </div>
             </div>
         </a>

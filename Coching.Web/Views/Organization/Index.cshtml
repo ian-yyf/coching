@@ -10,43 +10,53 @@
     .container {
         opacity: 1 !important;
     }
+
     .main {
         height: calc(100vh - 70px);
         padding: 5px;
     }
+
     .time-line {
         width: 400px;
         border-left: 1px solid #eee;
         overflow-y: auto;
         height: 100%;
     }
+
     .main-area {
         overflow-y: auto;
         height: 100%;
     }
+
     .catalogue {
         width: 300px;
         height: 100%;
         overflow-y: auto;
     }
+
     .catalogue-item {
         padding: 10px;
         cursor: pointer;
     }
-    .catalogue-item:hover {
-        background-color: #eee;
-    }
+
+        .catalogue-item:hover {
+            background-color: #eee;
+        }
+
         .catalogue-item img {
             height: 20px;
             margin-right: 10px;
         }
+
         .catalogue-item.circle img {
             width: 20px;
             border-radius: 50%;
         }
+
         .catalogue-item.active {
             background-color: rgba(27,154,238,0.1);
         }
+
     .catalogue-group:not(:first-child) {
         margin-top: 20px;
     }
@@ -54,10 +64,12 @@
     .catalogue-group-name {
         padding: 5px;
     }
-    .catalogue-group-name img {
-        height: 16px;
-        margin-right: 8px;
-    }
+
+        .catalogue-group-name img {
+            height: 16px;
+            margin-right: 8px;
+        }
+
     .comnmand {
         color: #1296db;
     }
@@ -70,15 +82,15 @@
                 <img src="~/res/tasks.png" />
                 <div>任务</div>
             </div>
-            <div class="layout-row layout-center-h catalogue-item default" onclick="myTasks(this)">
+            <div id="myTasks" class="layout-row layout-center-h catalogue-item default" onclick="myTasks(this)">
                 <img src="~/res/mine.png" />
                 <div class="ellipsis-1 flex">我的</div>
             </div>
-            <div class="layout-row layout-center-h catalogue-item" onclick="doingTasks(this)">
+            <div id="doingTasks" class="layout-row layout-center-h catalogue-item" onclick="doingTasks(this)">
                 <img src="~/res/jxz.png" />
                 <div class="ellipsis-1 flex">进行中</div>
             </div>
-            <div class="layout-row layout-center-h catalogue-item" onclick="cochingTasks(this)">
+            <div id="cochingTasks" class="layout-row layout-center-h catalogue-item" onclick="cochingTasks(this)">
                 <img src="~/res/dcl.png" />
                 <div class="ellipsis-1 flex">考成项</div>
             </div>
@@ -95,7 +107,7 @@
                     <div class="ellipsis-1 flex">@p.Name</div>
                 </a>
             }
-            <div class="layout-row layout-center-h catalogue-item comnmand" onclick="projects(this)">
+            <div id="projects" class="layout-row layout-center-h catalogue-item comnmand" onclick="projects(this)">
                 <img src="~/res/projects-this.png" />
                 <div class="ellipsis-1 flex">全部项目</div>
             </div>
@@ -107,7 +119,7 @@
             </div>
             @foreach (var u in Model.Users)
             {
-                <div class="layout-row layout-center-h catalogue-item circle" onclick="userTasks(this, '@u.ID')">
+                <div id="@u.ID" class="layout-row layout-center-h catalogue-item circle" onclick="userTasks(this)">
                     <img src="@Url.header(u.Header)" />
                     <div class="ellipsis-1 flex">@u.Name</div>
                 </div>
@@ -125,9 +137,11 @@
     function active(e) {
         $('.catalogue-item').removeClass('active');
         $(e).addClass('active');
+        YFUtils.addToUrl('kind', $(e).attr('id'));
     }
 
-    function userTasks(e, id) {
+    function userTasks(e) {
+        var id = $(e).attr('id');
         $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching"))' + '?WorkerGuid=' + id);
         active(e);
     }
@@ -153,5 +167,22 @@
     }
 
     $('.time-line').load('@Html.Raw(Url.Action("ActionLogs"))');
-    myTasks($('.default')[0]);
 </script>
+
+@if (string.IsNullOrEmpty(Model.Kind))
+{
+    <script>
+        myTasks($('.default')[0]);
+    </script>
+}
+else
+{
+    <script>
+        if ($('#@Model.Kind').length > 0) {
+            $('#@Model.Kind').click();
+        }
+        else {
+            myTasks($('.default')[0]);
+        }
+    </script>
+}

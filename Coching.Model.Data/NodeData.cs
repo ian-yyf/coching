@@ -30,6 +30,7 @@ namespace Coching.Model.Data
             Status = (int)NodeStatus.未进行;
             Coching = coching;
             CreatedTime = DateTime.Now;
+            LastModifyTime = CreatedTime;
         }
 
         public NodeData(NodeData rhs)
@@ -49,6 +50,7 @@ namespace Coching.Model.Data
             Status = rhs.Status;
             Coching = rhs.Coching;
             CreatedTime = rhs.CreatedTime;
+            LastModifyTime = rhs.LastModifyTime;
         }
 
         public NodeData(NodeData rhs, string name, string description, string htmlDescription, bool coching)
@@ -81,6 +83,7 @@ namespace Coching.Model.Data
         public int Status { get; set; }
         public bool Coching { get; set; }
         public DateTime CreatedTime { get; set; }
+        public DateTime LastModifyTime { get; set; }
 
         public NodeStatus getStatus()
         {

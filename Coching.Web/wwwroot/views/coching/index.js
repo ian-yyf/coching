@@ -266,17 +266,7 @@ function root_id(id) {
             top.layer.msg(result.Message);
         }
         else {
-            if (window.location.href.toLowerCase().indexOf(('rootGuid=' + id).toLowerCase()) < 0) {
-                var regex = /rootGuid=[0-9a-zA-Z-]+/i;
-                var newUrl = null;
-                if (window.location.href.match(regex)) {
-                    newUrl = window.location.href.replace(regex, 'rootGuid=' + id);
-                }
-                else {
-                    newUrl = window.location.href + '&rootGuid=' + id;
-                }
-                history.pushState(null, result.Body.Name, newUrl);
-            }
+            YFUtils.addToUrl('rootGuid', id);
             $('.catalogue-item').removeClass('layui-this');
             $('#' + id).addClass('layui-this');
 

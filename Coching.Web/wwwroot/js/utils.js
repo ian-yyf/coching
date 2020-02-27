@@ -251,5 +251,31 @@ var YFUtils = {
         var prop = this.getHiddenProp();
         if (!prop) return false;
         return document[prop];
+    },
+    addToUrl: function (name, value) {
+        var param = value ? name + '=' + value : '';
+        var regex = new RegExp('[?&]' + name + '=[0-9a-zA-Z-,]+', 'i');
+        var old = window.location.href.match(regex);
+
+        var newUrl = null;
+        if (old && old.length > 0) {
+            if (old[0].toLowerCase() == param.toLowerCase()) {
+                return;
+            }
+            var sign = old[0].substring(0, 1);
+            if (param) {
+                param = sign + param;
+            }
+            newUrl = window.location.href.replace(old[0], param);
+        }
+        else {
+            if (window.location.href.indexOf('?') > 0) {
+                newUrl = window.location.href + '&' + param;
+            }
+            else {
+                newUrl = window.location.href + '?' + param;
+            }
+        }
+        history.pushState(null, null, newUrl);
     }
 }

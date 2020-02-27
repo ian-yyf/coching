@@ -518,6 +518,7 @@ namespace Coching.Bll
             if (oldData.Status != newData.Status)
             {
                 await _models.addStatusLog(new StatusLogData(id, token.ID, oldData.Status, newData.Status, null));
+                newData.LastModifyTime = DateTime.Now;
             }
 
             if (oldData.ActualManHour != newData.ActualManHour)

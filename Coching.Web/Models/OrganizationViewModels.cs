@@ -14,12 +14,14 @@ namespace Coching.Web.Models
 
         }
 
-        public OrganizationIndexViewModel(FProject[] projects, FUser[] users)
+        public OrganizationIndexViewModel(string kind, FProject[] projects, FUser[] users)
         {
+            Kind = kind;
             Projects = projects;
             Users = users;
         }
 
+        public string Kind { get; set; }
         public FProject[] Projects { get; set; }
         public FUser[] Users { get; set; }
     }

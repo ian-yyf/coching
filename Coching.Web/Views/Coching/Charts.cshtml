@@ -195,17 +195,7 @@
 
             load_ids(ids);
 
-            var param = ids.length == 0 ? '' : '?ids=' + ids.join(',');
-
-            var regex = /\?ids=[0-9a-zA-Z-,]+/i;
-            var newUrl = null;
-            if (window.location.href.match(regex)) {
-                newUrl = window.location.href.replace(regex, param);
-            }
-            else {
-                newUrl = window.location.href + param;
-            }
-            history.pushState(null, null, newUrl);
+            YFUtils.addToUrl('ids', ids.join(','));
         });
     })
 </script>
