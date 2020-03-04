@@ -94,6 +94,10 @@
                 <img src="~/res/dcl.png" />
                 <div class="ellipsis-1 flex">考成项</div>
             </div>
+            <div id="allTasks" class="layout-row layout-center-h catalogue-item comnmand" onclick="allTasks(this)">
+                <img src="~/res/tasks-this.png" />
+                <div class="ellipsis-1 flex">全部任务</div>
+            </div>
         </div>
         <div class="catalogue-group">
             <div class="layout-row layout-center-h catalogue-group-name text-color-descrip">
@@ -160,6 +164,11 @@
 
     function cochingTasks(e) {
         $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching", new { Coching = true }))');
+        active(e);
+    }
+
+    function allTasks(e) {
+        $('.main-area').load('@Html.Raw(Url.Action("Tasks", "Coching"))');
         active(e);
     }
 
