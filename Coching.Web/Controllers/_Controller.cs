@@ -28,7 +28,7 @@ namespace Coching.Web.Controllers
 
         protected IActionResult Error(string message)
         {
-            return Error(message, AutoView("Error", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier }));
+            return View(new ErrorViewModel { Message = message, RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
         public override async Task<string> toAuthorizerAppid(Guid authorizerAppGuid)
