@@ -43,7 +43,7 @@ namespace Coching.Web.Controllers
                 return Error(partners.Message);
             }
 
-            return AutoView("Index", new CochingViewModel(token.ID, projectGuid, rootGuid, project.Body, roots.Body.Items, partners.Body));
+            return AutoView("Index", new CochingViewModel(token.ID, projectGuid, rootGuid, project.Body, roots.Body.Items.ToArray(), partners.Body));
         }
 
         [HttpPost]

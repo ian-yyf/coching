@@ -11,6 +11,7 @@ using Public.Mvc;
 using Coching.Model.Data;
 using Coching.Model.Front;
 using Public.Containers;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Coching.Web.Controllers
 {
@@ -41,5 +42,11 @@ namespace Coching.Web.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        //public async Task<IActionResult> Test([FromServices]IWebHostEnvironment hostEnvironment)
+        //{
+        //    var result = await _work.downlaodUserHeaders(hostEnvironment.WebRootPath, "headers", file => file.StartsWith("http://thirdwx.qlogo.cn"));
+        //    return Json(result);
+        //}
     }
 }
