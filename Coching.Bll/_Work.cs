@@ -114,5 +114,14 @@ namespace Coching.Bll
                 return checkPermission(token, PermissionKind.用户权限管理);
             });
         }
+
+        public override async Task<Result<FUser>> modifyUser(FUserToken token, Guid id, UserData oldData, UserData newData, Guid? codeId, string code)
+        {
+            return await modifyUser(token, id, oldData, newData, codeId, code, async id =>
+            {
+                await Task.CompletedTask;
+                return false;
+            });
+        }
     }
 }
