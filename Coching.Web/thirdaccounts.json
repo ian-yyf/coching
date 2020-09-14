@@ -35,7 +35,7 @@
   "EventAppSecret": "",
   "PlatformEventAppId": "",
   "PlatformEventAppSecret": "",
-  "FileUrl": "https://api.darkast.com/File",
+  "FileUrl": "https://apicore.darkast.com/File",
   "FileAppId": "",
   "FileAppSecret": "",
   "ReverseGeocodingUrl": "https://api.darkast.com/Map/ReverseGeocoding",
